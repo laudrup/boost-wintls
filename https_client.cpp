@@ -1,13 +1,26 @@
-#include <SDKDDKVer.h>
+#ifdef _WIN32
+# include <SDKDDKVer.h>
+#endif
 
 #include <boost/asio.hpp>
-#include <boost/asio/windows_sspi.hpp>
+
+#ifdef _WIN32
+# include <boost/asio/windows_sspi.hpp>
+#else
+# include <boost/asio/ssl.hpp>
+#endif
 
 #include <cstdlib>
 #include <iostream>
 #include <iterator>
 #include <string>
 #include <fstream>
+
+#ifdef _WIN32
+namespace ssl = boost::asio::windows_sspi;
+#else
+namespace ssl = boost::asio::ssl;
+#endif
 
 using boost::asio::ip::tcp;
 
@@ -45,12 +58,12 @@ int main(int argc, char *argv[]) {
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
     // Try each endpoint until we successfully establish a connection.
-    boost::asio::windows_sspi::context ctx;
-    boost::asio::windows_sspi::stream<boost::asio::ip::tcp::socket> socket(io_service, ctx);
+    ssl::context ctx{ssl::context::sslv23};
+    ssl::stream<boost::asio::ip::tcp::socket> socket(io_service, ctx);
 
     boost::asio::connect(socket.lowest_layer(), endpoint_iterator);
 
-    socket.handshake(boost::asio::windows_sspi::stream_base::client);
+    socket.handshake(ssl::stream_base::client);
     // Form the request. We specify the "Connection: close" header so that the
     // server will close the socket after transmitting the response. This will
     // allow us to treat all data up until the EOF as the content.

@@ -23,6 +23,7 @@ if (WIN32)
     Secur32
     )
 
+  # Taken from https://github.com/lefticus/cpp_starter_project
   set(MSVC_WARNINGS
     /W4 # Baseline reasonable warnings
     /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data

@@ -12,6 +12,7 @@
 #define BOOST_ASIO_WINDOWS_SSPI_CONTEXT_HPP
 
 #include "error.hpp"
+#include "context_base.hpp"
 
 // TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
 #define SECURITY_WIN32
@@ -25,25 +26,25 @@ namespace boost {
 namespace asio {
 namespace windows_sspi {
 
-class context
+class context : public context_base
 {
 public:
     using native_handle_type = CredHandle;
     using error_code = boost::system::error_code;
 
-    context()
-        : m_impl(std::make_shared<impl>())
+    explicit context(method m)
+        : m_impl(std::make_shared<impl>(m))
     {}
 
 private:
     struct impl
     {
-        impl()
+        explicit impl(method)
             : sspi_functions(InitSecurityInterface())
         {
             SCHANNEL_CRED creds{};
             creds.dwVersion = SCHANNEL_CRED_VERSION;
-            // TODO: Set protocols to enable
+            // TODO: Set protocols to enable from method param
             creds.grbitEnabledProtocols = 0;
             // TODO: Set proper flags based on options. This basically disables certificate validation.
             creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;

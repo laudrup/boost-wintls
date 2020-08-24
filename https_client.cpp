@@ -16,13 +16,13 @@
 #include <string>
 #include <fstream>
 
-#ifdef _WIN32
-namespace ssl = boost::asio::windows_sspi;
-#else
-namespace ssl = boost::asio::ssl;
-#endif
+namespace net = boost::asio;
 
-using boost::asio::ip::tcp;
+#ifdef _WIN32
+namespace ssl = net::windows_sspi;
+#else
+namespace ssl = net::ssl;
+#endif
 
 int main(int argc, char *argv[]) {
   try {
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     }
     const std::string host = url.substr(8, url.find('/', 8) - 8);
     const std::string path = url.find('/', 8) == std::string::npos ? "/" : url.substr(url.find('/', 8));
-    boost::asio::io_service io_service;
+    net::io_service io_service;
 
     std::ostream* ofs;
     std::ofstream out_file;
@@ -53,21 +53,21 @@ int main(int argc, char *argv[]) {
     }
 
     // Get a list of endpoints corresponding to the server name.
-    tcp::resolver resolver(io_service);
-    tcp::resolver::query query(host, "https");
-    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    net::ip::tcp::resolver resolver(io_service);
+    net::ip::tcp::resolver::query query(host, "https");
+    net::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
     // Try each endpoint until we successfully establish a connection.
     ssl::context ctx{ssl::context::sslv23};
-    ssl::stream<boost::asio::ip::tcp::socket> socket(io_service, ctx);
+    ssl::stream<net::ip::tcp::socket> socket(io_service, ctx);
 
-    boost::asio::connect(socket.lowest_layer(), endpoint_iterator);
+    net::connect(socket.lowest_layer(), endpoint_iterator);
 
     socket.handshake(ssl::stream_base::client);
     // Form the request. We specify the "Connection: close" header so that the
     // server will close the socket after transmitting the response. This will
     // allow us to treat all data up until the EOF as the content.
-    boost::asio::streambuf request;
+    net::streambuf request;
     std::ostream request_stream(&request);
     request_stream << "GET " << path << " HTTP/1.0\r\n";
     request_stream << "Host: " << host << "\r\n";
@@ -75,13 +75,13 @@ int main(int argc, char *argv[]) {
     request_stream << "Connection: close\r\n\r\n";
 
     // Send the request.
-    boost::asio::write(socket, request);
+    net::write(socket, request);
 
     // Read the response status line. The response streambuf will automatically
     // grow to accommodate the entire line. The growth may be limited by passing
     // a maximum size to the streambuf constructor.
-    boost::asio::streambuf response;
-    boost::asio::read_until(socket, response, "\r\n");
+    net::streambuf response;
+    net::read_until(socket, response, "\r\n");
 
     // Check that response is OK.
     std::istream response_stream(&response);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Read the response headers, which are terminated by a blank line.
-    boost::asio::read_until(socket, response, "\r\n\r\n");
+    net::read_until(socket, response, "\r\n\r\n");
 
     // Process the response headers.
     std::string header;
@@ -117,10 +117,10 @@ int main(int argc, char *argv[]) {
 
     // Read until EOF, writing data to output as we go.
     boost::system::error_code error;
-    while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error)) {
+    while (net::read(socket, response, net::transfer_at_least(1), error)) {
       *ofs << &response;
     }
-    if (error != boost::asio::error::eof) {
+    if (error != net::error::eof) {
       throw boost::system::system_error(error);
     }
   } catch (std::exception &e) {

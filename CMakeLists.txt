@@ -6,8 +6,6 @@ if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
-  set(BOOST_ROOT "C:/boost_1_73_0/")
-  set(BOOST_LIBRARYDIR "C:/boost_1_73_0/lib/")
 endif()
 
 find_package(Boost REQUIRED COMPONENTS date_time regex)

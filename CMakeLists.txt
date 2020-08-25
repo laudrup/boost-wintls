@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(boost-asio-windows-sspi)
+project(boost-asio-windows-sspi CXX)
+
+set(CMAKE_CXX_STANDARD 11)
 
 if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)

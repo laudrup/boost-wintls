@@ -16,6 +16,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/system/error_code.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #define SECURITY_WIN32
 
@@ -86,6 +87,7 @@ public:
 
       size_t size_written =
         m_next_layer.write_some(boost::asio::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
+      boost::ignore_unused(size_written);
       BOOST_ASSERT(size_written == OutBuffers[0].cbBuffer);
       m_context_impl->sspi_functions->FreeContextBuffer(OutBuffers[0].pvBuffer);
       if (ec) {
@@ -261,6 +263,7 @@ public:
     }
 
     auto sent = m_next_layer.write_some(boost::asio::buffer(message), ec);
+    boost::ignore_unused(sent);
     BOOST_ASSERT(sent == message.size());
     if (ec) {
       return 0;

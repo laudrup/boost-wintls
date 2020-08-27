@@ -221,6 +221,24 @@ public:
 
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence &buffers, boost::system::error_code &ec) {
+    auto message = encrypt(buffers, ec);
+    if (ec) {
+      return 0;
+    }
+
+    auto sent = m_next_layer.write_some(boost::asio::buffer(message), ec);
+    boost::ignore_unused(sent);
+    BOOST_ASSERT(sent == message.size());
+    if (ec) {
+      return 0;
+    }
+
+    return boost::asio::buffer_size(buffers);
+  }
+
+private:
+  template <typename ConstBufferSequence>
+  std::vector<char> encrypt(const ConstBufferSequence &buffers, boost::system::error_code &ec) {
     SecBufferDesc Message;
     SecBuffer Buffers[4];
 
@@ -228,7 +246,7 @@ public:
     SECURITY_STATUS sc = m_context_impl->sspi_functions->QueryContextAttributes(&m_security_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
-      return 0;
+      return {};
     }
 
     const auto input_size = boost::asio::buffer_size(buffers);
@@ -259,20 +277,11 @@ public:
 
     if (FAILED(sc)) {
       ec = error::make_error_code(sc);
-      return 0;
+      return {};
     }
-
-    auto sent = m_next_layer.write_some(boost::asio::buffer(message), ec);
-    boost::ignore_unused(sent);
-    BOOST_ASSERT(sent == message.size());
-    if (ec) {
-      return 0;
-    }
-
-    return input_size;
+    return message;
   }
 
-private:
   next_layer_type m_next_layer;
   std::array<char, 0x10000> m_input_buffer;
   std::size_t m_input_size = 0;

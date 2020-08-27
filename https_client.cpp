@@ -27,7 +27,6 @@ namespace ssl = net::ssl;
 int main(int argc, char *argv[]) {
   try {
     if (argc != 2 && argc != 3) {
-      std::cerr << "argc is: " << argc << "\n";
       std::cerr << "Usage: " << argv[0] << " <url> [file]\n";
       std::cerr << "Example:\n";
       std::cerr << "  " << argv[0] << " https://www.boost.org/LICENSE_1_0.txt license.txt\n";

@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     }
     const std::string host = url.substr(8, url.find('/', 8) - 8);
     const std::string path = url.find('/', 8) == std::string::npos ? "/" : url.substr(url.find('/', 8));
-    net::io_service io_service;
+    net::io_context io_ctx;
 
     std::ostream* ofs;
     std::ofstream out_file;
@@ -52,13 +52,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Get a list of endpoints corresponding to the server name.
-    net::ip::tcp::resolver resolver(io_service);
+    net::ip::tcp::resolver resolver(io_ctx);
     net::ip::tcp::resolver::query query(host, "https");
     net::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
     // Try each endpoint until we successfully establish a connection.
-    ssl::context ctx{ssl::context::sslv23};
-    ssl::stream<net::ip::tcp::socket> socket(io_service, ctx);
+    ssl::context ssl_ctx{ssl::context::sslv23};
+    ssl::stream<net::ip::tcp::socket> socket(io_ctx, ssl_ctx);
 
     net::connect(socket.lowest_layer(), endpoint_iterator);
 

@@ -37,12 +37,70 @@ namespace boost {
 namespace asio {
 namespace windows_sspi {
 
+class sspi_impl {
+public:
+  sspi_impl(CtxtHandle* context)
+    : m_context(context) {
+  }
+
+  template <typename ConstBufferSequence>
+  std::vector<char> encrypt(const ConstBufferSequence &buffers, boost::system::error_code &ec) {
+    SecBufferDesc Message;
+    SecBuffer Buffers[4];
+
+    SecPkgContext_StreamSizes stream_sizes;
+    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+    if (sc != SEC_E_OK) {
+      ec = error::make_error_code(sc);
+      return {};
+    }
+
+    const auto input_size = boost::asio::buffer_size(buffers);
+    BOOST_ASSERT(input_size <= stream_sizes.cbMaximumMessage);
+    std::vector<char> message(stream_sizes.cbHeader + input_size + stream_sizes.cbTrailer);
+
+    Buffers[0].pvBuffer = message.data();
+    Buffers[0].cbBuffer = stream_sizes.cbHeader;
+    Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
+
+    boost::asio::buffer_copy(boost::asio::buffer(message.data() + stream_sizes.cbHeader, input_size), buffers);
+    Buffers[1].pvBuffer = message.data() + stream_sizes.cbHeader;
+    Buffers[1].cbBuffer = static_cast<ULONG>(input_size);
+    Buffers[1].BufferType = SECBUFFER_DATA;
+
+    Buffers[2].pvBuffer = message.data() + stream_sizes.cbHeader + input_size;
+    Buffers[2].cbBuffer = stream_sizes.cbTrailer;
+    Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
+
+    Buffers[3].pvBuffer = SECBUFFER_EMPTY;
+    Buffers[3].cbBuffer = SECBUFFER_EMPTY;
+    Buffers[3].BufferType = SECBUFFER_EMPTY;
+
+    Message.ulVersion = SECBUFFER_VERSION;
+    Message.cBuffers = 4;
+    Message.pBuffers = Buffers;
+    sc = detail::sspi_functions::EncryptMessage(m_context, 0, &Message, 0);
+
+    if (FAILED(sc)) {
+      ec = error::make_error_code(sc);
+      return {};
+    }
+    return message;
+  }
+
+private:
+  CtxtHandle* m_context;
+};
+
 template <typename NextLayer> class stream : public stream_base {
 public:
   using next_layer_type = NextLayer;
   using lowest_layer_type = typename std::remove_reference<next_layer_type>::type::lowest_layer_type;
 
-  template <typename Arg> stream(Arg &&arg, context &ctx) : stream_base(ctx), m_next_layer(std::forward<Arg>(arg)) {
+  template <typename Arg> stream(Arg &&arg, context &ctx)
+    : stream_base(ctx)
+    , m_next_layer(std::forward<Arg>(arg))
+    , m_sspi_impl(std::make_shared<sspi_impl>(&m_security_context)) {
   }
 
   ~stream() {
@@ -222,7 +280,7 @@ public:
 
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence &buffers, boost::system::error_code &ec) {
-    auto message = encrypt(buffers, ec);
+    auto message = m_sspi_impl->encrypt(buffers, ec);
     if (ec) {
       return 0;
     }
@@ -238,56 +296,12 @@ public:
   }
 
 private:
-  template <typename ConstBufferSequence>
-  std::vector<char> encrypt(const ConstBufferSequence &buffers, boost::system::error_code &ec) {
-    SecBufferDesc Message;
-    SecBuffer Buffers[4];
-
-    SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(&m_security_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
-    if (sc != SEC_E_OK) {
-      ec = error::make_error_code(sc);
-      return {};
-    }
-
-    const auto input_size = boost::asio::buffer_size(buffers);
-    BOOST_ASSERT(input_size <= stream_sizes.cbMaximumMessage);
-    std::vector<char> message(stream_sizes.cbHeader + input_size + stream_sizes.cbTrailer);
-
-    Buffers[0].pvBuffer = message.data();
-    Buffers[0].cbBuffer = stream_sizes.cbHeader;
-    Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
-
-    boost::asio::buffer_copy(boost::asio::buffer(message.data() + stream_sizes.cbHeader, input_size), buffers);
-    Buffers[1].pvBuffer = message.data() + stream_sizes.cbHeader;
-    Buffers[1].cbBuffer = static_cast<ULONG>(input_size);
-    Buffers[1].BufferType = SECBUFFER_DATA;
-
-    Buffers[2].pvBuffer = message.data() + stream_sizes.cbHeader + input_size;
-    Buffers[2].cbBuffer = stream_sizes.cbTrailer;
-    Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
-
-    Buffers[3].pvBuffer = SECBUFFER_EMPTY;
-    Buffers[3].cbBuffer = SECBUFFER_EMPTY;
-    Buffers[3].BufferType = SECBUFFER_EMPTY;
-
-    Message.ulVersion = SECBUFFER_VERSION;
-    Message.cBuffers = 4;
-    Message.pBuffers = Buffers;
-    sc = detail::sspi_functions::EncryptMessage(&m_security_context, 0, &Message, 0);
-
-    if (FAILED(sc)) {
-      ec = error::make_error_code(sc);
-      return {};
-    }
-    return message;
-  }
-
   next_layer_type m_next_layer;
   std::array<char, 0x10000> m_input_buffer;
   std::size_t m_input_size = 0;
   std::vector<char> m_received_data;
   CtxtHandle m_security_context;
+  std::shared_ptr<sspi_impl> m_sspi_impl;
 };
 
 } // namespace windows_sspi

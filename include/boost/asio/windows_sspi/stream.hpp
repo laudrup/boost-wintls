@@ -11,8 +11,9 @@
 #ifndef BOOST_ASIO_WINDOWS_SSPI_STREAM_HPP
 #define BOOST_ASIO_WINDOWS_SSPI_STREAM_HPP
 
-#include "error.hpp"
-#include "stream_base.hpp"
+#include <boost/asio/windows_sspi/error.hpp>
+#include <boost/asio/windows_sspi/stream_base.hpp>
+#include <boost/asio/windows_sspi/detail/sspi_functions.hpp>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/system/error_code.hpp>
@@ -45,7 +46,7 @@ public:
   }
 
   ~stream() {
-    m_context_impl->sspi_functions->DeleteSecurityContext(&m_security_context);
+    detail::sspi_functions::DeleteSecurityContext(&m_security_context);
   }
 
   const lowest_layer_type &lowest_layer() const {
@@ -78,9 +79,9 @@ public:
       OutBuffer.pBuffers = OutBuffers;
       OutBuffer.ulVersion = SECBUFFER_VERSION;
 
-      sc = m_context_impl->sspi_functions->InitializeSecurityContext(&m_context_impl->handle, NULL, NULL, flags_in, 0,
-                                                                     SECURITY_NATIVE_DREP, NULL, 0, &m_security_context,
-                                                                     &OutBuffer, &flags_out, NULL);
+      sc = detail::sspi_functions::InitializeSecurityContext(&m_context_impl->handle, NULL, NULL, flags_in, 0,
+                                                             SECURITY_NATIVE_DREP, NULL, 0, &m_security_context,
+                                                             &OutBuffer, &flags_out, NULL);
       if (sc != SEC_I_CONTINUE_NEEDED) {
         throw boost::system::system_error(error::make_error_code(sc), "InitializeSecurityContext");
       }
@@ -89,7 +90,7 @@ public:
         m_next_layer.write_some(boost::asio::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
       boost::ignore_unused(size_written);
       BOOST_ASSERT(size_written == OutBuffers[0].cbBuffer);
-      m_context_impl->sspi_functions->FreeContextBuffer(OutBuffers[0].pvBuffer);
+      detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
       if (ec) {
         throw boost::system::system_error(ec);
       }
@@ -124,13 +125,13 @@ public:
       OutBuffer.pBuffers = OutBuffers;
       OutBuffer.ulVersion = SECBUFFER_VERSION;
 
-      sc = m_context_impl->sspi_functions->InitializeSecurityContext(
+      sc = detail::sspi_functions::InitializeSecurityContext(
           &m_context_impl->handle, &m_security_context, NULL, flags_in, 0, SECURITY_NATIVE_DREP, &InBuffer, 0, NULL,
           &OutBuffer, &flags_out, NULL);
 
       if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL) {
         m_next_layer.write_some(boost::asio::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
-        m_context_impl->sspi_functions->FreeContextBuffer(OutBuffers[0].pvBuffer);
+        detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
         OutBuffers[0].pvBuffer = NULL;
         if (ec) {
           throw boost::system::system_error(ec);
@@ -180,7 +181,7 @@ public:
       Message.cBuffers = 4;
       Message.pBuffers = Buffers;
 
-      SECURITY_STATUS sc = m_context_impl->sspi_functions->DecryptMessage(&m_security_context, &Message, 0, NULL);
+      SECURITY_STATUS sc = detail::sspi_functions::DecryptMessage(&m_security_context, &Message, 0, NULL);
       if (sc == SEC_E_INCOMPLETE_MESSAGE) {
         std::size_t size_read = m_next_layer.read_some(boost::asio::buffer(m_input_buffer.data() + m_input_size, m_input_buffer.size() - m_input_size), ec);
         if (ec) {
@@ -243,7 +244,7 @@ private:
     SecBuffer Buffers[4];
 
     SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = m_context_impl->sspi_functions->QueryContextAttributes(&m_security_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(&m_security_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return {};
@@ -273,7 +274,7 @@ private:
     Message.ulVersion = SECBUFFER_VERSION;
     Message.cBuffers = 4;
     Message.pBuffers = Buffers;
-    sc = m_context_impl->sspi_functions->EncryptMessage(&m_security_context, 0, &Message, 0);
+    sc = detail::sspi_functions::EncryptMessage(&m_security_context, 0, &Message, 0);
 
     if (FAILED(sc)) {
       ec = error::make_error_code(sc);

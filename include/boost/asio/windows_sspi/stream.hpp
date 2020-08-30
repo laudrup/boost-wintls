@@ -16,7 +16,10 @@
 #include <boost/asio/windows_sspi/detail/sspi_functions.hpp>
 
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/compose.hpp>
+
 #include <boost/system/error_code.hpp>
+
 #include <boost/core/ignore_unused.hpp>
 
 #define SECURITY_WIN32
@@ -33,10 +36,13 @@
 #include <stdexcept>
 #include <type_traits>
 
+// TODO: namespace net = boost::asio;
+
 namespace boost {
 namespace asio {
 namespace windows_sspi {
 
+// TODO: Move away from this file
 class sspi_impl {
 public:
   sspi_impl(CtxtHandle* context)
@@ -92,10 +98,51 @@ private:
   CtxtHandle* m_context;
 };
 
+// TODO: Move away from this file
+template <typename NextLayer, typename ConstBufferSequence>
+struct async_write_impl {
+  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi)
+    : m_next_layer(next_layer)
+    , m_buffer(buffer)
+    , m_sspi(sspi)
+    , m_state(encrypt) {
+  }
+
+  template <typename Self>
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+    boost::ignore_unused(length);
+    switch (m_state) {
+      case encrypt:
+        m_message = m_sspi->encrypt(m_buffer, ec);
+        if (ec) {
+          self.complete(ec, 0);
+          break;
+        }
+        m_state = write;
+        boost::asio::async_write(m_next_layer,
+                                 boost::asio::buffer(m_message),
+                                 boost::asio::transfer_exactly(m_message.size()),
+                                 std::move(self));
+        break;
+      case write:
+        BOOST_ASSERT(length == m_message.size());
+        self.complete(ec, boost::asio::buffer_size(m_buffer));
+    }
+  }
+
+private:
+  NextLayer& m_next_layer;
+  ConstBufferSequence m_buffer;
+  std::shared_ptr<sspi_impl> m_sspi;
+  enum { encrypt, write } m_state;
+  std::vector<char> m_message;
+};
+
 template <typename NextLayer> class stream : public stream_base {
 public:
   using next_layer_type = NextLayer;
   using lowest_layer_type = typename std::remove_reference<next_layer_type>::type::lowest_layer_type;
+  using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;
 
   template <typename Arg> stream(Arg &&arg, context &ctx)
     : stream_base(ctx)
@@ -285,7 +332,11 @@ public:
       return 0;
     }
 
-    auto sent = m_next_layer.write_some(boost::asio::buffer(message), ec);
+    auto sent = boost::asio::write(m_next_layer,
+                                   boost::asio::buffer(message),
+                                   boost::asio::transfer_exactly(message.size()),
+                                   ec);
+
     boost::ignore_unused(sent);
     BOOST_ASSERT(sent == message.size());
     if (ec) {
@@ -293,6 +344,14 @@ public:
     }
 
     return boost::asio::buffer_size(buffers);
+  }
+
+  template <typename ConstBufferSequence, typename CompletionToken>
+  auto async_write_some(const ConstBufferSequence &buffer, CompletionToken &&token) ->
+      typename boost::asio::async_result<typename std::decay<CompletionToken>::type,
+                                         void(boost::system::error_code, std::size_t)>::return_type {
+    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+        async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
   }
 
 private:

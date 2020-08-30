@@ -73,8 +73,17 @@ int main(int argc, char *argv[]) {
     request_stream << "Accept: */*\r\n";
     request_stream << "Connection: close\r\n\r\n";
 
+    auto size_to_send = request.size();
+    boost::asio::async_write(socket, request,
+        [&size_to_send](const boost::system::error_code& error, std::size_t length) {
+          if (error || length != size_to_send) {
+            // TODO: Handle in a better way at some point
+            std::cerr << "Error sending\n";
+            abort();
+          }
+        });
     // Send the request.
-    net::write(socket, request);
+    io_ctx.run_one();
 
     // Read the response status line. The response streambuf will automatically
     // grow to accommodate the entire line. The growth may be limited by passing

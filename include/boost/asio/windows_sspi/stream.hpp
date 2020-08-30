@@ -36,11 +36,11 @@
 #include <stdexcept>
 #include <type_traits>
 
-// TODO: namespace net = boost::asio;
-
 namespace boost {
 namespace asio {
 namespace windows_sspi {
+
+namespace net = boost::asio;
 
 // TODO: Move away from this file
 class sspi_impl {
@@ -61,7 +61,7 @@ public:
       return {};
     }
 
-    const auto input_size = boost::asio::buffer_size(buffers);
+    const auto input_size = net::buffer_size(buffers);
     BOOST_ASSERT(input_size <= stream_sizes.cbMaximumMessage);
     std::vector<char> message(stream_sizes.cbHeader + input_size + stream_sizes.cbTrailer);
 
@@ -69,7 +69,7 @@ public:
     Buffers[0].cbBuffer = stream_sizes.cbHeader;
     Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
 
-    boost::asio::buffer_copy(boost::asio::buffer(message.data() + stream_sizes.cbHeader, input_size), buffers);
+    net::buffer_copy(net::buffer(message.data() + stream_sizes.cbHeader, input_size), buffers);
     Buffers[1].pvBuffer = message.data() + stream_sizes.cbHeader;
     Buffers[1].cbBuffer = static_cast<ULONG>(input_size);
     Buffers[1].BufferType = SECBUFFER_DATA;
@@ -119,14 +119,11 @@ struct async_write_impl {
           break;
         }
         m_state = write;
-        boost::asio::async_write(m_next_layer,
-                                 boost::asio::buffer(m_message),
-                                 boost::asio::transfer_exactly(m_message.size()),
-                                 std::move(self));
+        net::async_write(m_next_layer, net::buffer(m_message), net::transfer_exactly(m_message.size()), std::move(self));
         break;
       case write:
         BOOST_ASSERT(length == m_message.size());
-        self.complete(ec, boost::asio::buffer_size(m_buffer));
+        self.complete(ec, net::buffer_size(m_buffer));
     }
   }
 
@@ -191,8 +188,7 @@ public:
         throw boost::system::system_error(error::make_error_code(sc), "InitializeSecurityContext");
       }
 
-      size_t size_written =
-        m_next_layer.write_some(boost::asio::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
+      size_t size_written = m_next_layer.write_some(net::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
       boost::ignore_unused(size_written);
       BOOST_ASSERT(size_written == OutBuffers[0].cbBuffer);
       detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
@@ -205,7 +201,7 @@ public:
     std::array<char, 0x10000> buffer;
 
     while (true) {
-      input_size += m_next_layer.read_some(boost::asio::buffer(buffer.data() + input_size, buffer.size() - input_size), ec);
+      input_size += m_next_layer.read_some(net::buffer(buffer.data() + input_size, buffer.size() - input_size), ec);
       if (ec) {
         throw boost::system::system_error(ec);
       }
@@ -235,7 +231,7 @@ public:
           &OutBuffer, &flags_out, NULL);
 
       if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL) {
-        m_next_layer.write_some(boost::asio::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
+        m_next_layer.write_some(net::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
         detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
         OutBuffers[0].pvBuffer = NULL;
         if (ec) {
@@ -288,7 +284,7 @@ public:
 
       SECURITY_STATUS sc = detail::sspi_functions::DecryptMessage(&m_security_context, &Message, 0, NULL);
       if (sc == SEC_E_INCOMPLETE_MESSAGE) {
-        std::size_t size_read = m_next_layer.read_some(boost::asio::buffer(m_input_buffer.data() + m_input_size, m_input_buffer.size() - m_input_size), ec);
+        std::size_t size_read = m_next_layer.read_some(net::buffer(m_input_buffer.data() + m_input_size, m_input_buffer.size() - m_input_size), ec);
         if (ec) {
           return 0;
         }
@@ -296,7 +292,7 @@ public:
         continue;
       }
       if (sc == SEC_I_CONTEXT_EXPIRED) {
-        ec = boost::asio::error::eof;
+        ec = net::error::eof;
         return 0;
       }
       if (FAILED(sc)) {
@@ -319,8 +315,8 @@ public:
         }
       }
     }
-    std::size_t to_return = std::min(boost::asio::buffer_size(buffers), m_received_data.size());
-    boost::asio::buffer_copy(buffers, boost::asio::buffer(m_received_data, to_return));
+    std::size_t to_return = std::min(net::buffer_size(buffers), m_received_data.size());
+    net::buffer_copy(buffers, net::buffer(m_received_data, to_return));
     m_received_data.erase(m_received_data.begin(), m_received_data.begin() + to_return);
     return to_return;
   }
@@ -332,10 +328,7 @@ public:
       return 0;
     }
 
-    auto sent = boost::asio::write(m_next_layer,
-                                   boost::asio::buffer(message),
-                                   boost::asio::transfer_exactly(message.size()),
-                                   ec);
+    auto sent = net::write(m_next_layer, net::buffer(message), net::transfer_exactly(message.size()), ec);
 
     boost::ignore_unused(sent);
     BOOST_ASSERT(sent == message.size());
@@ -343,14 +336,14 @@ public:
       return 0;
     }
 
-    return boost::asio::buffer_size(buffers);
+    return net::buffer_size(buffers);
   }
 
   template <typename ConstBufferSequence, typename CompletionToken>
   auto async_write_some(const ConstBufferSequence &buffer, CompletionToken &&token) ->
-      typename boost::asio::async_result<typename std::decay<CompletionToken>::type,
-                                         void(boost::system::error_code, std::size_t)>::return_type {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+      typename net::async_result<typename std::decay<CompletionToken>::type,
+                                 void(boost::system::error_code, std::size_t)>::return_type {
+    return net::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
         async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
   }
 

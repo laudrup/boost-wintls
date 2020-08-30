@@ -17,6 +17,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/compose.hpp>
+#include <boost/asio/coroutine.hpp>
 
 #include <boost/system/error_code.hpp>
 
@@ -100,30 +101,24 @@ private:
 
 // TODO: Move away from this file
 template <typename NextLayer, typename ConstBufferSequence>
-struct async_write_impl {
+struct async_write_impl : boost::asio::coroutine {
   async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi)
     : m_next_layer(next_layer)
     , m_buffer(buffer)
-    , m_sspi(sspi)
-    , m_state(encrypt) {
+    , m_sspi(std::move(sspi)) {
   }
 
   template <typename Self>
   void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     boost::ignore_unused(length);
-    switch (m_state) {
-      case encrypt:
-        m_message = m_sspi->encrypt(m_buffer, ec);
-        if (ec) {
-          self.complete(ec, 0);
-          break;
-        }
-        m_state = write;
-        net::async_write(m_next_layer, net::buffer(m_message), net::transfer_exactly(m_message.size()), std::move(self));
-        break;
-      case write:
-        BOOST_ASSERT(length == m_message.size());
-        self.complete(ec, net::buffer_size(m_buffer));
+    BOOST_ASIO_CORO_REENTER(*this) {
+      m_message = m_sspi->encrypt(m_buffer, ec);
+      if (ec) {
+        self.complete(ec, 0);
+        return;
+      }
+      BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer, net::buffer(m_message), net::transfer_exactly(m_message.size()), std::move(self));
+      self.complete(ec, net::buffer_size(m_buffer));
     }
   }
 
@@ -131,7 +126,6 @@ private:
   NextLayer& m_next_layer;
   ConstBufferSequence m_buffer;
   std::shared_ptr<sspi_impl> m_sspi;
-  enum { encrypt, write } m_state;
   std::vector<char> m_message;
 };
 
@@ -340,10 +334,10 @@ public:
   }
 
   template <typename ConstBufferSequence, typename CompletionToken>
-  auto async_write_some(const ConstBufferSequence &buffer, CompletionToken &&token) ->
+  auto async_write_some(const ConstBufferSequence& buffer, CompletionToken&& token) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
-    return net::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
         async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
   }
 

@@ -15,13 +15,11 @@ namespace boost {
 namespace asio {
 namespace windows_sspi {
 
-class context_base
-{
+class context_base {
 public:
   /// Different methods supported by a context.
   // TODO: Map to grbitEnabledProtocols member of SCHANNEL_CRED struct (and acutally use it).
-  enum method
-  {
+  enum method {
     /// Generic SSL version 2.
     sslv2,
 

@@ -11,9 +11,9 @@
 #ifndef BOOST_ASIO_WINDOWS_SSPI_CONTEXT_HPP
 #define BOOST_ASIO_WINDOWS_SSPI_CONTEXT_HPP
 
-#include <boost/asio/windows_sspi/error.hpp>
 #include <boost/asio/windows_sspi/context_base.hpp>
 #include <boost/asio/windows_sspi/detail/sspi_functions.hpp>
+#include <boost/asio/windows_sspi/error.hpp>
 
 // TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
 #define SECURITY_WIN32
@@ -49,7 +49,7 @@ private:
       TimeStamp expiry;
       SECURITY_STATUS sc = detail::sspi_functions::AcquireCredentialsHandle(NULL,
                                                                             const_cast<SEC_CHAR*>(UNISP_NAME), // Yikes...
-                                                                            SECPKG_CRED_OUTBOUND,              // TODO: Should probably be set based on client/server
+                                                                            SECPKG_CRED_OUTBOUND, // TODO: Should probably be set based on client/server
                                                                             NULL,
                                                                             &creds,
                                                                             NULL,
@@ -57,8 +57,7 @@ private:
                                                                             &handle,
                                                                             &expiry);
       if (sc != SEC_E_OK) {
-        throw boost::system::system_error(error::make_error_code(sc),
-                                          "AcquireCredentialsHandleA");
+        throw boost::system::system_error(error::make_error_code(sc), "AcquireCredentialsHandleA");
       }
     }
 

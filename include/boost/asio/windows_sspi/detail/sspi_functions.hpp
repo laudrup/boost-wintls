@@ -82,32 +82,16 @@ inline SECURITY_STATUS FreeContextBuffer(PVOID pvContextBuffer) {
   return sspi_function_table()->FreeContextBuffer(pvContextBuffer);
 }
 
-inline SECURITY_STATUS DecryptMessage(PCtxtHandle phContext,
-                                      PSecBufferDesc pMessage,
-                                      unsigned long MessageSeqNo,
-                                      unsigned long* pfQOP) {
-  return sspi_function_table()->DecryptMessage(phContext,
-                                               pMessage,
-                                               MessageSeqNo,
-                                               pfQOP);
+inline SECURITY_STATUS DecryptMessage(PCtxtHandle phContext, PSecBufferDesc pMessage, unsigned long MessageSeqNo, unsigned long* pfQOP) {
+  return sspi_function_table()->DecryptMessage(phContext, pMessage, MessageSeqNo, pfQOP);
 }
 
-inline SECURITY_STATUS QueryContextAttributes(PCtxtHandle phContext,
-                                              unsigned long ulAttribute,
-                                              void *pBuffer) {
-  return sspi_function_table()->QueryContextAttributes(phContext,
-                                                       ulAttribute,
-                                                       pBuffer);
+inline SECURITY_STATUS QueryContextAttributes(PCtxtHandle phContext, unsigned long ulAttribute, void* pBuffer) {
+  return sspi_function_table()->QueryContextAttributes(phContext, ulAttribute, pBuffer);
 }
 
-inline SECURITY_STATUS EncryptMessage(PCtxtHandle phContext,
-                                      unsigned long fQOP,
-                                      PSecBufferDesc pMessage,
-                                      unsigned long MessageSeqNo) {
-  return sspi_function_table()->EncryptMessage(phContext,
-                                               fQOP,
-                                               pMessage,
-                                               MessageSeqNo);
+inline SECURITY_STATUS EncryptMessage(PCtxtHandle phContext, unsigned long fQOP, PSecBufferDesc pMessage, unsigned long MessageSeqNo) {
+  return sspi_function_table()->EncryptMessage(phContext, fQOP, pMessage, MessageSeqNo);
 }
 
 inline SECURITY_STATUS SEC_ENTRY FreeCredentialsHandle(PCredHandle phCredential) {

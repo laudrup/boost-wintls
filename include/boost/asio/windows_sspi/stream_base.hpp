@@ -11,7 +11,7 @@
 #ifndef BOOST_ASIO_WINDOWS_SSPI_STREAM_BASE_HPP
 #define BOOST_ASIO_WINDOWS_SSPI_STREAM_BASE_HPP
 
-#include "context.hpp"
+#include <boost/asio/windows_sspi/context.hpp>
 
 namespace boost {
 namespace asio {

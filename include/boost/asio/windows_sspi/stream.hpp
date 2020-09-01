@@ -51,10 +51,11 @@ public:
   }
 
   template <typename ConstBufferSequence>
-  std::vector<char> encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+  std::vector<char> encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec, size_t& size_encrypted) {
     SecBufferDesc Message;
     SecBuffer Buffers[4];
 
+    // TODO: Calculate this once when handshake is complete
     SecPkgContext_StreamSizes stream_sizes;
     SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
     if (sc != SEC_E_OK) {
@@ -62,20 +63,19 @@ public:
       return {};
     }
 
-    const auto input_size = net::buffer_size(buffers);
-    BOOST_ASSERT(input_size <= stream_sizes.cbMaximumMessage);
-    std::vector<char> message(stream_sizes.cbHeader + input_size + stream_sizes.cbTrailer);
+    size_encrypted = std::min(net::buffer_size(buffers), static_cast<size_t>(stream_sizes.cbMaximumMessage));
+    std::vector<char> message(stream_sizes.cbHeader + size_encrypted + stream_sizes.cbTrailer);
 
     Buffers[0].pvBuffer = message.data();
     Buffers[0].cbBuffer = stream_sizes.cbHeader;
     Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
 
-    net::buffer_copy(net::buffer(message.data() + stream_sizes.cbHeader, input_size), buffers);
+    net::buffer_copy(net::buffer(message.data() + stream_sizes.cbHeader, size_encrypted), buffers);
     Buffers[1].pvBuffer = message.data() + stream_sizes.cbHeader;
-    Buffers[1].cbBuffer = static_cast<ULONG>(input_size);
+    Buffers[1].cbBuffer = static_cast<ULONG>(size_encrypted);
     Buffers[1].BufferType = SECBUFFER_DATA;
 
-    Buffers[2].pvBuffer = message.data() + stream_sizes.cbHeader + input_size;
+    Buffers[2].pvBuffer = message.data() + stream_sizes.cbHeader + size_encrypted;
     Buffers[2].cbBuffer = stream_sizes.cbTrailer;
     Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
 
@@ -101,16 +101,16 @@ private:
 
 // TODO: Move away from this file
 template <typename NextLayer, typename ConstBufferSequence> struct async_write_impl : boost::asio::coroutine {
-  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi)
+  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi_impl)
     : m_next_layer(next_layer)
     , m_buffer(buffer)
-    , m_sspi(std::move(sspi)) {
+    , m_sspi_impl(std::move(sspi_impl)) {
   }
 
   template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     boost::ignore_unused(length);
     BOOST_ASIO_CORO_REENTER(*this) {
-      m_message = m_sspi->encrypt(m_buffer, ec);
+      m_message = m_sspi_impl->encrypt(m_buffer, ec, m_size_encrypted);
       if (ec) {
         self.complete(ec, 0);
         return;
@@ -119,15 +119,16 @@ template <typename NextLayer, typename ConstBufferSequence> struct async_write_i
                                              net::buffer(m_message),
                                              net::transfer_exactly(m_message.size()),
                                              std::move(self));
-      self.complete(ec, net::buffer_size(m_buffer));
+      self.complete(ec, m_size_encrypted);
     }
   }
 
 private:
   NextLayer& m_next_layer;
   ConstBufferSequence m_buffer;
-  std::shared_ptr<sspi_impl> m_sspi;
+  std::shared_ptr<sspi_impl> m_sspi_impl;
   std::vector<char> m_message;
+  size_t m_size_encrypted{0};
 };
 
 template <typename NextLayer> class stream : public stream_base {
@@ -339,7 +340,8 @@ public:
 
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
-    auto message = m_sspi_impl->encrypt(buffers, ec);
+    size_t size_encrypted{0};
+    auto message = m_sspi_impl->encrypt(buffers, ec, size_encrypted);
     if (ec) {
       return 0;
     }
@@ -352,7 +354,7 @@ public:
       return 0;
     }
 
-    return net::buffer_size(buffers);
+    return size_encrypted;
   }
 
   template <typename ConstBufferSequence, typename CompletionToken>

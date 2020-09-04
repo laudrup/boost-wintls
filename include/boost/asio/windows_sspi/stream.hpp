@@ -95,6 +95,53 @@ public:
     return message;
   }
 
+  SECURITY_STATUS decrypt(const std::vector<char>& data) {
+    // TODO: Calculate this once when handshake is complete
+    SecPkgContext_StreamSizes stream_sizes;
+    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+    if (sc != SEC_E_OK) {
+      return sc;
+    }
+
+    encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
+    BOOST_ASSERT(encrypted_data.size() <= stream_sizes.cbMaximumMessage);
+
+    SecBufferDesc Message;
+    SecBuffer Buffers[4];
+
+    Buffers[0].pvBuffer = encrypted_data.data();
+    Buffers[0].cbBuffer = static_cast<ULONG>(encrypted_data.size());
+    Buffers[0].BufferType = SECBUFFER_DATA;
+    Buffers[1].BufferType = SECBUFFER_EMPTY;
+    Buffers[2].BufferType = SECBUFFER_EMPTY;
+    Buffers[3].BufferType = SECBUFFER_EMPTY;
+
+    Message.ulVersion = SECBUFFER_VERSION;
+    Message.cBuffers = 4;
+    Message.pBuffers = Buffers;
+
+    sc = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
+    if (sc != SEC_E_OK) {
+      return sc;
+    }
+
+    encrypted_data.clear();
+    for (int i = 1; i < 4; i++) {
+      if (Buffers[i].BufferType == SECBUFFER_DATA) {
+        SecBuffer* pDataBuffer = &Buffers[i];
+        decrypted_data = std::vector<char>(reinterpret_cast<const char*>(pDataBuffer->pvBuffer), reinterpret_cast<const char*>(pDataBuffer->pvBuffer) + pDataBuffer->cbBuffer);
+      }
+      if (Buffers[i].BufferType == SECBUFFER_EXTRA) {
+        SecBuffer* pExtraBuffer = &Buffers[i];
+        encrypted_data = std::vector<char>(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), reinterpret_cast<const char*>(pExtraBuffer->pvBuffer) + pExtraBuffer->cbBuffer);
+      }
+    }
+    return sc;
+  }
+
+  std::vector<char> encrypted_data;
+  std::vector<char> decrypted_data;
+
 private:
   CtxtHandle* m_context;
 };
@@ -282,59 +329,31 @@ public:
 
   template <typename MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
-    while (m_received_data.empty()) {
-      SecBufferDesc Message;
-      SecBuffer Buffers[4];
-
-      Buffers[0].pvBuffer = m_input_buffer.data();
-      Buffers[0].cbBuffer = static_cast<ULONG>(m_input_size);
-      Buffers[0].BufferType = SECBUFFER_DATA;
-      Buffers[1].BufferType = SECBUFFER_EMPTY;
-      Buffers[2].BufferType = SECBUFFER_EMPTY;
-      Buffers[3].BufferType = SECBUFFER_EMPTY;
-
-      Message.ulVersion = SECBUFFER_VERSION;
-      Message.cBuffers = 4;
-      Message.pBuffers = Buffers;
-
-      SECURITY_STATUS sc = detail::sspi_functions::DecryptMessage(&m_security_context, &Message, 0, NULL);
-      if (sc == SEC_E_INCOMPLETE_MESSAGE) {
-        std::size_t size_read = m_next_layer.read_some(net::buffer(m_input_buffer.data() + m_input_size,
-                                                                   m_input_buffer.size() - m_input_size),
-                                                       ec);
-        if (ec) {
+    while(m_sspi_impl->decrypted_data.empty()) {
+        std::vector<char> input_buffer(0x4000 - m_sspi_impl->encrypted_data.size());
+        std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+        input_buffer.resize(size_read);
+        auto sc = m_sspi_impl->decrypt(input_buffer);
+        if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
           return 0;
         }
-        m_input_size += size_read;
-        continue;
-      }
-      if (sc == SEC_I_CONTEXT_EXPIRED) {
-        ec = net::error::eof;
-        return 0;
-      }
-      if (FAILED(sc)) {
-        ec = error::make_error_code(sc);
-        return 0;
+        if (sc == SEC_E_INCOMPLETE_MESSAGE) {
+          continue;
+        }
+        if (sc == SEC_I_CONTEXT_EXPIRED) {
+          ec = net::error::eof;
+          return 0;
+        }
+        if (sc != SEC_E_OK) {
+          ec = error::make_error_code(sc);
+          return 0;
+        }
+        break;
       }
 
-      m_input_size = 0;
-      for (int i = 1; i < 4; i++) {
-        if (Buffers[i].BufferType == SECBUFFER_DATA) {
-          SecBuffer* pDataBuffer = pDataBuffer = &Buffers[i];
-          std::copy_n(reinterpret_cast<const char*>(pDataBuffer->pvBuffer),
-                      pDataBuffer->cbBuffer,
-                      std::back_inserter(m_received_data));
-        }
-        if (Buffers[i].BufferType == SECBUFFER_EXTRA) {
-          SecBuffer* pExtraBuffer = &Buffers[i];
-          std::copy_n(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), pExtraBuffer->cbBuffer, m_input_buffer.data());
-          m_input_size += pExtraBuffer->cbBuffer;
-        }
-      }
-    }
-    std::size_t to_return = std::min(net::buffer_size(buffers), m_received_data.size());
-    net::buffer_copy(buffers, net::buffer(m_received_data, to_return));
-    m_received_data.erase(m_received_data.begin(), m_received_data.begin() + to_return);
+    std::size_t to_return = std::min(net::buffer_size(buffers), m_sspi_impl->decrypted_data.size());
+    net::buffer_copy(buffers, net::buffer(m_sspi_impl->decrypted_data, to_return));
+    m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
     return to_return;
   }
 
@@ -367,9 +386,6 @@ public:
 
 private:
   next_layer_type m_next_layer;
-  std::array<char, 0x10000> m_input_buffer;
-  std::size_t m_input_size = 0;
-  std::vector<char> m_received_data;
   CtxtHandle m_security_context;
   std::shared_ptr<sspi_impl> m_sspi_impl;
 };

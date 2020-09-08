@@ -43,11 +43,21 @@ namespace windows_sspi {
 
 namespace net = boost::asio;
 
-// TODO: Move away from this file
+// TODO: Move away from this file and into detail namespace
 class sspi_impl {
 public:
   sspi_impl(CtxtHandle* context)
     : m_context(context) {
+  }
+
+  // TODO: Calculate this once when handshake is complete
+  SecPkgContext_StreamSizes stream_sizes() const {
+    SecPkgContext_StreamSizes stream_sizes;
+    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+
+    // TODO: Signal error to user (throw exception or use error code?)
+    BOOST_ASSERT(sc == SEC_E_OK);
+    return stream_sizes;
   }
 
   template <typename ConstBufferSequence>
@@ -55,28 +65,21 @@ public:
     SecBufferDesc Message;
     SecBuffer Buffers[4];
 
-    // TODO: Calculate this once when handshake is complete
-    SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
-    if (sc != SEC_E_OK) {
-      ec = error::make_error_code(sc);
-      return {};
-    }
-
-    size_encrypted = std::min(net::buffer_size(buffers), static_cast<size_t>(stream_sizes.cbMaximumMessage));
-    std::vector<char> message(stream_sizes.cbHeader + size_encrypted + stream_sizes.cbTrailer);
+    // TODO: Consider encrypting all buffer contents before returning
+    size_encrypted = std::min(net::buffer_size(buffers), static_cast<size_t>(stream_sizes().cbMaximumMessage));
+    std::vector<char> message(stream_sizes().cbHeader + size_encrypted + stream_sizes().cbTrailer);
 
     Buffers[0].pvBuffer = message.data();
-    Buffers[0].cbBuffer = stream_sizes.cbHeader;
+    Buffers[0].cbBuffer = stream_sizes().cbHeader;
     Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
 
-    net::buffer_copy(net::buffer(message.data() + stream_sizes.cbHeader, size_encrypted), buffers);
-    Buffers[1].pvBuffer = message.data() + stream_sizes.cbHeader;
+    net::buffer_copy(net::buffer(message.data() + stream_sizes().cbHeader, size_encrypted), buffers);
+    Buffers[1].pvBuffer = message.data() + stream_sizes().cbHeader;
     Buffers[1].cbBuffer = static_cast<ULONG>(size_encrypted);
     Buffers[1].BufferType = SECBUFFER_DATA;
 
-    Buffers[2].pvBuffer = message.data() + stream_sizes.cbHeader + size_encrypted;
-    Buffers[2].cbBuffer = stream_sizes.cbTrailer;
+    Buffers[2].pvBuffer = message.data() + stream_sizes().cbHeader + size_encrypted;
+    Buffers[2].cbBuffer = stream_sizes().cbTrailer;
     Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
 
     Buffers[3].pvBuffer = SECBUFFER_EMPTY;
@@ -86,9 +89,9 @@ public:
     Message.ulVersion = SECBUFFER_VERSION;
     Message.cBuffers = 4;
     Message.pBuffers = Buffers;
-    sc = detail::sspi_functions::EncryptMessage(m_context, 0, &Message, 0);
+    SECURITY_STATUS sc = detail::sspi_functions::EncryptMessage(m_context, 0, &Message, 0);
 
-    if (FAILED(sc)) {
+    if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return {};
     }
@@ -96,15 +99,7 @@ public:
   }
 
   SECURITY_STATUS decrypt(const std::vector<char>& data) {
-    // TODO: Calculate this once when handshake is complete
-    SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
-    if (sc != SEC_E_OK) {
-      return sc;
-    }
-
     encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
-    BOOST_ASSERT(encrypted_data.size() <= stream_sizes.cbMaximumMessage);
 
     SecBufferDesc Message;
     SecBuffer Buffers[4];
@@ -120,7 +115,7 @@ public:
     Message.cBuffers = 4;
     Message.pBuffers = Buffers;
 
-    sc = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
+    SECURITY_STATUS sc = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
     if (sc != SEC_E_OK) {
       return sc;
     }
@@ -176,6 +171,58 @@ private:
   std::shared_ptr<sspi_impl> m_sspi_impl;
   std::vector<char> m_message;
   size_t m_size_encrypted{0};
+};
+
+// TODO: Move away from this file
+template <typename NextLayer, typename MutableBufferSequence> struct async_read_impl : boost::asio::coroutine {
+  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi_impl)
+    : m_next_layer(next_layer)
+    , m_buffer(buffer)
+    , m_sspi_impl(std::move(sspi_impl)) {
+  }
+
+  template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+    BOOST_ASIO_CORO_REENTER(*this) {
+      while(m_sspi_impl->decrypted_data.empty()) {
+        // TODO: Find some way to make the sspi_impl, the decrypt
+        // function or something else be responsible for keeping track
+        // of state and buffer(s)
+        m_message.resize(0x10000 - m_sspi_impl->encrypted_data.size());
+        BOOST_ASIO_CORO_YIELD net::async_read(m_next_layer,
+                                              net::buffer(m_message),
+                                              std::move(self));
+        if (ec && length == 0 && m_sspi_impl->decrypted_data.empty()) {
+          self.complete(ec, 0);
+          return;
+        }
+        m_message.resize(length);
+        auto sc = m_sspi_impl->decrypt(m_message);
+        m_message.clear();
+        if (sc == SEC_E_INCOMPLETE_MESSAGE) {
+          continue;
+        }
+        if (sc == SEC_I_CONTEXT_EXPIRED) {
+          self.complete(net::error::eof, 0);
+          return;
+        }
+        if (sc != SEC_E_OK) {
+          self.complete(error::make_error_code(sc), 0);
+          return;
+        }
+      }
+
+      std::size_t to_return = std::min(net::buffer_size(m_buffer), m_sspi_impl->decrypted_data.size());
+      net::buffer_copy(m_buffer, net::buffer(m_sspi_impl->decrypted_data, to_return));
+      m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
+      self.complete(boost::system::error_code{}, to_return);
+    }
+  }
+
+private:
+  NextLayer& m_next_layer;
+  MutableBufferSequence m_buffer;
+  std::shared_ptr<sspi_impl> m_sspi_impl;
+  std::vector<char> m_message;
 };
 
 template <typename NextLayer> class stream : public stream_base {
@@ -330,31 +377,41 @@ public:
   template <typename MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     while(m_sspi_impl->decrypted_data.empty()) {
-        std::vector<char> input_buffer(0x4000 - m_sspi_impl->encrypted_data.size());
-        std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
-        input_buffer.resize(size_read);
-        auto sc = m_sspi_impl->decrypt(input_buffer);
-        if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
-          return 0;
-        }
-        if (sc == SEC_E_INCOMPLETE_MESSAGE) {
-          continue;
-        }
-        if (sc == SEC_I_CONTEXT_EXPIRED) {
-          ec = net::error::eof;
-          return 0;
-        }
-        if (sc != SEC_E_OK) {
-          ec = error::make_error_code(sc);
-          return 0;
-        }
-        break;
+      // TODO: This is duplicated in the async version
+      std::vector<char> input_buffer(0x10000 - m_sspi_impl->encrypted_data.size());
+      std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+      if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
+        return 0;
       }
+      input_buffer.resize(size_read);
+      auto sc = m_sspi_impl->decrypt(input_buffer);
+      input_buffer.clear();
+      if (sc == SEC_E_INCOMPLETE_MESSAGE) {
+        continue;
+      }
+      if (sc == SEC_I_CONTEXT_EXPIRED) {
+        ec = net::error::eof;
+        return 0;
+      }
+      if (sc != SEC_E_OK) {
+        ec = error::make_error_code(sc);
+        return 0;
+      }
+      break;
+    }
 
     std::size_t to_return = std::min(net::buffer_size(buffers), m_sspi_impl->decrypted_data.size());
     net::buffer_copy(buffers, net::buffer(m_sspi_impl->decrypted_data, to_return));
     m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
     return to_return;
+  }
+
+  template <typename MutableBufferSequence, typename CompletionToken>
+  auto async_read_some(const MutableBufferSequence& buffer, CompletionToken&& token) ->
+    typename net::async_result<typename std::decay<CompletionToken>::type,
+                                 void(boost::system::error_code, std::size_t)>::return_type {
+    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+        async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
   }
 
   template <typename ConstBufferSequence>

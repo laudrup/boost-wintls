@@ -1,20 +1,20 @@
 #ifdef _WIN32
-# include <SDKDDKVer.h>
+#include <SDKDDKVer.h>
 #endif
 
 #include <boost/asio.hpp>
 
 #ifdef _WIN32
-# include <boost/asio/windows_sspi.hpp>
+#include <boost/asio/windows_sspi.hpp>
 #else
-# include <boost/asio/ssl.hpp>
+#include <boost/asio/ssl.hpp>
 #endif
 
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
-#include <fstream>
 
 namespace net = boost::asio;
 
@@ -24,75 +24,49 @@ namespace ssl = net::windows_sspi;
 namespace ssl = net::ssl;
 #endif
 
-int main(int argc, char *argv[]) {
-  try {
-    if (argc != 2 && argc != 3) {
-      std::cerr << "Usage: " << argv[0] << " <url> [file]\n";
-      std::cerr << "Example:\n";
-      std::cerr << "  " << argv[0] << " https://www.boost.org/LICENSE_1_0.txt license.txt\n";
-      return EXIT_FAILURE;
-    }
+class https_client {
+public:
+  https_client(const std::string& host, const std::string& path, net::io_context& io_ctx, std::ostream* output)
+      : io_ctx_(io_ctx)
+      , ssl_ctx_(ssl::context::sslv23)
+      , socket_(io_ctx_, ssl_ctx_)
+      , output_(output) {
 
-    std::string url(argv[1]);
-    if (url.rfind("https://", 0) != 0) {
-      std::cerr << "Unsupported url: " << url << "\n";
-      return EXIT_FAILURE;
-    }
-    const std::string host = url.substr(8, url.find('/', 8) - 8);
-    const std::string path = url.find('/', 8) == std::string::npos ? "/" : url.substr(url.find('/', 8));
-    net::io_context io_ctx;
-
-    std::ostream* ofs;
-    std::ofstream out_file;
-    if (argc == 3) {
-      out_file = std::ofstream(argv[2], std::ios::out | std::ios::binary);
-      ofs = &out_file;
-    } else {
-      ofs = &std::cout;
-    }
-
-    // Get a list of endpoints corresponding to the server name.
     net::ip::tcp::resolver resolver(io_ctx);
     net::ip::tcp::resolver::query query(host, "https");
+
+    // TODO: Consider async resolve
     net::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
-    // Try each endpoint until we successfully establish a connection.
-    ssl::context ssl_ctx{ssl::context::sslv23};
-    ssl::stream<net::ip::tcp::socket> socket(io_ctx, ssl_ctx);
+    // TODO: Consider async connect
+    net::connect(socket_.lowest_layer(), endpoint_iterator);
 
-    net::connect(socket.lowest_layer(), endpoint_iterator);
+    // TODO: Implement async handshake
+    socket_.handshake(ssl::stream_base::client);
 
-    socket.handshake(ssl::stream_base::client);
-    // Form the request. We specify the "Connection: close" header so that the
-    // server will close the socket after transmitting the response. This will
-    // allow us to treat all data up until the EOF as the content.
-    net::streambuf request;
-    std::ostream request_stream(&request);
+    std::ostream request_stream(&request_);
     request_stream << "GET " << path << " HTTP/1.0\r\n";
     request_stream << "Host: " << host << "\r\n";
     request_stream << "Accept: */*\r\n";
     request_stream << "Connection: close\r\n\r\n";
 
-    auto size_to_send = request.size();
-    boost::asio::async_write(socket, request,
-        [&size_to_send](const boost::system::error_code& error, std::size_t length) {
-          if (error || length != size_to_send) {
-            // TODO: Handle in a better way at some point
-            std::cerr << "Error sending\n";
-            abort();
-          }
-        });
-    // Send the request.
-    io_ctx.run_one();
+    boost::asio::async_write(socket_, request_, [this](const boost::system::error_code& ec, std::size_t) {
+      if (ec) {
+        std::cerr << "Error sending: request:" << ec.message() << "\n";
+        return;
+      }
+      net::async_read_until(socket_, response_, "\r\n", [this](boost::system::error_code ec, size_t) {
+        if (ec) {
+          std::cerr << "Error receiving response: " << ec.message() << "\n";
+        }
+        read_response();
+      });
+    });
+  }
 
-    // Read the response status line. The response streambuf will automatically
-    // grow to accommodate the entire line. The growth may be limited by passing
-    // a maximum size to the streambuf constructor.
-    net::streambuf response;
-    net::read_until(socket, response, "\r\n");
-
-    // Check that response is OK.
-    std::istream response_stream(&response);
+private:
+  void read_response() {
+    std::istream response_stream(&response_);
     std::string http_version;
     response_stream >> http_version;
     unsigned int status_code;
@@ -101,40 +75,75 @@ int main(int argc, char *argv[]) {
     std::getline(response_stream, status_message);
     if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
       std::cerr << "Invalid response\n";
-      return 1;
+      return;
     }
     if (status_code != 200) {
       std::cerr << "Response returned with status code " << status_code << "\n";
-      return 1;
+      return;
     }
+    net::async_read_until(socket_, response_, "\r\n\r\n", [this](boost::system::error_code ec, size_t) {
+      if (ec) {
+        std::cerr << "Error reading headers: " << ec.message() << "\n";
+        return;
+      }
+      read_headers();
+    });
+  }
 
-    // Read the response headers, which are terminated by a blank line.
-    net::read_until(socket, response, "\r\n\r\n");
-
-    // Process the response headers.
+  void read_headers() {
+    std::istream response_stream(&response_);
     std::string header;
     while (std::getline(response_stream, header) && header != "\r") {
-      std::cerr << header << "\n";
+      std::cout << header << "\n";
     }
-    std::cerr << "\n";
+    std::cout << "\n";
+    read_body();
+  }
 
-    // Write whatever content we already have to output.
-    if (response.size() > 0) {
-      *ofs << &response;
-    }
+  void read_body() {
+    async_read(socket_, response_, net::transfer_at_least(1), [this](boost::system::error_code ec, size_t) {
+      *output_ << &response_;
+      if (!ec) {
+        read_body();
+      }
+    });
+  }
 
-    // Read until EOF, writing data to output as we go.
-    boost::system::error_code error;
-    while (net::read(socket, response, net::transfer_at_least(1), error)) {
-      *ofs << &response;
-    }
-    if (error != net::error::eof) {
-      throw boost::system::system_error(error);
-    }
-  } catch (std::exception &e) {
-    std::cerr << "Exception: " << e.what() << "\n";
+  net::io_context& io_ctx_;
+  ssl::context ssl_ctx_;
+  ssl::stream<net::ip::tcp::socket> socket_;
+  net::streambuf request_;
+  net::streambuf response_;
+  std::ostream* output_;
+};
+
+int main(int argc, char* argv[]) {
+  if (argc != 2 && argc != 3) {
+    std::cerr << "Usage: " << argv[0] << " <url> [file]\n";
+    std::cerr << "Example:\n";
+    std::cerr << "  " << argv[0] << " https://www.boost.org/LICENSE_1_0.txt license.txt\n";
     return EXIT_FAILURE;
   }
 
+  std::string url(argv[1]);
+  if (url.rfind("https://", 0) != 0) {
+    std::cerr << "Unsupported url: " << url << "\n";
+    return EXIT_FAILURE;
+  }
+  const std::string host = url.substr(8, url.find('/', 8) - 8);
+  const std::string path = url.find('/', 8) == std::string::npos ? "/" : url.substr(url.find('/', 8));
+
+  std::ostream* ofs;
+  std::ofstream out_file;
+  if (argc == 3) {
+    out_file = std::ofstream(argv[2], std::ios::out | std::ios::binary);
+    ofs = &out_file;
+  } else {
+    ofs = &std::cout;
+  }
+
+  net::io_context io_ctx;
+  https_client client{host, path, io_ctx, ofs};
+  io_ctx.run();
   return EXIT_SUCCESS;
 }

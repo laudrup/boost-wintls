@@ -56,6 +56,7 @@ public:
     SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
 
     // TODO: Signal error to user (throw exception or use error code?)
+    boost::ignore_unused(sc);
     BOOST_ASSERT(sc == SEC_E_OK);
     return stream_sizes;
   }

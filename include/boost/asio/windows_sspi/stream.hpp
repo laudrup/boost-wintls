@@ -188,6 +188,9 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
         // TODO: Find some way to make the sspi_impl, the decrypt
         // function or something else be responsible for keeping track
         // of state and buffer(s)
+        // TODO: Fix so overflow cannot happen (we don't need to read
+        // more data unless DecryptMessage asks us to).
+        BOOST_ASSERT(m_sspi_impl->encrypted_data.size() < 0x10000);
         m_message.resize(0x10000 - m_sspi_impl->encrypted_data.size());
         BOOST_ASIO_CORO_YIELD net::async_read(m_next_layer,
                                               net::buffer(m_message),
@@ -213,7 +216,9 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
       }
 
       std::size_t to_return = std::min(net::buffer_size(m_buffer), m_sspi_impl->decrypted_data.size());
-      net::buffer_copy(m_buffer, net::buffer(m_sspi_impl->decrypted_data, to_return));
+      std::size_t bytes_copied = net::buffer_copy(m_buffer, net::buffer(m_sspi_impl->decrypted_data, to_return));
+      boost::ignore_unused(bytes_copied);
+      BOOST_ASSERT(bytes_copied == to_return);
       m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
       self.complete(boost::system::error_code{}, to_return);
     }
@@ -379,6 +384,9 @@ public:
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     while(m_sspi_impl->decrypted_data.empty()) {
       // TODO: This is duplicated in the async version
+      // TODO: Fix so overflow cannot happen (we don't need to read
+      // more data unless DecryptMessage asks us to).
+      BOOST_ASSERT(m_sspi_impl->encrypted_data.size() < 0x10000);
       std::vector<char> input_buffer(0x10000 - m_sspi_impl->encrypted_data.size());
       std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
       if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
@@ -402,7 +410,9 @@ public:
     }
 
     std::size_t to_return = std::min(net::buffer_size(buffers), m_sspi_impl->decrypted_data.size());
-    net::buffer_copy(buffers, net::buffer(m_sspi_impl->decrypted_data, to_return));
+    std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(m_sspi_impl->decrypted_data, to_return));
+    boost::ignore_unused(bytes_copied);
+    BOOST_ASSERT(bytes_copied == to_return);
     m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
     return to_return;
   }

@@ -206,6 +206,8 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
           continue;
         }
         if (sc == SEC_I_CONTEXT_EXPIRED) {
+          // TODO: Shutdown the TLS context gracefully (implement
+          // async_shutdown), then return EOF.
           self.complete(net::error::eof, 0);
           return;
         }
@@ -399,6 +401,8 @@ public:
         continue;
       }
       if (sc == SEC_I_CONTEXT_EXPIRED) {
+        // TODO: Shutdown the TLS context gracefully (implement
+        // shutdown), then return EOF.
         ec = net::error::eof;
         return 0;
       }

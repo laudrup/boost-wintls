@@ -8,13 +8,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASIO_WINDOWS_SSPI_STREAM_BASE_HPP
-#define BOOST_ASIO_WINDOWS_SSPI_STREAM_BASE_HPP
+#ifndef BOOST_WINDOWS_SSPI_STREAM_BASE_HPP
+#define BOOST_WINDOWS_SSPI_STREAM_BASE_HPP
 
-#include <boost/asio/windows_sspi/context.hpp>
+#include <boost/windows_sspi/context.hpp>
 
 namespace boost {
-namespace asio {
 namespace windows_sspi {
 
 class stream_base {
@@ -30,7 +29,6 @@ protected:
 };
 
 } // namespace windows_sspi
-} // namespace asio
 } // namespace boost
 
-#endif
+#endif // BOOST_WINDOWS_SSPI_STREAM_BASE_HPP

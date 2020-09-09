@@ -8,15 +8,14 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASIO_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
-#define BOOST_ASIO_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
+#ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
+#define BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
 
 // TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
 #define SECURITY_WIN32
 #include <security.h>
 
 namespace boost {
-namespace asio {
 namespace windows_sspi {
 namespace detail {
 namespace sspi_functions {
@@ -101,7 +100,6 @@ inline SECURITY_STATUS SEC_ENTRY FreeCredentialsHandle(PCredHandle phCredential)
 } // namespace sspi_functions
 } // namespace detail
 } // namespace windows_sspi
-} // namespace asio
 } // namespace boost
 
-#endif // BOOST_ASIO_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
+#endif // BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP

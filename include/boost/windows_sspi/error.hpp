@@ -1,6 +1,6 @@
 //
 // windows_sspi/error.hpp
-// ~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
@@ -8,8 +8,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASIO_WINDOWS_SSPI_ERROR_HPP
-#define BOOST_ASIO_WINDOWS_SSPI_ERROR_HPP
+#ifndef BOOST_WINDOWS_SSPI_ERROR_HPP
+#define BOOST_WINDOWS_SSPI_ERROR_HPP
 
 #include <boost/asio.hpp>
 
@@ -49,7 +49,7 @@ struct local_free {
 } // namespace
 
 namespace boost {
-namespace asio {
+
 namespace windows_sspi {
 
 class error_category : public boost::system::error_category {
@@ -117,8 +117,6 @@ inline boost::system::error_code make_error_code(SECURITY_STATUS sc) {
 }
 
 } // namespace error
-
-} // namespace asio
 } // namespace boost
 
-#endif // BOOST_ASIO_WINDOWS_SSPI_ERROR_HPP
+#endif // BOOST_WINDOWS_SSPI_ERROR_HPP

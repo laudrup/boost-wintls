@@ -5,7 +5,7 @@
 #include <boost/asio.hpp>
 
 #ifdef _WIN32
-#include <boost/asio/windows_sspi.hpp>
+#include <boost/windows_sspi/windows_sspi.hpp>
 #else
 #include <boost/asio/ssl.hpp>
 #endif
@@ -19,9 +19,9 @@
 namespace net = boost::asio;
 
 #ifdef _WIN32
-namespace ssl = net::windows_sspi;
+namespace ssl = boost::windows_sspi;
 #else
-namespace ssl = net::ssl;
+namespace ssl = boost::asio::ssl;
 #endif
 
 class https_client {

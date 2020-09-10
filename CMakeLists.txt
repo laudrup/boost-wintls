@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(boost-asio-windows-sspi CXX)
+project(boost-windows-sspi CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -8,19 +8,17 @@ if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
-endif()
 
-find_package(Boost REQUIRED COMPONENTS date_time regex)
+  find_package(Boost REQUIRED COMPONENTS date_time regex)
 
-add_executable(https_client https_client.cpp)
-target_link_libraries(https_client PRIVATE
-  Boost::headers
-  Boost::date_time
-  Boost::regex
-  )
+  add_library(boost-windows-sspi INTERFACE)
+  target_link_libraries(boost-windows-sspi INTERFACE
+    Boost::headers
+    Boost::date_time
+    Boost::regex
+    )
 
-if (WIN32)
-  target_link_libraries(https_client PRIVATE
+  target_link_libraries(boost-windows-sspi INTERFACE
     Crypt32
     Secur32
     )
@@ -49,12 +47,10 @@ if (WIN32)
     /WX
     )
 
-  target_include_directories(https_client PRIVATE include)
-  target_compile_options(https_client PRIVATE ${MSVC_WARNINGS})
+  target_include_directories(boost-windows-sspi INTERFACE include)
+  target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
 else()
-  target_link_libraries(https_client PRIVATE
-    pthread
-    crypto
-    ssl
-    )
+  find_package(Boost REQUIRED)
 endif()
+
+add_subdirectory(examples)

@@ -1,6 +1,6 @@
 //
 // windows_sspi/stream.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
@@ -8,12 +8,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASIO_WINDOWS_SSPI_STREAM_HPP
-#define BOOST_ASIO_WINDOWS_SSPI_STREAM_HPP
+#ifndef BOOST_WINDOWS_SSPI_STREAM_HPP
+#define BOOST_WINDOWS_SSPI_STREAM_HPP
 
-#include <boost/asio/windows_sspi/detail/sspi_functions.hpp>
-#include <boost/asio/windows_sspi/error.hpp>
-#include <boost/asio/windows_sspi/stream_base.hpp>
+#include <boost/windows_sspi/detail/sspi_functions.hpp>
+#include <boost/windows_sspi/error.hpp>
+#include <boost/windows_sspi/stream_base.hpp>
 
 #include <boost/asio/compose.hpp>
 #include <boost/asio/coroutine.hpp>
@@ -38,7 +38,6 @@
 #include <type_traits>
 
 namespace boost {
-namespace asio {
 namespace windows_sspi {
 
 namespace net = boost::asio;
@@ -463,7 +462,6 @@ private:
 };
 
 } // namespace windows_sspi
-} // namespace asio
 } // namespace boost
 
-#endif // BOOST_ASIO_WINDOWS_SSPI_STREAM_HPP
+#endif // BOOST_WINDOWS_SSPI_STREAM_HPP

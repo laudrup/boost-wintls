@@ -3,6 +3,9 @@ version: 1.0.{build}
 image:
   - Visual Studio 2019
 
+install:
+  - cinst openssl
+
 configuration:
   - Debug
   - Release

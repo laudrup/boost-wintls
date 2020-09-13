@@ -23,6 +23,9 @@ if (WIN32)
     Secur32
     )
 
+  # Target Windows 7
+  target_compile_definitions(boost-windows-sspi INTERFACE _WIN32_WINNT=0x0601)
+
   # Taken from https://github.com/lefticus/cpp_starter_project
   set(MSVC_WARNINGS
     /W4 # Baseline reasonable warnings

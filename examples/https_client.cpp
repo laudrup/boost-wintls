@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#include <SDKDDKVer.h>
-#endif
-
 #include <boost/asio.hpp>
 
 #ifdef _WIN32

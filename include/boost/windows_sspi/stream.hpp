@@ -23,15 +23,6 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#define SECURITY_WIN32
-
-#include <schannel.h>
-#include <security.h>
-#include <sspi.h>
-#include <wincrypt.h>
-#include <windows.h>
-#include <wintrust.h>
-
 #include <array>
 #include <iterator>
 #include <stdexcept>

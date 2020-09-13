@@ -11,9 +11,7 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
 
-// TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
-#define SECURITY_WIN32
-#include <security.h>
+#include <boost/windows_sspi/detail/sspi_types.h>
 
 namespace boost {
 namespace windows_sspi {

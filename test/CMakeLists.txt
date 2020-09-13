@@ -1,7 +1,5 @@
 add_executable(unittest echo_test.cpp)
 
-enable_testing()
-
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 

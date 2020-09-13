@@ -4,6 +4,8 @@ project(boost-windows-sspi CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
+enable_testing()
+
 if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)

@@ -11,7 +11,7 @@ if (WIN32)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
 
-  find_package(Boost REQUIRED COMPONENTS date_time regex unit_test_framework)
+  find_package(Boost REQUIRED COMPONENTS date_time regex)
 
   add_library(boost-windows-sspi INTERFACE)
   target_link_libraries(boost-windows-sspi INTERFACE
@@ -55,7 +55,7 @@ if (WIN32)
   target_include_directories(boost-windows-sspi INTERFACE include)
   target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
 else()
-  find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+  find_package(Boost REQUIRED COMPONENTS date_time regex)
 endif()
 
 add_subdirectory(examples)

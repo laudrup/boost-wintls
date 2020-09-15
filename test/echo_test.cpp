@@ -1,27 +1,29 @@
-#define BOOST_TEST_MODULE boost-windows-sspi-test
-#include <boost/test/unit_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <boost/beast/_experimental/test/stream.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
+#ifdef _WIN32
 #include <boost/windows_sspi/windows_sspi.hpp>
+#endif
 
 #include <array>
 #include <thread>
 
 namespace net = boost::asio;
 
-BOOST_AUTO_TEST_CASE(sync_echo_test) {
+template<typename ClientTLSContext, typename ClientTLSStream, typename ClientTLSStreamBase>
+void sync_echo_test() {
   const std::string test_data("Hello world");
   net::io_context io_context;
 
-  boost::windows_sspi::context client_ctx(boost::windows_sspi::context::tls_client);
+  ClientTLSContext client_ctx(ClientTLSContext::tls_client);
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
   server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
   server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
 
-  boost::windows_sspi::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
+  ClientTLSStream client_stream(io_context, client_ctx);
   boost::asio::ssl::stream<boost::beast::test::stream> server_stream(io_context, server_ctx);
 
   client_stream.next_layer().connect(server_stream.next_layer());
@@ -32,7 +34,7 @@ BOOST_AUTO_TEST_CASE(sync_echo_test) {
   std::thread server_handshake([&server_stream]() {
     server_stream.handshake(boost::asio::ssl::stream_base::server);
   });
-  client_stream.handshake(boost::windows_sspi::stream_base::client);
+  client_stream.handshake(ClientTLSStreamBase::client);
   server_handshake.join();
 
   net::write(client_stream, net::buffer(test_data));
@@ -40,5 +42,14 @@ BOOST_AUTO_TEST_CASE(sync_echo_test) {
   std::array<char, 1024> data;
   size_t reply_length = server_stream.read_some(net::buffer(data));
 
-  BOOST_CHECK_EQUAL(std::string(data.data(), reply_length), test_data);
+  BOOST_TEST_EQ(std::string(data.data(), reply_length), test_data);
+}
+
+int main() {
+  using test_stream = boost::beast::test::stream;
+#ifdef _WIN32
+  sync_echo_test<boost::windows_sspi::context, boost::windows_sspi::stream<test_stream>, boost::windows_sspi::stream_base>();
+#endif
+  sync_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>();
+  return boost::report_errors();
 }

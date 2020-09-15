@@ -10,7 +10,6 @@ if (WIN32)
 endif()
 
 target_link_libraries(unittest PRIVATE
-  Boost::unit_test_framework
   OpenSSL::SSL
   OpenSSL::Crypto
   Threads::Threads

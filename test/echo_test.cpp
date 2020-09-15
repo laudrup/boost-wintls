@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(sync_echo_test) {
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
   server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
-  server_ctx.use_private_key_file(TEST_CERTIFICATE_PATH, boost::asio::ssl::context::pem);
+  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
 
   boost::windows_sspi::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
   boost::asio::ssl::stream<boost::beast::test::stream> server_stream(io_context, server_ctx);

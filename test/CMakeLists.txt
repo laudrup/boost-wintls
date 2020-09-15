@@ -27,6 +27,20 @@ add_custom_target(
   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_server.key ${CMAKE_CURRENT_BINARY_DIR}/test_server.cert
   )
 
+if (WIN32)
+add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
+  COMMAND openssl rand -writerand "$ENV{userprofile}/.rnd"
+  VERBATIM
+  )
+
+add_custom_target(
+  generate-random
+  DEPENDS "$ENV{userprofile}/.rnd"
+  )
+
+add_dependencies(generate-certificate generate-random)
+endif()
+
 add_dependencies(unittest generate-certificate)
 target_compile_definitions(unittest PRIVATE
   TEST_CERTIFICATE_PATH="${CMAKE_CURRENT_BINARY_DIR}/test_server.cert"

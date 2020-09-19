@@ -5,10 +5,20 @@ if (WIN32)
     boost-windows-sspi
     )
 else()
+  if (NOT OPENSSL_FOUND)
+    message(SEND_ERROR "OpenSSL not found. Cannot build examples.")
+    return()
+  endif()
+
+  if (NOT Threads_FOUND)
+    message(SEND_ERROR "Threads library not found. Cannot build examples.")
+    return()
+  endif()
+
   target_link_libraries(https_client PRIVATE
     Boost::headers
-    pthread
-    crypto
-    ssl
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    Threads::Threads
     )
 endif()

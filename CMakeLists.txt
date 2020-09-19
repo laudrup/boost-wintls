@@ -10,14 +10,16 @@ if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
 
-  find_package(Boost REQUIRED COMPONENTS date_time regex)
+find_package(Boost REQUIRED)
+find_package(OpenSSL COMPONENTS SSL Crypto)
+find_package(Threads)
 
+if (WIN32)
   add_library(boost-windows-sspi INTERFACE)
   target_link_libraries(boost-windows-sspi INTERFACE
     Boost::headers
-    Boost::date_time
-    Boost::regex
     )
 
   target_link_libraries(boost-windows-sspi INTERFACE
@@ -27,6 +29,11 @@ if (WIN32)
 
   # Target Windows 7
   target_compile_definitions(boost-windows-sspi INTERFACE _WIN32_WINNT=0x0601)
+
+  target_compile_definitions(boost-windows-sspi INTERFACE
+    BOOST_DATE_TIME_NO_LIB
+    BOOST_REGEX_NO_LIB
+    )
 
   # Taken from https://github.com/lefticus/cpp_starter_project
   set(MSVC_WARNINGS
@@ -54,8 +61,6 @@ if (WIN32)
 
   target_include_directories(boost-windows-sspi INTERFACE include)
   target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
-else()
-  find_package(Boost REQUIRED COMPONENTS date_time regex)
 endif()
 
 add_subdirectory(examples)

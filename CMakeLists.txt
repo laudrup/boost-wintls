@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(boost-asio-windows-sspi CXX)
+project(boost-windows-sspi CXX)
 
 set(CMAKE_CXX_STANDARD 11)
+
+option(ENABLE_TESTING "Enable Test Builds" ON)
+option(ENABLE_EXAMPLES "Enable Examples Builds" ON)
 
 if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
@@ -10,19 +13,29 @@ if (WIN32)
   set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS date_time regex)
-
-add_executable(https_client https_client.cpp)
-target_link_libraries(https_client PRIVATE
-  Boost::headers
-  Boost::date_time
-  Boost::regex
-  )
+find_package(Boost REQUIRED)
+find_package(OpenSSL COMPONENTS SSL Crypto)
+find_package(Threads)
 
 if (WIN32)
-  target_link_libraries(https_client PRIVATE
+  add_library(boost-windows-sspi INTERFACE)
+  target_link_libraries(boost-windows-sspi INTERFACE
+    Boost::headers
+    )
+
+  target_link_libraries(boost-windows-sspi INTERFACE
     Crypt32
     Secur32
+    )
+
+  # Target Windows 7
+  target_compile_definitions(boost-windows-sspi INTERFACE
+    _WIN32_WINNT=0x0601
+    )
+
+  target_compile_definitions(boost-windows-sspi INTERFACE
+    BOOST_DATE_TIME_NO_LIB
+    BOOST_REGEX_NO_LIB
     )
 
   # Taken from https://github.com/lefticus/cpp_starter_project
@@ -49,12 +62,17 @@ if (WIN32)
     /WX
     )
 
-  target_include_directories(https_client PRIVATE include)
-  target_compile_options(https_client PRIVATE ${MSVC_WARNINGS})
-else()
-  target_link_libraries(https_client PRIVATE
-    pthread
-    crypto
-    ssl
-    )
+  target_include_directories(boost-windows-sspi INTERFACE include)
+  target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
+endif()
+
+if(ENABLE_TESTING)
+  enable_testing()
+  message("Building Tests.")
+  add_subdirectory(test)
+endif()
+
+if(ENABLE_EXAMPLES)
+  message("Building Examples.")
+  add_subdirectory(examples)
 endif()

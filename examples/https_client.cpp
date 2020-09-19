@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#include <SDKDDKVer.h>
-#endif
-
 #include <boost/asio.hpp>
 
 #ifdef _WIN32
@@ -39,7 +35,7 @@ public:
     net::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
     // TODO: Consider async connect
-    net::connect(socket_.lowest_layer(), endpoint_iterator);
+    net::connect(socket_.next_layer(), endpoint_iterator);
 
     // TODO: Implement async handshake
     socket_.handshake(ssl::stream_base::client);

@@ -15,11 +15,6 @@
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
 #include <boost/windows_sspi/error.hpp>
 
-// TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
-#define SECURITY_WIN32
-#include <schannel.h>
-#include <sspi.h>
-
 #include <memory>
 #include <stdexcept>
 

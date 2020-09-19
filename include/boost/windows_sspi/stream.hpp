@@ -23,15 +23,6 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#define SECURITY_WIN32
-
-#include <schannel.h>
-#include <security.h>
-#include <sspi.h>
-#include <wincrypt.h>
-#include <windows.h>
-#include <wintrust.h>
-
 #include <array>
 #include <iterator>
 #include <stdexcept>
@@ -234,8 +225,7 @@ private:
 
 template <typename NextLayer> class stream : public stream_base {
 public:
-  using next_layer_type = NextLayer;
-  using lowest_layer_type = typename std::remove_reference<next_layer_type>::type::lowest_layer_type;
+  using next_layer_type = typename std::remove_reference<NextLayer>::type;
   using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;
 
   template <typename Arg>
@@ -249,12 +239,12 @@ public:
     detail::sspi_functions::DeleteSecurityContext(&m_security_context);
   }
 
-  const lowest_layer_type& lowest_layer() const {
-    return m_next_layer.lowest_layer();
+  const next_layer_type& next_layer() const {
+    return m_next_layer;
   }
 
-  lowest_layer_type& lowest_layer() {
-    return m_next_layer.lowest_layer();
+  next_layer_type& next_layer() {
+    return m_next_layer;
   }
 
   void handshake(handshake_type type) {

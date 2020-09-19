@@ -3,9 +3,16 @@ version: 1.0.{build}
 image:
   - Visual Studio 2019
 
+install:
+  - cinst openssl
+
 configuration:
   - Debug
   - Release
 
 before_build:
-  - cmd: cmake -H. -B./build -DBOOST_ROOT="C:/Libraries/boost_1_73_0"
+  - cmake -H. -B./build -DBOOST_ROOT="C:/Libraries/boost_1_73_0"
+
+test_script:
+  - cd build
+  - ctest -C %CONFIGURATION% --output-on-failure

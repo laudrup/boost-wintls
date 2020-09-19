@@ -4,7 +4,8 @@ project(boost-windows-sspi CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-enable_testing()
+option(ENABLE_TESTING "Enable Test Builds" ON)
+option(ENABLE_EXAMPLES "Enable Examples Builds" ON)
 
 if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
@@ -28,7 +29,9 @@ if (WIN32)
     )
 
   # Target Windows 7
-  target_compile_definitions(boost-windows-sspi INTERFACE _WIN32_WINNT=0x0601)
+  target_compile_definitions(boost-windows-sspi INTERFACE
+    _WIN32_WINNT=0x0601
+    )
 
   target_compile_definitions(boost-windows-sspi INTERFACE
     BOOST_DATE_TIME_NO_LIB
@@ -63,5 +66,13 @@ if (WIN32)
   target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
 endif()
 
-add_subdirectory(examples)
-add_subdirectory(test)
+if(ENABLE_TESTING)
+  enable_testing()
+  message("Building Tests.")
+  add_subdirectory(test)
+endif()
+
+if(ENABLE_EXAMPLES)
+  message("Building Examples.")
+  add_subdirectory(examples)
+endif()

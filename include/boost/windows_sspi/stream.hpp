@@ -373,18 +373,21 @@ public:
 
   template <typename MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
+    SECURITY_STATUS sc = SEC_E_OK;
     while(m_sspi_impl->decrypted_data.empty()) {
-      // TODO: This is duplicated in the async version
-      // TODO: Fix so overflow cannot happen (we don't need to read
-      // more data unless DecryptMessage asks us to).
-      BOOST_ASSERT(m_sspi_impl->encrypted_data.size() < 0x10000);
-      std::vector<char> input_buffer(0x10000 - m_sspi_impl->encrypted_data.size());
-      std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
-      if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
-        return 0;
+      // TODO: This is duplicated in the async version. Move logic to
+      // sspi_impl some way. Possibly a decryption class for keep
+      // track of state and buffers.
+      std::vector<char> input_buffer;
+      if (m_sspi_impl->encrypted_data.empty() || sc == SEC_E_INCOMPLETE_MESSAGE) {
+        input_buffer.resize(0x10000);
+        std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+        if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
+          return 0;
+        }
+        input_buffer.resize(size_read);
       }
-      input_buffer.resize(size_read);
-      auto sc = m_sspi_impl->decrypt(input_buffer);
+      sc = m_sspi_impl->decrypt(input_buffer);
       input_buffer.clear();
       if (sc == SEC_E_INCOMPLETE_MESSAGE) {
         continue;

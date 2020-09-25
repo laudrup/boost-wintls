@@ -12,6 +12,7 @@
 #define BOOST_WINDOWS_SSPI_STREAM_HPP
 
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
+#include <boost/windows_sspi/detail/sspi_impl.hpp>
 #include <boost/windows_sspi/error.hpp>
 #include <boost/windows_sspi/stream_base.hpp>
 
@@ -33,108 +34,9 @@ namespace windows_sspi {
 
 namespace net = boost::asio;
 
-// TODO: Move away from this file and into detail namespace
-class sspi_impl {
-public:
-  sspi_impl(CtxtHandle* context)
-    : m_context(context) {
-  }
-
-  // TODO: Calculate this once when handshake is complete
-  SecPkgContext_StreamSizes stream_sizes() const {
-    SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
-
-    // TODO: Signal error to user (throw exception or use error code?)
-    boost::ignore_unused(sc);
-    BOOST_ASSERT(sc == SEC_E_OK);
-    return stream_sizes;
-  }
-
-  template <typename ConstBufferSequence>
-  std::vector<char> encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec, size_t& size_encrypted) {
-    SecBufferDesc Message;
-    SecBuffer Buffers[4];
-
-    // TODO: Consider encrypting all buffer contents before returning
-    size_encrypted = std::min(net::buffer_size(buffers), static_cast<size_t>(stream_sizes().cbMaximumMessage));
-    std::vector<char> message(stream_sizes().cbHeader + size_encrypted + stream_sizes().cbTrailer);
-
-    Buffers[0].pvBuffer = message.data();
-    Buffers[0].cbBuffer = stream_sizes().cbHeader;
-    Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
-
-    net::buffer_copy(net::buffer(message.data() + stream_sizes().cbHeader, size_encrypted), buffers);
-    Buffers[1].pvBuffer = message.data() + stream_sizes().cbHeader;
-    Buffers[1].cbBuffer = static_cast<ULONG>(size_encrypted);
-    Buffers[1].BufferType = SECBUFFER_DATA;
-
-    Buffers[2].pvBuffer = message.data() + stream_sizes().cbHeader + size_encrypted;
-    Buffers[2].cbBuffer = stream_sizes().cbTrailer;
-    Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
-
-    Buffers[3].pvBuffer = SECBUFFER_EMPTY;
-    Buffers[3].cbBuffer = SECBUFFER_EMPTY;
-    Buffers[3].BufferType = SECBUFFER_EMPTY;
-
-    Message.ulVersion = SECBUFFER_VERSION;
-    Message.cBuffers = 4;
-    Message.pBuffers = Buffers;
-    SECURITY_STATUS sc = detail::sspi_functions::EncryptMessage(m_context, 0, &Message, 0);
-
-    if (sc != SEC_E_OK) {
-      ec = error::make_error_code(sc);
-      return {};
-    }
-    return message;
-  }
-
-  SECURITY_STATUS decrypt(const std::vector<char>& data) {
-    encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
-
-    SecBufferDesc Message;
-    SecBuffer Buffers[4];
-
-    Buffers[0].pvBuffer = encrypted_data.data();
-    Buffers[0].cbBuffer = static_cast<ULONG>(encrypted_data.size());
-    Buffers[0].BufferType = SECBUFFER_DATA;
-    Buffers[1].BufferType = SECBUFFER_EMPTY;
-    Buffers[2].BufferType = SECBUFFER_EMPTY;
-    Buffers[3].BufferType = SECBUFFER_EMPTY;
-
-    Message.ulVersion = SECBUFFER_VERSION;
-    Message.cBuffers = 4;
-    Message.pBuffers = Buffers;
-
-    SECURITY_STATUS sc = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
-    if (sc != SEC_E_OK) {
-      return sc;
-    }
-
-    encrypted_data.clear();
-    for (int i = 1; i < 4; i++) {
-      if (Buffers[i].BufferType == SECBUFFER_DATA) {
-        SecBuffer* pDataBuffer = &Buffers[i];
-        decrypted_data = std::vector<char>(reinterpret_cast<const char*>(pDataBuffer->pvBuffer), reinterpret_cast<const char*>(pDataBuffer->pvBuffer) + pDataBuffer->cbBuffer);
-      }
-      if (Buffers[i].BufferType == SECBUFFER_EXTRA) {
-        SecBuffer* pExtraBuffer = &Buffers[i];
-        encrypted_data = std::vector<char>(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), reinterpret_cast<const char*>(pExtraBuffer->pvBuffer) + pExtraBuffer->cbBuffer);
-      }
-    }
-    return sc;
-  }
-
-  std::vector<char> encrypted_data;
-  std::vector<char> decrypted_data;
-
-private:
-  CtxtHandle* m_context;
-};
-
 // TODO: Move away from this file
 template <typename NextLayer, typename ConstBufferSequence> struct async_write_impl : boost::asio::coroutine {
-  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi_impl)
+  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<detail::sspi_impl> sspi_impl)
     : m_next_layer(next_layer)
     , m_buffer(buffer)
     , m_sspi_impl(std::move(sspi_impl)) {
@@ -159,14 +61,14 @@ template <typename NextLayer, typename ConstBufferSequence> struct async_write_i
 private:
   NextLayer& m_next_layer;
   ConstBufferSequence m_buffer;
-  std::shared_ptr<sspi_impl> m_sspi_impl;
+  std::shared_ptr<detail::sspi_impl> m_sspi_impl;
   std::vector<char> m_message;
   size_t m_size_encrypted{0};
 };
 
 // TODO: Move away from this file
 template <typename NextLayer, typename MutableBufferSequence> struct async_read_impl : boost::asio::coroutine {
-  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffer, std::shared_ptr<sspi_impl> sspi_impl)
+  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffer, std::shared_ptr<detail::sspi_impl> sspi_impl)
     : m_next_layer(next_layer)
     , m_buffer(buffer)
     , m_sspi_impl(std::move(sspi_impl)) {
@@ -219,7 +121,7 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
 private:
   NextLayer& m_next_layer;
   MutableBufferSequence m_buffer;
-  std::shared_ptr<sspi_impl> m_sspi_impl;
+  std::shared_ptr<detail::sspi_impl> m_sspi_impl;
   std::vector<char> m_message;
 };
 
@@ -232,7 +134,7 @@ public:
   stream(Arg&& arg, context& ctx)
     : stream_base(ctx)
     , m_next_layer(std::forward<Arg>(arg))
-    , m_sspi_impl(std::make_shared<sspi_impl>(&m_security_context)) {
+    , m_sspi_impl(std::make_shared<detail::sspi_impl>(&m_security_context)) {
   }
 
   ~stream() {
@@ -451,7 +353,7 @@ public:
 private:
   next_layer_type m_next_layer;
   CtxtHandle m_security_context;
-  std::shared_ptr<sspi_impl> m_sspi_impl;
+  std::shared_ptr<detail::sspi_impl> m_sspi_impl;
 };
 
 } // namespace windows_sspi

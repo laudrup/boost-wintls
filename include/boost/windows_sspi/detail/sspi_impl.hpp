@@ -21,25 +21,14 @@ namespace detail {
 
 namespace net = boost::asio;
 
-class sspi_impl {
+class sspi_encrypt {
 public:
-  sspi_impl(CtxtHandle* context)
+  sspi_encrypt(CtxtHandle* context)
     : m_context(context) {
   }
 
-  // TODO: Calculate this once when handshake is complete
-  SecPkgContext_StreamSizes stream_sizes() const {
-    SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
-
-    // TODO: Signal error to user (throw exception or use error code?)
-    boost::ignore_unused(sc);
-    BOOST_ASSERT(sc == SEC_E_OK);
-    return stream_sizes;
-  }
-
   template <typename ConstBufferSequence>
-  std::vector<char> encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec, size_t& size_encrypted) {
+  std::vector<char> operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec, size_t& size_encrypted) {
     SecBufferDesc Message;
     SecBuffer Buffers[4];
 
@@ -76,7 +65,28 @@ public:
     return message;
   }
 
-  SECURITY_STATUS decrypt(const std::vector<char>& data) {
+private:
+  // TODO: Calculate this once when handshake is complete
+  SecPkgContext_StreamSizes stream_sizes() const {
+    SecPkgContext_StreamSizes stream_sizes;
+    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+
+    // TODO: Signal error to user (throw exception or use error code?)
+    boost::ignore_unused(sc);
+    BOOST_ASSERT(sc == SEC_E_OK);
+    return stream_sizes;
+  }
+
+  CtxtHandle* m_context;
+};
+
+class sspi_decrypt {
+public:
+  sspi_decrypt(CtxtHandle* context)
+    : m_context(context) {
+  }
+
+  SECURITY_STATUS operator()(const std::vector<char>& data) {
     encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
 
     SecBufferDesc Message;
@@ -117,6 +127,17 @@ public:
 
 private:
   CtxtHandle* m_context;
+};
+
+class sspi_impl {
+public:
+  sspi_impl(CtxtHandle* context)
+    : encrypt(context)
+    , decrypt(context) {
+  }
+
+  sspi_encrypt encrypt;
+  sspi_decrypt decrypt;
 };
 
 } // namespace detail

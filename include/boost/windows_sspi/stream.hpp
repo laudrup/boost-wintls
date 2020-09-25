@@ -76,18 +76,18 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
 
   template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     BOOST_ASIO_CORO_REENTER(*this) {
-      while(m_sspi_impl->decrypted_data.empty()) {
+      while(m_sspi_impl->decrypt.decrypted_data.empty()) {
         // TODO: Find some way to make the sspi_impl, the decrypt
         // function or something else be responsible for keeping track
         // of state and buffer(s)
         // TODO: Fix so overflow cannot happen (we don't need to read
         // more data unless DecryptMessage asks us to).
-        BOOST_ASSERT(m_sspi_impl->encrypted_data.size() < 0x10000);
-        m_message.resize(0x10000 - m_sspi_impl->encrypted_data.size());
+        BOOST_ASSERT(m_sspi_impl->decrypt.encrypted_data.size() < 0x10000);
+        m_message.resize(0x10000 - m_sspi_impl->decrypt.encrypted_data.size());
         BOOST_ASIO_CORO_YIELD net::async_read(m_next_layer,
                                               net::buffer(m_message),
                                               std::move(self));
-        if (ec && length == 0 && m_sspi_impl->decrypted_data.empty()) {
+        if (ec && length == 0 && m_sspi_impl->decrypt.decrypted_data.empty()) {
           self.complete(ec, 0);
           return;
         }
@@ -109,11 +109,11 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
         }
       }
 
-      std::size_t to_return = std::min(net::buffer_size(m_buffer), m_sspi_impl->decrypted_data.size());
-      std::size_t bytes_copied = net::buffer_copy(m_buffer, net::buffer(m_sspi_impl->decrypted_data, to_return));
+      std::size_t to_return = std::min(net::buffer_size(m_buffer), m_sspi_impl->decrypt.decrypted_data.size());
+      std::size_t bytes_copied = net::buffer_copy(m_buffer, net::buffer(m_sspi_impl->decrypt.decrypted_data, to_return));
       boost::ignore_unused(bytes_copied);
       BOOST_ASSERT(bytes_copied == to_return);
-      m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
+      m_sspi_impl->decrypt.decrypted_data.erase(m_sspi_impl->decrypt.decrypted_data.begin(), m_sspi_impl->decrypt.decrypted_data.begin() + to_return);
       self.complete(boost::system::error_code{}, to_return);
     }
   }
@@ -276,15 +276,15 @@ public:
   template <typename MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     SECURITY_STATUS sc = SEC_E_OK;
-    while(m_sspi_impl->decrypted_data.empty()) {
+    while(m_sspi_impl->decrypt.decrypted_data.empty()) {
       // TODO: This is duplicated in the async version. Move logic to
       // sspi_impl some way. Possibly a decryption class for keep
       // track of state and buffers.
       std::vector<char> input_buffer;
-      if (m_sspi_impl->encrypted_data.empty() || sc == SEC_E_INCOMPLETE_MESSAGE) {
+      if (m_sspi_impl->decrypt.encrypted_data.empty() || sc == SEC_E_INCOMPLETE_MESSAGE) {
         input_buffer.resize(0x10000);
         std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
-        if (ec && size_read == 0 && m_sspi_impl->decrypted_data.empty()) {
+        if (ec && size_read == 0 && m_sspi_impl->decrypt.decrypted_data.empty()) {
           return 0;
         }
         input_buffer.resize(size_read);
@@ -307,11 +307,11 @@ public:
       break;
     }
 
-    std::size_t to_return = std::min(net::buffer_size(buffers), m_sspi_impl->decrypted_data.size());
-    std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(m_sspi_impl->decrypted_data, to_return));
+    std::size_t to_return = std::min(net::buffer_size(buffers), m_sspi_impl->decrypt.decrypted_data.size());
+    std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(m_sspi_impl->decrypt.decrypted_data, to_return));
     boost::ignore_unused(bytes_copied);
     BOOST_ASSERT(bytes_copied == to_return);
-    m_sspi_impl->decrypted_data.erase(m_sspi_impl->decrypted_data.begin(), m_sspi_impl->decrypted_data.begin() + to_return);
+    m_sspi_impl->decrypt.decrypted_data.erase(m_sspi_impl->decrypt.decrypted_data.begin(), m_sspi_impl->decrypt.decrypted_data.begin() + to_return);
     return to_return;
   }
 

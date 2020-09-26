@@ -27,6 +27,7 @@ public:
     : m_context(context) {
   }
 
+  // TODO: Since this is now a functor class, consider getting rid of these output arguments
   template <typename ConstBufferSequence>
   std::vector<char> operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec, size_t& size_encrypted) {
     SecBufferDesc Message;
@@ -83,11 +84,23 @@ private:
 class sspi_decrypt {
 public:
   sspi_decrypt(CtxtHandle* context)
-    : m_context(context) {
+    : error_code(SEC_E_OK)
+    , m_context(context) {
   }
 
-  SECURITY_STATUS operator()(const std::vector<char>& data) {
-    encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
+  enum class state {
+    data_needed,
+    data_available,
+    error
+  };
+
+  state operator()() {
+    if (!decrypted_data.empty()) {
+      return state::data_available;
+    }
+    if (encrypted_data.empty()) {
+      return state::data_needed;
+    }
 
     SecBufferDesc Message;
     SecBuffer Buffers[4];
@@ -103,9 +116,12 @@ public:
     Message.cBuffers = 4;
     Message.pBuffers = Buffers;
 
-    SECURITY_STATUS sc = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
-    if (sc != SEC_E_OK) {
-      return sc;
+    error_code = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
+    if (error_code == SEC_E_INCOMPLETE_MESSAGE) {
+      return state::data_needed;
+    }
+    if (error_code != SEC_E_OK) {
+      return state::error;
     }
 
     encrypted_data.clear();
@@ -119,11 +135,28 @@ public:
         encrypted_data = std::vector<char>(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), reinterpret_cast<const char*>(pExtraBuffer->pvBuffer) + pExtraBuffer->cbBuffer);
       }
     }
-    return sc;
+    BOOST_ASSERT(!decrypted_data.empty());
+
+    return state::data_available;
   }
 
+  // TODO: Consider making this more flexible by not requering a
+  // vector of chars, but any view of a range of bytes
+  void put(const std::vector<char>& data) {
+    encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
+  }
+
+  std::vector<char> get(std::size_t max) {
+    std::size_t size = std::min(max, decrypted_data.size());
+    std::vector<char> ret{decrypted_data.begin(), decrypted_data.begin() + size};
+    decrypted_data.erase(decrypted_data.begin(), decrypted_data.begin() + size);
+    return ret;
+  }
+
+  // TODO: Make private
   std::vector<char> encrypted_data;
   std::vector<char> decrypted_data;
+  SECURITY_STATUS error_code;
 
 private:
   CtxtHandle* m_context;
@@ -136,6 +169,7 @@ public:
     , decrypt(context) {
   }
 
+  // TODO: Find some better names
   sspi_encrypt encrypt;
   sspi_decrypt decrypt;
 };

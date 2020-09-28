@@ -12,14 +12,13 @@
 #define BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
+#include <boost/windows_sspi/detail/config.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 
 namespace boost {
 namespace windows_sspi {
 namespace detail {
-
-namespace net = boost::asio;
 
 class sspi_encrypt {
 public:

@@ -32,8 +32,6 @@
 namespace boost {
 namespace windows_sspi {
 
-namespace net = boost::asio;
-
 // TODO: Move away from this file
 template <typename NextLayer, typename ConstBufferSequence> struct async_write_impl : boost::asio::coroutine {
   async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<detail::sspi_impl> sspi_impl)

@@ -190,6 +190,10 @@ public:
   }
 
   std::vector<char> get(std::size_t max) {
+    // TODO: Figure out a way to avoid removing from the front of the
+    // vector. Since the caller will ask for decrypted data as long as
+    // it's there, this buffer should just give out chunks from the
+    // beginning until it's empty.
     std::size_t size = std::min(max, decrypted_data.size());
     std::vector<char> ret{decrypted_data.begin(), decrypted_data.begin() + size};
     decrypted_data.erase(decrypted_data.begin(), decrypted_data.begin() + size);

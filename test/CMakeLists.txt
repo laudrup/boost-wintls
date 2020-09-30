@@ -22,7 +22,7 @@ add_custom_target(
 
 if (WIN32)
   add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
-    COMMAND openssl rand -writerand "$ENV{userprofile}/.rnd"
+    COMMAND openssl rand -out "$ENV{userprofile}/.rnd"
     VERBATIM
     )
 

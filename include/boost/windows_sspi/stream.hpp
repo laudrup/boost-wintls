@@ -90,7 +90,7 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
       }
 
       if (m_sspi_impl.decrypt() == detail::sspi_decrypt::state::error) {
-        ec = boost::error::make_error_code(m_sspi_impl.decrypt.error_code);
+        ec = boost::error::make_error_code(m_sspi_impl.decrypt.last_error);
         self.complete(ec, 0);
         return;
       }
@@ -267,7 +267,7 @@ public:
     }
 
     if (m_sspi_impl.decrypt() == detail::sspi_decrypt::state::error) {
-      ec = boost::error::make_error_code(m_sspi_impl.decrypt.error_code);
+      ec = boost::error::make_error_code(m_sspi_impl.decrypt.last_error);
       return 0;
     }
 

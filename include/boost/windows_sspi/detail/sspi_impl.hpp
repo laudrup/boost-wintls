@@ -127,7 +127,7 @@ private:
 class sspi_decrypt {
 public:
   sspi_decrypt(CtxtHandle* context)
-    : error_code(SEC_E_OK)
+    : last_error(SEC_E_OK)
     , m_context(context) {
   }
 
@@ -159,11 +159,11 @@ public:
     Message.cBuffers = 4;
     Message.pBuffers = Buffers;
 
-    error_code = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
-    if (error_code == SEC_E_INCOMPLETE_MESSAGE) {
+    last_error = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, NULL);
+    if (last_error == SEC_E_INCOMPLETE_MESSAGE) {
       return state::data_needed;
     }
-    if (error_code != SEC_E_OK) {
+    if (last_error != SEC_E_OK) {
       return state::error;
     }
 
@@ -199,7 +199,7 @@ public:
   // TODO: Make private
   std::vector<char> encrypted_data;
   std::vector<char> decrypted_data;
-  SECURITY_STATUS error_code;
+  SECURITY_STATUS last_error;
 
 private:
   CtxtHandle* m_context;

@@ -34,16 +34,16 @@ namespace windows_sspi {
 
 // TODO: Move away from this file
 template <typename NextLayer, typename ConstBufferSequence> struct async_write_impl : boost::asio::coroutine {
-  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, std::shared_ptr<detail::sspi_impl> sspi_impl)
+  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_impl& sspi_impl)
     : m_next_layer(next_layer)
     , m_buffer(buffer)
-    , m_sspi_impl(std::move(sspi_impl)) {
+    , m_sspi_impl(sspi_impl) {
   }
 
   template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     boost::ignore_unused(length);
     BOOST_ASIO_CORO_REENTER(*this) {
-      m_bytes_consumed = m_sspi_impl->encrypt(m_buffer, ec);
+      m_bytes_consumed = m_sspi_impl.encrypt(m_buffer, ec);
       if (ec) {
         self.complete(ec, 0);
         return;
@@ -51,7 +51,7 @@ template <typename NextLayer, typename ConstBufferSequence> struct async_write_i
       // TODO: Figure out why we need a copy of the data here. It
       // should be enough to keep the encrypt member in sspi_impl
       // alive, but using that causes a segfault.
-      m_message = m_sspi_impl->encrypt.data();
+      m_message = m_sspi_impl.encrypt.data();
       BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer,
                                              net::buffer(m_message),
                                              net::transfer_exactly(m_message.size()),
@@ -63,39 +63,39 @@ template <typename NextLayer, typename ConstBufferSequence> struct async_write_i
 private:
   NextLayer& m_next_layer;
   ConstBufferSequence m_buffer;
-  std::shared_ptr<detail::sspi_impl> m_sspi_impl;
+  detail::sspi_impl& m_sspi_impl;
   std::vector<char> m_message;
   size_t m_bytes_consumed{0};
 };
 
 // TODO: Move away from this file
 template <typename NextLayer, typename MutableBufferSequence> struct async_read_impl : boost::asio::coroutine {
-  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, std::shared_ptr<detail::sspi_impl> sspi_impl)
+  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_impl& sspi_impl)
     : m_next_layer(next_layer)
     , m_buffers(buffers)
-    , m_sspi_impl(std::move(sspi_impl)) {
+    , m_sspi_impl(sspi_impl) {
   }
 
   template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     BOOST_ASIO_CORO_REENTER(*this) {
-      while(m_sspi_impl->decrypt() == detail::sspi_decrypt::state::data_needed) {
+      while(m_sspi_impl.decrypt() == detail::sspi_decrypt::state::data_needed) {
         // TODO: Use a fixed size buffer instead
         m_input.resize(0x10000);
         BOOST_ASIO_CORO_YIELD net::async_read(m_next_layer,
                                               net::buffer(m_input),
                                               std::move(self));
-        m_sspi_impl->decrypt.put({m_input.begin(), m_input.begin() + length});
+        m_sspi_impl.decrypt.put({m_input.begin(), m_input.begin() + length});
         m_input.clear();
         continue;
       }
 
-      if (m_sspi_impl->decrypt() == detail::sspi_decrypt::state::error) {
-        ec = boost::error::make_error_code(m_sspi_impl->decrypt.error_code);
+      if (m_sspi_impl.decrypt() == detail::sspi_decrypt::state::error) {
+        ec = boost::error::make_error_code(m_sspi_impl.decrypt.error_code);
         self.complete(ec, 0);
         return;
       }
 
-      const auto data = m_sspi_impl->decrypt.get(net::buffer_size(m_buffers));
+      const auto data = m_sspi_impl.decrypt.get(net::buffer_size(m_buffers));
       std::size_t bytes_copied = net::buffer_copy(m_buffers, net::buffer(data));
       BOOST_ASSERT(bytes_copied == data.size());
       self.complete(boost::system::error_code{}, bytes_copied);
@@ -105,7 +105,7 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
 private:
   NextLayer& m_next_layer;
   MutableBufferSequence m_buffers;
-  std::shared_ptr<detail::sspi_impl> m_sspi_impl;
+  detail::sspi_impl& m_sspi_impl;
   std::vector<char> m_input;
 };
 
@@ -118,7 +118,7 @@ public:
   stream(Arg&& arg, context& ctx)
     : stream_base(ctx)
     , m_next_layer(std::forward<Arg>(arg))
-    , m_sspi_impl(std::make_shared<detail::sspi_impl>(&m_security_context)) {
+    , m_sspi_impl(&m_security_context) {
   }
 
   ~stream() {
@@ -259,19 +259,19 @@ public:
 
   template <typename MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
-    while(m_sspi_impl->decrypt() == detail::sspi_decrypt::state::data_needed) {
+    while(m_sspi_impl.decrypt() == detail::sspi_decrypt::state::data_needed) {
       std::array<char, 0x10000> input_buffer;
       std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
-      m_sspi_impl->decrypt.put({input_buffer.begin(), input_buffer.begin() + size_read});
+      m_sspi_impl.decrypt.put({input_buffer.begin(), input_buffer.begin() + size_read});
       continue;
     }
 
-    if (m_sspi_impl->decrypt() == detail::sspi_decrypt::state::error) {
-      ec = boost::error::make_error_code(m_sspi_impl->decrypt.error_code);
+    if (m_sspi_impl.decrypt() == detail::sspi_decrypt::state::error) {
+      ec = boost::error::make_error_code(m_sspi_impl.decrypt.error_code);
       return 0;
     }
 
-    const auto data = m_sspi_impl->decrypt.get(net::buffer_size(buffers));
+    const auto data = m_sspi_impl.decrypt.get(net::buffer_size(buffers));
     std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(data));
     BOOST_ASSERT(bytes_copied == data.size());
     return bytes_copied;
@@ -287,12 +287,12 @@ public:
 
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
-    std::size_t bytes_consumed = m_sspi_impl->encrypt(buffers, ec);
+    std::size_t bytes_consumed = m_sspi_impl.encrypt(buffers, ec);
     if (ec) {
       return 0;
     }
 
-    net::write(m_next_layer, net::buffer(m_sspi_impl->encrypt.data()), net::transfer_exactly(m_sspi_impl->encrypt.data().size()), ec);
+    net::write(m_next_layer, net::buffer(m_sspi_impl.encrypt.data()), net::transfer_exactly(m_sspi_impl.encrypt.data().size()), ec);
 
     if (ec) {
       return 0;
@@ -312,7 +312,7 @@ public:
 private:
   next_layer_type m_next_layer;
   CtxtHandle m_security_context;
-  std::shared_ptr<detail::sspi_impl> m_sspi_impl;
+  detail::sspi_impl m_sspi_impl;
 };
 
 } // namespace windows_sspi

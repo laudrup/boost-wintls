@@ -43,16 +43,20 @@ template <typename NextLayer, typename ConstBufferSequence> struct async_write_i
   template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     boost::ignore_unused(length);
     BOOST_ASIO_CORO_REENTER(*this) {
-      m_message = m_sspi_impl->encrypt(m_buffer, ec, m_size_encrypted);
+      m_bytes_consumed = m_sspi_impl->encrypt(m_buffer, ec);
       if (ec) {
         self.complete(ec, 0);
         return;
       }
+      // TODO: Figure out why we need a copy of the data here. It
+      // should be enough to keep the encrypt member in sspi_impl
+      // alive, but using that causes a segfault.
+      m_message = m_sspi_impl->encrypt.data();
       BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer,
                                              net::buffer(m_message),
                                              net::transfer_exactly(m_message.size()),
                                              std::move(self));
-      self.complete(ec, m_size_encrypted);
+      self.complete(ec, m_bytes_consumed);
     }
   }
 
@@ -61,7 +65,7 @@ private:
   ConstBufferSequence m_buffer;
   std::shared_ptr<detail::sspi_impl> m_sspi_impl;
   std::vector<char> m_message;
-  size_t m_size_encrypted{0};
+  size_t m_bytes_consumed{0};
 };
 
 // TODO: Move away from this file
@@ -283,21 +287,18 @@ public:
 
   template <typename ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
-    size_t size_encrypted{0};
-    auto message = m_sspi_impl->encrypt(buffers, ec, size_encrypted);
+    std::size_t bytes_consumed = m_sspi_impl->encrypt(buffers, ec);
     if (ec) {
       return 0;
     }
 
-    auto sent = net::write(m_next_layer, net::buffer(message), net::transfer_exactly(message.size()), ec);
+    net::write(m_next_layer, net::buffer(m_sspi_impl->encrypt.data()), net::transfer_exactly(m_sspi_impl->encrypt.data().size()), ec);
 
-    boost::ignore_unused(sent);
-    BOOST_ASSERT(sent == message.size());
     if (ec) {
       return 0;
     }
 
-    return size_encrypted;
+    return bytes_consumed;
   }
 
   template <typename ConstBufferSequence, typename CompletionToken>

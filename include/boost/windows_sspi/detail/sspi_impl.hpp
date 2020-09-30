@@ -16,6 +16,8 @@
 
 #include <boost/core/ignore_unused.hpp>
 
+#include <array>
+
 namespace boost {
 namespace windows_sspi {
 namespace detail {
@@ -23,61 +25,103 @@ namespace detail {
 class sspi_encrypt {
 public:
   sspi_encrypt(CtxtHandle* context)
-    : m_context(context) {
+    : m_context(context)
+    , m_message(context) {
   }
 
-  // TODO: Since this is now a functor class, consider getting rid of these output arguments
   template <typename ConstBufferSequence>
-  std::vector<char> operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec, size_t& size_encrypted) {
-    SecBufferDesc Message;
-    SecBuffer Buffers[4];
+  std::size_t operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+    SECURITY_STATUS sc;
 
-    // TODO: Consider encrypting all buffer contents before returning
-    size_encrypted = std::min(net::buffer_size(buffers), static_cast<size_t>(stream_sizes().cbMaximumMessage));
-    std::vector<char> message(stream_sizes().cbHeader + size_encrypted + stream_sizes().cbTrailer);
-
-    Buffers[0].pvBuffer = message.data();
-    Buffers[0].cbBuffer = stream_sizes().cbHeader;
-    Buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
-
-    net::buffer_copy(net::buffer(message.data() + stream_sizes().cbHeader, size_encrypted), buffers);
-    Buffers[1].pvBuffer = message.data() + stream_sizes().cbHeader;
-    Buffers[1].cbBuffer = static_cast<ULONG>(size_encrypted);
-    Buffers[1].BufferType = SECBUFFER_DATA;
-
-    Buffers[2].pvBuffer = message.data() + stream_sizes().cbHeader + size_encrypted;
-    Buffers[2].cbBuffer = stream_sizes().cbTrailer;
-    Buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
-
-    Buffers[3].pvBuffer = SECBUFFER_EMPTY;
-    Buffers[3].cbBuffer = SECBUFFER_EMPTY;
-    Buffers[3].BufferType = SECBUFFER_EMPTY;
-
-    Message.ulVersion = SECBUFFER_VERSION;
-    Message.cBuffers = 4;
-    Message.pBuffers = Buffers;
-    SECURITY_STATUS sc = detail::sspi_functions::EncryptMessage(m_context, 0, &Message, 0);
-
+    std::size_t size_encrypted = m_message(buffers, sc);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
-      return {};
+      return 0;
     }
-    return message;
+
+    sc = detail::sspi_functions::EncryptMessage(m_context, 0, m_message, 0);
+    if (sc != SEC_E_OK) {
+      ec = error::make_error_code(sc);
+      return 0;
+    }
+
+    return size_encrypted;
+  }
+
+  std::vector<char> data() const {
+    return m_message.data();
   }
 
 private:
-  // TODO: Calculate this once when handshake is complete
-  SecPkgContext_StreamSizes stream_sizes() const {
-    SecPkgContext_StreamSizes stream_sizes;
-    SECURITY_STATUS sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+  class message {
+  public:
+    message(CtxtHandle* context)
+      : m_context(context) {
+    }
 
-    // TODO: Signal error to user (throw exception or use error code?)
-    boost::ignore_unused(sc);
-    BOOST_ASSERT(sc == SEC_E_OK);
-    return stream_sizes;
-  }
+    operator PSecBufferDesc() {
+      return &m_message;
+    }
+
+    template <typename ConstBufferSequence>
+    std::size_t operator()(const ConstBufferSequence& buffers, SECURITY_STATUS& sc) {
+      const auto sizes = stream_sizes(sc);
+      if (sc != SEC_E_OK) {
+        return 0;
+      }
+
+      const auto size_encrypted = std::min(net::buffer_size(buffers), static_cast<size_t>(sizes.cbMaximumMessage));
+      // TODO: No need to resize this. Since we know the max size, we
+      // can allocate a static buffer. Just reserving the max size
+      // would probably be good enough in practice, or at least better.
+      m_data.resize(sizes.cbHeader + size_encrypted + sizes.cbTrailer);
+
+      m_buffers[0].pvBuffer = m_data.data();
+      m_buffers[0].cbBuffer = sizes.cbHeader;
+      m_buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
+
+      net::buffer_copy(net::buffer(m_data.data() + sizes.cbHeader, size_encrypted), buffers);
+      m_buffers[1].pvBuffer = m_data.data() + sizes.cbHeader;
+      m_buffers[1].cbBuffer = static_cast<ULONG>(size_encrypted);
+      m_buffers[1].BufferType = SECBUFFER_DATA;
+
+      m_buffers[2].pvBuffer = m_data.data() + sizes.cbHeader + size_encrypted;
+      m_buffers[2].cbBuffer = sizes.cbTrailer;
+      m_buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
+
+      m_buffers[3].pvBuffer = SECBUFFER_EMPTY;
+      m_buffers[3].cbBuffer = SECBUFFER_EMPTY;
+      m_buffers[3].BufferType = SECBUFFER_EMPTY;
+
+      m_message.ulVersion = SECBUFFER_VERSION;
+      m_message.cBuffers = 4;
+      m_message.pBuffers = m_buffers.data();
+
+      return size_encrypted;
+    }
+
+    std::vector<char> data() const {
+      return m_data;
+    }
+
+  private:
+    // TODO: We only need to call this once, but after the handshake
+    // has completed, so it cannot be in the constructor unless we
+    // defer the message construction till its needed.
+    SecPkgContext_StreamSizes stream_sizes(SECURITY_STATUS& sc) const {
+      SecPkgContext_StreamSizes stream_sizes;
+      sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+      return stream_sizes;
+    }
+
+    CtxtHandle* m_context;
+    std::vector<char> m_data;
+    SecBufferDesc m_message;
+    std::array<SecBuffer, 4> m_buffers;
+  };
 
   CtxtHandle* m_context;
+  message m_message;
 };
 
 class sspi_decrypt {

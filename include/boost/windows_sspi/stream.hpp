@@ -81,9 +81,7 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
       while(m_sspi_impl.decrypt() == detail::sspi_decrypt::state::data_needed) {
         // TODO: Use a fixed size buffer instead
         m_input.resize(0x10000);
-        BOOST_ASIO_CORO_YIELD net::async_read(m_next_layer,
-                                              net::buffer(m_input),
-                                              std::move(self));
+        BOOST_ASIO_CORO_YIELD m_next_layer.async_read_some(net::buffer(m_input), std::move(self));
         m_sspi_impl.decrypt.put({m_input.begin(), m_input.begin() + length});
         m_input.clear();
         continue;

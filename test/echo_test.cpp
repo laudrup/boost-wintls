@@ -78,7 +78,9 @@ void sync_echo_test(std::size_t test_data_size) {
   std::thread server_handshake([&server_stream]() {
     server_stream.handshake(boost::asio::ssl::stream_base::server);
   });
-  client_stream.handshake(ClientTLSStreamBase::client);
+  boost::system::error_code ec;
+  client_stream.handshake(ClientTLSStreamBase::client, ec);
+  BOOST_TEST_NOT(ec);
   server_handshake.join();
 
   net::write(client_stream, net::buffer(test_data));
@@ -106,5 +108,6 @@ int main() {
     sync_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>(size);
     async_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>(size);
   }
+
   return boost::report_errors();
 }

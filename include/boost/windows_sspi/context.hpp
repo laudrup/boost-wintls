@@ -23,11 +23,15 @@ namespace windows_sspi {
 
 class context : public context_base {
 public:
-  using native_handle_type = CredHandle;
+  using native_handle_type = CredHandle*;
   using error_code = boost::system::error_code;
 
   explicit context(method m)
     : m_impl(std::make_shared<impl>(m)) {
+  }
+
+  native_handle_type native_handle() const {
+    return &m_impl->handle;
   }
 
 private:

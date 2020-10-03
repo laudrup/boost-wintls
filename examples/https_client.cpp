@@ -38,7 +38,8 @@ public:
     net::connect(socket_.next_layer(), endpoint_iterator);
 
     // TODO: Implement async handshake
-    socket_.handshake(ssl::stream_base::client);
+    boost::system::error_code ec;
+    socket_.handshake(ssl::stream_base::client, ec);
 
     std::ostream request_stream(&request_);
     request_stream << "GET " << path << " HTTP/1.0\r\n";

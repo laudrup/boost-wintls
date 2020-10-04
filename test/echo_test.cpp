@@ -47,9 +47,9 @@ void async_echo_test(std::size_t test_data_size) {
                boost::asio::ssl::stream_base>
     server(server_stream, server_ctx);
 
-  async_client<boost::asio::ssl::context,
-               boost::asio::ssl::stream<boost::beast::test::stream>,
-               boost::asio::ssl::stream_base>
+  async_client<ClientTLSContext,
+               ClientTLSStream,
+               ClientTLSStreamBase>
     client(client_stream, client_ctx, test_data);
 
   io_context.run();
@@ -104,6 +104,7 @@ int main() {
       0x100000, 0x100000 - 1, 0x100000 + 1}) {
 #ifdef _WIN32
     sync_echo_test<boost::windows_sspi::context, boost::windows_sspi::stream<test_stream>, boost::windows_sspi::stream_base>(size);
+    async_echo_test<boost::windows_sspi::context, boost::windows_sspi::stream<test_stream>, boost::windows_sspi::stream_base>(size);
 #endif
     sync_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>(size);
     async_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>(size);

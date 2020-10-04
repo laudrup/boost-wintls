@@ -37,26 +37,28 @@ public:
     // TODO: Consider async connect
     net::connect(socket_.next_layer(), endpoint_iterator);
 
-    // TODO: Implement async handshake
-    boost::system::error_code ec;
-    socket_.handshake(ssl::stream_base::client, ec);
-
-    std::ostream request_stream(&request_);
-    request_stream << "GET " << path << " HTTP/1.0\r\n";
-    request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: */*\r\n";
-    request_stream << "Connection: close\r\n\r\n";
-
-    boost::asio::async_write(socket_, request_, [this](const boost::system::error_code& ec, std::size_t) {
+    socket_.async_handshake(ssl::stream_base::client, [this, &path, &host](const boost::system::error_code& ec) {
       if (ec) {
-        std::cerr << "Error sending: request:" << ec.message() << "\n";
+        std::cerr << "Error handshaking:" << ec.message() << "\n";
         return;
       }
-      net::async_read_until(socket_, response_, "\r\n", [this](boost::system::error_code ec, size_t) {
+      std::ostream request_stream(&request_);
+      request_stream << "GET " << path << " HTTP/1.0\r\n";
+      request_stream << "Host: " << host << "\r\n";
+      request_stream << "Accept: */*\r\n";
+      request_stream << "Connection: close\r\n\r\n";
+
+      boost::asio::async_write(socket_, request_, [this](const boost::system::error_code& ec, std::size_t) {
         if (ec) {
-          std::cerr << "Error receiving response: " << ec.message() << "\n";
+          std::cerr << "Error sending request:" << ec.message() << "\n";
+          return;
         }
-        read_response();
+        net::async_read_until(socket_, response_, "\r\n", [this](boost::system::error_code ec, size_t) {
+          if (ec) {
+            std::cerr << "Error receiving response: " << ec.message() << "\n";
+          }
+          read_response();
+        });
       });
     });
   }

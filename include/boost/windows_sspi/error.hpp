@@ -51,7 +51,7 @@ struct local_free {
 
 class error_category : public boost::system::error_category {
 public:
-  char const* name() const BOOST_ASIO_ERROR_CATEGORY_NOEXCEPT {
+  char const* name() const noexcept override {
     return "WinSSPI";
   }
 

@@ -30,7 +30,7 @@ public:
 
   void do_read() {
     boost::asio::async_read_until(m_stream, m_received_message, '\0',
-                                  [this](const boost::system::error_code& ec, std::size_t) {
+                                  [](const boost::system::error_code& ec, std::size_t) {
                                     if (!ec) {
                                     }
                                   });

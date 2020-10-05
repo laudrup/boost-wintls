@@ -374,8 +374,7 @@ private:
 class sspi_impl {
 public:
   sspi_impl(CredHandle* cred_handle)
-    : m_cred_handle(cred_handle)
-    , handshake(&m_context, cred_handle)
+    : handshake(&m_context, cred_handle)
     , encrypt(&m_context)
     , decrypt(&m_context) {
   }
@@ -388,7 +387,6 @@ public:
   }
 
 private:
-  CredHandle* m_cred_handle;
   CtxtHandle m_context;
 
 public:

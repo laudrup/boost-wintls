@@ -18,7 +18,7 @@ namespace net = boost::asio;
 namespace {
 std::string generate_data(std::size_t size) {
   std::string ret(size, '\0');
-  for (auto i = 0; i < size - 1; ++i) {
+  for (std::size_t i = 0; i < size - 1; ++i) {
   const char cur_char = i % 26;
     ret[i] = cur_char + 65;
   }

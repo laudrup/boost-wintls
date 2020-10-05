@@ -73,8 +73,10 @@ struct async_handshake_impl : boost::asio::coroutine {
 
         if (state == detail::sspi_handshake::state::error) {
           if (!is_continuation()) {
-            auto e = self.get_executor();
-            BOOST_ASIO_CORO_YIELD net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+            BOOST_ASIO_CORO_YIELD {
+              auto e = self.get_executor();
+              net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+            }
           }
           self.complete(m_sspi_impl.handshake.last_error());
           return;
@@ -82,8 +84,10 @@ struct async_handshake_impl : boost::asio::coroutine {
       }
 
       if (!is_continuation()) {
-        auto e = self.get_executor();
-        BOOST_ASIO_CORO_YIELD net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+        BOOST_ASIO_CORO_YIELD {
+          auto e = self.get_executor();
+          net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+        }
       }
       BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
       self.complete(m_sspi_impl.handshake.last_error());
@@ -171,8 +175,10 @@ struct async_read_impl : boost::asio::coroutine {
 
       if (state == detail::sspi_decrypt::state::error) {
         if (!is_continuation()) {
-          auto e = self.get_executor();
-          BOOST_ASIO_CORO_YIELD net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+          BOOST_ASIO_CORO_YIELD {
+            auto e = self.get_executor();
+            net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+          }
         }
         ec = m_sspi_impl.decrypt.last_error();
         self.complete(ec, 0);

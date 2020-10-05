@@ -7,7 +7,6 @@ install:
   - cinst OpenCppCoverage
   - cinst codecov
   - refreshenv
-  - cinst openssl
 
 configuration:
   - Debug

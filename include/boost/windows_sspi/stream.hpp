@@ -33,14 +33,82 @@ namespace boost {
 namespace windows_sspi {
 
 // TODO: Move away from this file
-template <typename NextLayer, typename ConstBufferSequence> struct async_write_impl : boost::asio::coroutine {
+template <typename NextLayer>
+struct async_handshake_impl : boost::asio::coroutine {
+  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
+    : m_next_layer(next_layer)
+    , m_sspi_impl(sspi_impl)
+    , m_entry_count(0) {
+  }
+
+  template <typename Self>
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+    if (ec) {
+      self.complete(ec);
+      return;
+    }
+
+    ++m_entry_count;
+    auto is_continuation = [this] {
+      return m_entry_count > 1;
+    };
+
+    BOOST_ASIO_CORO_REENTER(*this) {
+      detail::sspi_handshake::state state;
+      while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
+        if (state == detail::sspi_handshake::state::data_needed) {
+          // TODO: Use a fixed size buffer instead
+          m_input.resize(0x10000);
+          BOOST_ASIO_CORO_YIELD m_next_layer.async_read_some(net::buffer(m_input), std::move(self));
+          m_sspi_impl.handshake.put({m_input.data(), m_input.data() + length});
+          m_input.clear();
+          continue;
+        }
+
+        if (state == detail::sspi_handshake::state::data_available) {
+          m_output = m_sspi_impl.handshake.get();
+          BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer, net::buffer(m_output), net::transfer_exactly(m_output.size()), std::move(self));
+          continue;
+        }
+
+        if (state == detail::sspi_handshake::state::error) {
+          if (!is_continuation()) {
+            auto e = self.get_executor();
+            BOOST_ASIO_CORO_YIELD net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+          }
+          self.complete(m_sspi_impl.handshake.last_error());
+          return;
+        }
+      }
+
+      if (!is_continuation()) {
+        auto e = self.get_executor();
+        BOOST_ASIO_CORO_YIELD net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+      }
+      BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
+      self.complete(m_sspi_impl.handshake.last_error());
+    }
+  }
+
+private:
+  NextLayer& m_next_layer;
+  detail::sspi_impl& m_sspi_impl;
+  int m_entry_count;
+  std::vector<char> m_input;
+  std::vector<char> m_output;
+};
+
+// TODO: Move away from this file
+template <typename NextLayer, typename ConstBufferSequence>
+struct async_write_impl : boost::asio::coroutine {
   async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_impl& sspi_impl)
     : m_next_layer(next_layer)
     , m_buffer(buffer)
     , m_sspi_impl(sspi_impl) {
   }
 
-  template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  template <typename Self>
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     boost::ignore_unused(length);
     BOOST_ASIO_CORO_REENTER(*this) {
       m_bytes_consumed = m_sspi_impl.encrypt(m_buffer, ec);
@@ -69,16 +137,30 @@ private:
 };
 
 // TODO: Move away from this file
-template <typename NextLayer, typename MutableBufferSequence> struct async_read_impl : boost::asio::coroutine {
+template <typename NextLayer, typename MutableBufferSequence>
+struct async_read_impl : boost::asio::coroutine {
   async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_impl& sspi_impl)
     : m_next_layer(next_layer)
     , m_buffers(buffers)
-    , m_sspi_impl(sspi_impl) {
+    , m_sspi_impl(sspi_impl)
+    , m_entry_count(0) {
   }
 
-  template <typename Self> void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  template <typename Self>
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+    if (ec) {
+      self.complete(ec, length);
+      return;
+    }
+
+    ++m_entry_count;
+    auto is_continuation = [this] {
+      return m_entry_count > 1;
+    };
+
     BOOST_ASIO_CORO_REENTER(*this) {
-      while(m_sspi_impl.decrypt() == detail::sspi_decrypt::state::data_needed) {
+      detail::sspi_decrypt::state state;
+      while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
         // TODO: Use a fixed size buffer instead
         m_input.resize(0x10000);
         BOOST_ASIO_CORO_YIELD m_next_layer.async_read_some(net::buffer(m_input), std::move(self));
@@ -87,12 +169,17 @@ template <typename NextLayer, typename MutableBufferSequence> struct async_read_
         continue;
       }
 
-      if (m_sspi_impl.decrypt() == detail::sspi_decrypt::state::error) {
-        ec = boost::error::make_error_code(m_sspi_impl.decrypt.last_error);
+      if (state == detail::sspi_decrypt::state::error) {
+        if (!is_continuation()) {
+          auto e = self.get_executor();
+          BOOST_ASIO_CORO_YIELD net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+        }
+        ec = m_sspi_impl.decrypt.last_error();
         self.complete(ec, 0);
         return;
       }
 
+      // TODO: Avoid this copy if possible
       const auto data = m_sspi_impl.decrypt.get(net::buffer_size(m_buffers));
       std::size_t bytes_copied = net::buffer_copy(m_buffers, net::buffer(data));
       BOOST_ASSERT(bytes_copied == data.size());
@@ -104,10 +191,12 @@ private:
   NextLayer& m_next_layer;
   MutableBufferSequence m_buffers;
   detail::sspi_impl& m_sspi_impl;
+  int m_entry_count;
   std::vector<char> m_input;
 };
 
-template <typename NextLayer> class stream : public stream_base {
+template <typename NextLayer>
+class stream : public stream_base {
 public:
   using next_layer_type = typename std::remove_reference<NextLayer>::type;
   using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;
@@ -116,11 +205,7 @@ public:
   stream(Arg&& arg, context& ctx)
     : stream_base(ctx)
     , m_next_layer(std::forward<Arg>(arg))
-    , m_sspi_impl(&m_security_context) {
-  }
-
-  ~stream() {
-    detail::sspi_functions::DeleteSecurityContext(&m_security_context);
+    , m_sspi_impl(ctx.native_handle()) {
   }
 
   const next_layer_type& next_layer() const {
@@ -131,141 +216,59 @@ public:
     return m_next_layer;
   }
 
-  void handshake(handshake_type type) {
-    DWORD flags_out = 0;
-    DWORD flags_in = ISC_REQ_SEQUENCE_DETECT | ISC_REQ_REPLAY_DETECT | ISC_REQ_CONFIDENTIALITY |
-                     ISC_RET_EXTENDED_ERROR | ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_STREAM;
-
-    boost::system::error_code ec;
-    SECURITY_STATUS sc = SEC_E_OK;
-
-    SecBufferDesc OutBuffer;
-    SecBuffer OutBuffers[1];
-    SecBufferDesc InBuffer;
-    SecBuffer InBuffers[2];
-
-    if (type == client) {
-      OutBuffers[0].pvBuffer = NULL;
-      OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-      OutBuffers[0].cbBuffer = 0;
-
-      OutBuffer.cBuffers = 1;
-      OutBuffer.pBuffers = OutBuffers;
-      OutBuffer.ulVersion = SECBUFFER_VERSION;
-
-      sc = detail::sspi_functions::InitializeSecurityContext(&m_context_impl->handle,
-                                                             NULL,
-                                                             NULL,
-                                                             flags_in,
-                                                             0,
-                                                             SECURITY_NATIVE_DREP,
-                                                             NULL,
-                                                             0,
-                                                             &m_security_context,
-                                                             &OutBuffer,
-                                                             &flags_out,
-                                                             NULL);
-      if (sc != SEC_I_CONTINUE_NEEDED) {
-        throw boost::system::system_error(error::make_error_code(sc), "InitializeSecurityContext");
-      }
-
-      size_t size_written = m_next_layer.write_some(net::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
-      boost::ignore_unused(size_written);
-      BOOST_ASSERT(size_written == OutBuffers[0].cbBuffer);
-      detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
-      if (ec) {
-        throw boost::system::system_error(ec);
-      }
-    }
-
-    size_t input_size = 0;
-    std::array<char, 0x10000> buffer;
-
-    while (true) {
-      input_size += m_next_layer.read_some(net::buffer(buffer.data() + input_size, buffer.size() - input_size), ec);
-      if (ec) {
-        throw boost::system::system_error(ec);
-      }
-
-      InBuffers[0].pvBuffer = reinterpret_cast<void*>(buffer.data());
-      InBuffers[0].cbBuffer = static_cast<ULONG>(input_size);
-      InBuffers[0].BufferType = SECBUFFER_TOKEN;
-
-      InBuffers[1].pvBuffer = NULL;
-      InBuffers[1].cbBuffer = 0;
-      InBuffers[1].BufferType = SECBUFFER_EMPTY;
-
-      InBuffer.cBuffers = 2;
-      InBuffer.pBuffers = InBuffers;
-      InBuffer.ulVersion = SECBUFFER_VERSION;
-
-      OutBuffers[0].pvBuffer = NULL;
-      OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-      OutBuffers[0].cbBuffer = 0;
-
-      OutBuffer.cBuffers = 1;
-      OutBuffer.pBuffers = OutBuffers;
-      OutBuffer.ulVersion = SECBUFFER_VERSION;
-
-      sc = detail::sspi_functions::InitializeSecurityContext(&m_context_impl->handle,
-                                                             &m_security_context,
-                                                             NULL,
-                                                             flags_in,
-                                                             0,
-                                                             SECURITY_NATIVE_DREP,
-                                                             &InBuffer,
-                                                             0,
-                                                             NULL,
-                                                             &OutBuffer,
-                                                             &flags_out,
-                                                             NULL);
-
-      if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL) {
-        m_next_layer.write_some(net::const_buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer), ec);
-        detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
-        OutBuffers[0].pvBuffer = NULL;
-        if (ec) {
-          throw boost::system::system_error(ec);
-        }
-      }
-
-      switch (sc) {
-      case SEC_E_INCOMPLETE_MESSAGE:
-        continue;
-
-      case SEC_E_OK:
-        BOOST_ASSERT_MSG(InBuffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
-        return;
-
-      case SEC_I_INCOMPLETE_CREDENTIALS:
-        BOOST_ASSERT_MSG(false, "client authentication not implemented");
-
-      default:
-        if (FAILED(sc)) {
-          throw boost::system::system_error(error::make_error_code(sc), "InitializeSecurityContext");
-        }
-      }
-
-      if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
-        std::copy_n(buffer.data() + (input_size - InBuffers[1].cbBuffer), InBuffers[1].cbBuffer, buffer.data());
-        input_size = InBuffers[1].cbBuffer;
-      } else {
-        input_size = 0;
+  void handshake(handshake_type, boost::system::error_code& ec) {
+    detail::sspi_handshake::state state;
+    while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
+      switch (state) {
+        case detail::sspi_handshake::state::data_needed:
+          {
+            std::array<char, 0x10000> input_buffer;
+            std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+            if (ec) {
+              return;
+            }
+            m_sspi_impl.handshake.put({input_buffer.begin(), input_buffer.begin() + size_read});
+            continue;
+          }
+        case detail::sspi_handshake::state::data_available:
+          {
+            auto data = m_sspi_impl.handshake.get();
+            net::write(m_next_layer, net::buffer(data), net::transfer_exactly(data.size()), ec);
+            if (ec) {
+              return;
+            }
+            continue;
+          }
+        case detail::sspi_handshake::state::error:
+          ec = m_sspi_impl.handshake.last_error();
+          return;
       }
     }
   }
 
+  template <typename CompletionToken>
+  auto async_handshake(handshake_type, CompletionToken&& token) ->
+    typename net::async_result<typename std::decay<CompletionToken>::type,
+                                 void(boost::system::error_code)>::return_type {
+    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
+        async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl}, token);
+  }
+
   template <typename MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
-    while(m_sspi_impl.decrypt() == detail::sspi_decrypt::state::data_needed) {
+    detail::sspi_decrypt::state state;
+    while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
       std::array<char, 0x10000> input_buffer;
       std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+      if (ec) {
+        return 0;
+      }
       m_sspi_impl.decrypt.put({input_buffer.begin(), input_buffer.begin() + size_read});
       continue;
     }
 
-    if (m_sspi_impl.decrypt() == detail::sspi_decrypt::state::error) {
-      ec = boost::error::make_error_code(m_sspi_impl.decrypt.last_error);
+    if (state == detail::sspi_decrypt::state::error) {
+      ec = m_sspi_impl.decrypt.last_error();
       return 0;
     }
 
@@ -291,7 +294,6 @@ public:
     }
 
     net::write(m_next_layer, net::buffer(m_sspi_impl.encrypt.data()), net::transfer_exactly(m_sspi_impl.encrypt.data().size()), ec);
-
     if (ec) {
       return 0;
     }
@@ -309,7 +311,6 @@ public:
 
 private:
   next_layer_type m_next_layer;
-  CtxtHandle m_security_context;
   detail::sspi_impl m_sspi_impl;
 };
 

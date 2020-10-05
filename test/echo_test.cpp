@@ -1,3 +1,6 @@
+#include "async_echo_server.hpp"
+#include "async_echo_client.hpp"
+
 #include <boost/core/lightweight_test.hpp>
 #include <boost/beast/_experimental/test/stream.hpp>
 #include <boost/asio.hpp>
@@ -24,6 +27,36 @@ std::string generate_data(std::size_t size) {
 }
 
 template<typename ClientTLSContext, typename ClientTLSStream, typename ClientTLSStreamBase>
+void async_echo_test(std::size_t test_data_size) {
+  const std::string test_data = generate_data(test_data_size);
+  net::io_context io_context;
+
+  ClientTLSContext client_ctx(ClientTLSContext::tls_client);
+
+  boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
+  server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
+  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
+
+  ClientTLSStream client_stream(io_context, client_ctx);
+  boost::asio::ssl::stream<boost::beast::test::stream> server_stream(io_context, server_ctx);
+
+  client_stream.next_layer().connect(server_stream.next_layer());
+
+  async_server<boost::asio::ssl::context,
+               boost::asio::ssl::stream<boost::beast::test::stream>,
+               boost::asio::ssl::stream_base>
+    server(server_stream, server_ctx);
+
+  async_client<ClientTLSContext,
+               ClientTLSStream,
+               ClientTLSStreamBase>
+    client(client_stream, client_ctx, test_data);
+
+  io_context.run();
+  BOOST_TEST_EQ(client.received_message(), test_data);
+}
+
+template<typename ClientTLSContext, typename ClientTLSStream, typename ClientTLSStreamBase>
 void sync_echo_test(std::size_t test_data_size) {
   const std::string test_data = generate_data(test_data_size);
   net::io_context io_context;
@@ -45,7 +78,9 @@ void sync_echo_test(std::size_t test_data_size) {
   std::thread server_handshake([&server_stream]() {
     server_stream.handshake(boost::asio::ssl::stream_base::server);
   });
-  client_stream.handshake(ClientTLSStreamBase::client);
+  boost::system::error_code ec;
+  client_stream.handshake(ClientTLSStreamBase::client, ec);
+  BOOST_TEST_NOT(ec);
   server_handshake.join();
 
   net::write(client_stream, net::buffer(test_data));
@@ -69,8 +104,11 @@ int main() {
       0x100000, 0x100000 - 1, 0x100000 + 1}) {
 #ifdef _WIN32
     sync_echo_test<boost::windows_sspi::context, boost::windows_sspi::stream<test_stream>, boost::windows_sspi::stream_base>(size);
+    async_echo_test<boost::windows_sspi::context, boost::windows_sspi::stream<test_stream>, boost::windows_sspi::stream_base>(size);
 #endif
     sync_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>(size);
+    async_echo_test<boost::asio::ssl::context, boost::asio::ssl::stream<test_stream>, boost::asio::ssl::stream_base>(size);
   }
+
   return boost::report_errors();
 }

@@ -38,7 +38,7 @@ if (WIN32)
     BOOST_REGEX_NO_LIB
     )
 
-  # Taken from https://github.com/lefticus/cpp_starter_project
+  # Based on https://github.com/lefticus/cpp_starter_project
   set(MSVC_WARNINGS
     /W4 # Baseline reasonable warnings
     /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
@@ -58,6 +58,7 @@ if (WIN32)
     /w14905 # wide string literal cast to 'LPSTR'
     /w14906 # string literal cast to 'LPWSTR'
     /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
+    /w15038 # data member 'member1' will be initialized after data member 'member2'
     /permissive- # standards conformance mode for MSVC compiler.
     /WX
     )

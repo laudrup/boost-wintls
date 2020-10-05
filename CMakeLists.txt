@@ -64,6 +64,7 @@ if (WIN32)
 
   target_include_directories(boost-windows-sspi INTERFACE include)
   target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
+  target_compile_definitions(boost-windows-sspi INTERFACE _CRT_SECURE_NO_WARNINGS)
 endif()
 
 if(ENABLE_TESTING)

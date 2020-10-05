@@ -380,6 +380,9 @@ public:
     , decrypt(&m_context) {
   }
 
+  sspi_impl(const sspi_impl&) = delete;
+  sspi_impl& operator=(const sspi_impl&) = delete;
+
   ~sspi_impl() {
     detail::sspi_functions::DeleteSecurityContext(&m_context);
   }

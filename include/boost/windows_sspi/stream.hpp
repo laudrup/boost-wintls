@@ -248,6 +248,10 @@ public:
         case detail::sspi_handshake::state::error:
           ec = m_sspi_impl.handshake.last_error();
           return;
+        case detail::sspi_handshake::state::done:
+          BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
+          ec = m_sspi_impl.handshake.last_error();
+          return;
       }
     }
   }

@@ -91,8 +91,12 @@ inline SECURITY_STATUS EncryptMessage(PCtxtHandle phContext, unsigned long fQOP,
   return sspi_function_table()->EncryptMessage(phContext, fQOP, pMessage, MessageSeqNo);
 }
 
-inline SECURITY_STATUS SEC_ENTRY FreeCredentialsHandle(PCredHandle phCredential) {
+inline SECURITY_STATUS FreeCredentialsHandle(PCredHandle phCredential) {
   return sspi_function_table()->FreeCredentialsHandle(phCredential);
+}
+
+inline SECURITY_STATUS ApplyControlToken(PCtxtHandle phContext, PSecBufferDesc pInput) {
+  return sspi_function_table()->ApplyControlToken(phContext, pInput);
 }
 
 } // namespace sspi_functions

@@ -92,6 +92,16 @@ void sync_echo_test(std::size_t test_data_size) {
   net::streambuf client_data;
   net::read_until(client_stream, client_data, '\0');
 
+  // As a shutdown potentially requires multiple read and writes
+  // between client and server, we have to run the synchronous version
+  // in a separate thread. Unfortunately.
+  std::thread server_shutdown([&server_stream]() {
+    server_stream.shutdown();
+  });
+  client_stream.shutdown(ec);
+  BOOST_TEST_NOT(ec);
+  server_shutdown.join();
+
   BOOST_TEST_EQ(std::string(net::buffers_begin(client_data.data()), net::buffers_begin(client_data.data()) + client_data.size()), test_data);
 }
 

@@ -11,7 +11,6 @@
 #ifndef BOOST_WINDOWS_SSPI_STREAM_HPP
 #define BOOST_WINDOWS_SSPI_STREAM_HPP
 
-#include <boost/windows_sspi/detail/sspi_functions.hpp>
 #include <boost/windows_sspi/detail/sspi_impl.hpp>
 #include <boost/windows_sspi/error.hpp>
 #include <boost/windows_sspi/stream_base.hpp>
@@ -201,6 +200,53 @@ private:
   std::vector<char> m_input;
 };
 
+// TODO: Move away from this file
+template <typename NextLayer>
+struct async_shutdown_impl : boost::asio::coroutine {
+  async_shutdown_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
+    : m_next_layer(next_layer)
+    , m_sspi_impl(sspi_impl)
+    , m_entry_count(0) {
+  }
+
+  template <typename Self>
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+    if (ec) {
+      self.complete(ec);
+      return;
+    }
+
+    ++m_entry_count;
+    auto is_continuation = [this] {
+      return m_entry_count > 1;
+    };
+
+    BOOST_ASIO_CORO_REENTER(*this) {
+      if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::data_available) {
+          BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer, net::buffer(m_sspi_impl.shutdown.data()), net::transfer_exactly(m_sspi_impl.shutdown.data().size()), std::move(self));
+          self.complete(m_sspi_impl.handshake.last_error());
+          return;
+      }
+
+      if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::error) {
+        if (!is_continuation()) {
+          BOOST_ASIO_CORO_YIELD {
+            auto e = self.get_executor();
+            net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+          }
+        }
+        self.complete(m_sspi_impl.handshake.last_error());
+        return;
+      }
+    }
+  }
+
+private:
+  NextLayer& m_next_layer;
+  detail::sspi_impl& m_sspi_impl;
+  int m_entry_count;
+};
+
 template <typename NextLayer>
 class stream : public stream_base {
 public:
@@ -317,6 +363,24 @@ public:
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
         async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
+  }
+
+  void shutdown(boost::system::error_code& ec) {
+    switch(m_sspi_impl.shutdown()) {
+      case detail::sspi_shutdown::state::data_available:
+        net::write(m_next_layer, net::buffer(m_sspi_impl.shutdown.data()), net::transfer_exactly(m_sspi_impl.shutdown.data().size()), ec);
+        return;
+      case detail::sspi_shutdown::state::error:
+        ec = m_sspi_impl.shutdown.last_error();
+    }
+  }
+
+  template <typename CompletionToken>
+  auto async_shutdown(CompletionToken&& token) ->
+    typename net::async_result<typename std::decay<CompletionToken>::type,
+                               void(boost::system::error_code)>::return_type {
+    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
+        async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, token);
   }
 
 private:

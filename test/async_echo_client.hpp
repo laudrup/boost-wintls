@@ -26,14 +26,22 @@ public:
                                  do_read();
                                }
                              });
-}
+  }
 
   void do_read() {
     boost::asio::async_read_until(m_stream, m_received_message, '\0',
-                                  [](const boost::system::error_code& ec, std::size_t) {
+                                  [this](const boost::system::error_code& ec, std::size_t) {
                                     if (!ec) {
+                                      do_shutdown();
                                     }
                                   });
+  }
+
+  void do_shutdown() {
+    m_stream.async_shutdown([](const boost::system::error_code& ec) {
+      if (!ec) {
+      }
+    });
   }
 
   std::string received_message() const {

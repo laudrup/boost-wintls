@@ -20,6 +20,9 @@ environment:
 before_build:
   - cmake -H. -B./build -T "%TOOLSET%" -DBOOST_ROOT="C:/Libraries/boost_1_73_0"
 
+build:
+  project: build/boost-windows-sspi.sln
+
 test_script:
   - cd build
   - ctest -C %CONFIGURATION% --output-on-failure

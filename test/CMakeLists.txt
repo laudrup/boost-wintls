@@ -1,3 +1,5 @@
+Include(FetchContent)
+
 if (NOT OPENSSL_FOUND)
   message(SEND_ERROR "OpenSSL not found. Cannot build tests.")
   return()
@@ -20,7 +22,18 @@ add_custom_target(
   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_server.key ${CMAKE_CURRENT_BINARY_DIR}/test_server.cert
   )
 
-add_executable(unittest echo_test.cpp)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v2.13.1) # TODO: Use latest
+
+FetchContent_MakeAvailable(Catch2)
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
+
+add_executable(unittest
+  main.cpp
+  echo_test.cpp
+  )
 
 add_dependencies(unittest generate-certificate)
 
@@ -33,6 +46,7 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::SSL
   OpenSSL::Crypto
   Threads::Threads
+  Catch2::Catch2
   )
 
 if (WIN32)
@@ -41,4 +55,6 @@ if (WIN32)
     )
 endif()
 
-add_test(NAME unittest COMMAND unittest)
+include(CTest)
+include(Catch)
+catch_discover_tests(unittest)

@@ -70,11 +70,11 @@ endif()
 
 if(ENABLE_TESTING)
   enable_testing()
-  message("Building Tests.")
+  message(STATUS "Building Tests.")
   add_subdirectory(test)
 endif()
 
 if(ENABLE_EXAMPLES)
-  message("Building Examples.")
+  message(STATUS "Building Examples.")
   add_subdirectory(examples)
 endif()

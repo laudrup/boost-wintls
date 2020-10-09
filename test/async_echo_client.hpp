@@ -1,3 +1,6 @@
+#ifndef BOOST_WINDOWS_SSPI_TEST_ASYNC_ECHO_CLIENT
+#define BOOST_WINDOWS_SSPI_TEST_ASYNC_ECHO_CLIENT
+
 #include <boost/asio.hpp>
 
 template<typename TLSContext, typename TLSStream, typename TLSStreamBase>
@@ -55,3 +58,5 @@ private:
   std::string m_message;
   boost::asio::streambuf m_received_message;
 };
+
+#endif

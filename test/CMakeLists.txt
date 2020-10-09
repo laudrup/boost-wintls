@@ -25,14 +25,25 @@ add_custom_target(
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.13.1) # TODO: Use latest
+  GIT_TAG        v2.13.2)
 
 FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
 
-add_executable(unittest
+set(test_sources
   main.cpp
   echo_test.cpp
+  tls_record.cpp
+  )
+
+if (WIN32)
+  list(APPEND test_sources
+    handshake_test.cpp
+    )
+endif()
+
+add_executable(unittest
+  ${test_sources}
   )
 
 add_dependencies(unittest generate-certificate)

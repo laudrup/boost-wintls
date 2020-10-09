@@ -96,7 +96,7 @@ public:
   }
 };
 
-boost::system::error_category& get_sspi_category() {
+inline boost::system::error_category& get_sspi_category() {
   static error_category instance;
   return instance;
 }

@@ -1,3 +1,6 @@
+#ifndef BOOST_WINDOWS_SSPI_TEST_ASYNC_ECHO_SERVER
+#define BOOST_WINDOWS_SSPI_TEST_ASYNC_ECHO_SERVER
+
 #include <boost/asio.hpp>
 
 template<typename TLSContext, typename TLSStream, typename TLSStreamBase>
@@ -29,8 +32,18 @@ public:
 
   void do_write() {
     boost::asio::async_write(m_stream, m_data,
-                             [](const boost::system::error_code&, std::size_t) {
+                             [this](const boost::system::error_code& ec, std::size_t) {
+                               if (!ec) {
+                                 do_shutdown();
+                               }
                              });
+  }
+
+  void do_shutdown() {
+    m_stream.async_shutdown([](const boost::system::error_code& ec) {
+      if (!ec) {
+      }
+    });
   }
 
 private:
@@ -38,3 +51,5 @@ private:
   TLSStream& m_stream;
   boost::asio::streambuf m_data;
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef BOOST_WINDOWS_SSPI_TEST_ASYNC_ECHO_CLIENT
+#define BOOST_WINDOWS_SSPI_TEST_ASYNC_ECHO_CLIENT
+
 #include <boost/asio.hpp>
 
 template<typename TLSContext, typename TLSStream, typename TLSStreamBase>
@@ -26,14 +29,22 @@ public:
                                  do_read();
                                }
                              });
-}
+  }
 
   void do_read() {
     boost::asio::async_read_until(m_stream, m_received_message, '\0',
-                                  [](const boost::system::error_code& ec, std::size_t) {
+                                  [this](const boost::system::error_code& ec, std::size_t) {
                                     if (!ec) {
+                                      do_shutdown();
                                     }
                                   });
+  }
+
+  void do_shutdown() {
+    m_stream.async_shutdown([](const boost::system::error_code& ec) {
+      if (!ec) {
+      }
+    });
   }
 
   std::string received_message() const {
@@ -47,3 +58,5 @@ private:
   std::string m_message;
   boost::asio::streambuf m_received_message;
 };
+
+#endif

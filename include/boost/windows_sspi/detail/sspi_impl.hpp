@@ -23,6 +23,14 @@ namespace boost {
 namespace windows_sspi {
 namespace detail {
 
+const DWORD context_flags =
+  ISC_REQ_SEQUENCE_DETECT | // Detect messages received out of sequence
+  ISC_REQ_REPLAY_DETECT | // Detect replayed messages
+  ISC_REQ_CONFIDENTIALITY | // Encrypt messages
+  ISC_RET_EXTENDED_ERROR | // When errors occur, the remote party will be notified
+  ISC_REQ_ALLOCATE_MEMORY | // Allocate buffers. Free them with FreeContextBuffer
+  ISC_REQ_STREAM; // Support a stream-oriented connection
+
 class sspi_handshake {
 public:
   enum class state {
@@ -35,10 +43,7 @@ public:
   sspi_handshake(CtxtHandle* context, CredHandle* credentials)
     : m_context(context)
     , m_credentials(credentials)
-    , m_last_error(SEC_E_OK)
-    , m_flags_out(0)
-    , m_flags_in(ISC_REQ_SEQUENCE_DETECT | ISC_REQ_REPLAY_DETECT | ISC_REQ_CONFIDENTIALITY |
-                 ISC_RET_EXTENDED_ERROR | ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_STREAM) {
+    , m_last_error(SEC_E_OK) {
 
     SecBufferDesc OutBuffer;
     SecBuffer OutBuffers[1];
@@ -51,17 +56,19 @@ public:
     OutBuffer.pBuffers = OutBuffers;
     OutBuffer.ulVersion = SECBUFFER_VERSION;
 
+    DWORD out_flags = 0;
+
     m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
                                                                      nullptr,
                                                                      nullptr,
-                                                                     m_flags_in,
+                                                                     context_flags,
                                                                      0,
                                                                      SECURITY_NATIVE_DREP,
                                                                      nullptr,
                                                                      0,
                                                                      m_context,
                                                                      &OutBuffer,
-                                                                     &m_flags_out,
+                                                                     &out_flags,
                                                                      nullptr);
     if (m_last_error == SEC_I_CONTINUE_NEEDED) {
       // TODO: Avoid this copy
@@ -107,17 +114,19 @@ public:
     OutBuffer.pBuffers = OutBuffers;
     OutBuffer.ulVersion = SECBUFFER_VERSION;
 
+    DWORD out_flags = 0;
+
     m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
                                                                      m_context,
                                                                      nullptr,
-                                                                     m_flags_in,
+                                                                     context_flags,
                                                                      0,
                                                                      SECURITY_NATIVE_DREP,
                                                                      &InBuffer,
                                                                      0,
                                                                      nullptr,
                                                                      &OutBuffer,
-                                                                     &m_flags_out,
+                                                                     &out_flags,
                                                                      nullptr);
 
     if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
@@ -174,8 +183,6 @@ private:
   CtxtHandle* m_context;
   CredHandle* m_credentials;
   SECURITY_STATUS m_last_error;
-  DWORD m_flags_out;
-  DWORD m_flags_in;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
 };
@@ -371,12 +378,93 @@ private:
   SECURITY_STATUS m_last_error;
 };
 
+class sspi_shutdown {
+public:
+  enum class state {
+    data_available,
+    error
+  };
+
+  sspi_shutdown(CtxtHandle* context, CredHandle* credentials)
+    : m_context(context)
+    , m_credentials(credentials)
+    , m_last_error(SEC_E_OK) {
+  }
+
+  state operator()() {
+    SecBufferDesc OutBuffer;
+    SecBuffer OutBuffers[1];
+
+    DWORD shutdown_type = SCHANNEL_SHUTDOWN;
+
+    OutBuffers[0].pvBuffer = &shutdown_type;
+    OutBuffers[0].BufferType = SECBUFFER_TOKEN;
+    OutBuffers[0].cbBuffer = sizeof(shutdown_type);
+
+    OutBuffer.cBuffers  = 1;
+    OutBuffer.pBuffers  = OutBuffers;
+    OutBuffer.ulVersion = SECBUFFER_VERSION;
+
+    m_last_error = detail::sspi_functions::ApplyControlToken(m_context, &OutBuffer);
+    if (m_last_error != SEC_E_OK) {
+      return state::error;
+    }
+
+    OutBuffers[0].pvBuffer   = NULL;
+    OutBuffers[0].BufferType = SECBUFFER_TOKEN;
+    OutBuffers[0].cbBuffer   = 0;
+
+    OutBuffer.cBuffers  = 1;
+    OutBuffer.pBuffers  = OutBuffers;
+    OutBuffer.ulVersion = SECBUFFER_VERSION;
+
+    DWORD out_flags = 0;
+
+    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
+                                                                     m_context,
+                                                                     NULL,
+                                                                     context_flags,
+                                                                     0,
+                                                                     SECURITY_NATIVE_DREP,
+                                                                     NULL,
+                                                                     0,
+                                                                     m_context,
+                                                                     &OutBuffer,
+                                                                     &out_flags,
+                                                                     nullptr);
+    if (m_last_error != SEC_E_OK) {
+      return state::error;
+    }
+
+    // TODO: Avoid this copy
+    m_output_data = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer),
+      reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
+    detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
+    return state::data_available;
+  }
+
+  boost::system::error_code last_error() const {
+    return error::make_error_code(m_last_error);
+  }
+
+  std::vector<char> data() const {
+    return m_output_data;
+  }
+
+private:
+  CtxtHandle* m_context;
+  CredHandle* m_credentials;
+  SECURITY_STATUS m_last_error;
+  std::vector<char> m_output_data;
+};
+
 class sspi_impl {
 public:
   sspi_impl(CredHandle* cred_handle)
     : handshake(&m_context, cred_handle)
     , encrypt(&m_context)
-    , decrypt(&m_context) {
+    , decrypt(&m_context)
+    , shutdown(&m_context, cred_handle) {
   }
 
   sspi_impl(const sspi_impl&) = delete;
@@ -394,6 +482,7 @@ public:
   sspi_handshake handshake;
   sspi_encrypt encrypt;
   sspi_decrypt decrypt;
+  sspi_shutdown shutdown;
 };
 
 } // namespace detail

@@ -436,26 +436,32 @@ public:
       return state::error;
     }
 
-    // TODO: Avoid this copy
-    m_output_data = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer),
-      reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
-    detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
+    m_buf = net::buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer);
     return state::data_available;
+  }
+
+  net::const_buffer output() const {
+    return m_buf;
+  }
+
+  void consume(std::size_t size) {
+    boost::ignore_unused(size);
+    // TODO: Handle this instead of asserting
+    BOOST_ASSERT(size == m_buf.size());
+    // TODO: RAII this buffer to ensure it's freed even if the consume function is never called
+    detail::sspi_functions::FreeContextBuffer(const_cast<void*>(m_buf.data()));
+    m_buf = net::const_buffer{};
   }
 
   boost::system::error_code last_error() const {
     return error::make_error_code(m_last_error);
   }
 
-  std::vector<char> data() const {
-    return m_output_data;
-  }
-
 private:
   CtxtHandle* m_context;
   CredHandle* m_credentials;
   SECURITY_STATUS m_last_error;
-  std::vector<char> m_output_data;
+  net::const_buffer m_buf;
 };
 
 class sspi_impl {

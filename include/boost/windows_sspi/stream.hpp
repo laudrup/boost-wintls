@@ -223,9 +223,12 @@ struct async_shutdown_impl : boost::asio::coroutine {
 
     BOOST_ASIO_CORO_REENTER(*this) {
       if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::data_available) {
-          BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer, net::buffer(m_sspi_impl.shutdown.data()), net::transfer_exactly(m_sspi_impl.shutdown.data().size()), std::move(self));
-          self.complete(m_sspi_impl.handshake.last_error());
-          return;
+        BOOST_ASIO_CORO_YIELD {
+          net::async_write(m_next_layer, m_sspi_impl.shutdown.output(), std::move(self));
+        }
+        m_sspi_impl.shutdown.consume(length);
+        self.complete({});
+        return;
       }
 
       if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::error) {
@@ -235,7 +238,7 @@ struct async_shutdown_impl : boost::asio::coroutine {
             net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
           }
         }
-        self.complete(m_sspi_impl.handshake.last_error());
+        self.complete(m_sspi_impl.shutdown.last_error());
         return;
       }
     }
@@ -367,9 +370,11 @@ public:
 
   void shutdown(boost::system::error_code& ec) {
     switch(m_sspi_impl.shutdown()) {
-      case detail::sspi_shutdown::state::data_available:
-        net::write(m_next_layer, net::buffer(m_sspi_impl.shutdown.data()), net::transfer_exactly(m_sspi_impl.shutdown.data().size()), ec);
+      case detail::sspi_shutdown::state::data_available: {
+        auto size = net::write(m_next_layer, m_sspi_impl.shutdown.output(), ec);
+        m_sspi_impl.shutdown.consume(size);
         return;
+      }
       case detail::sspi_shutdown::state::error:
         ec = m_sspi_impl.shutdown.last_error();
     }

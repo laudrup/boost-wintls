@@ -52,13 +52,16 @@ struct async_handshake_impl : boost::asio::coroutine {
       return m_entry_count > 1;
     };
 
+    detail::sspi_handshake::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      detail::sspi_handshake::state state;
       while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
         if (state == detail::sspi_handshake::state::data_needed) {
           // TODO: Use a fixed size buffer instead
           m_input.resize(0x10000);
-          BOOST_ASIO_CORO_YIELD m_next_layer.async_read_some(net::buffer(m_input), std::move(self));
+          BOOST_ASIO_CORO_YIELD {
+            auto buf = net::buffer(m_input);
+            m_next_layer.async_read_some(buf, std::move(self));
+          }
           m_sspi_impl.handshake.put({m_input.data(), m_input.data() + length});
           m_input.clear();
           continue;
@@ -66,7 +69,11 @@ struct async_handshake_impl : boost::asio::coroutine {
 
         if (state == detail::sspi_handshake::state::data_available) {
           m_output = m_sspi_impl.handshake.get();
-          BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer, net::buffer(m_output), net::transfer_exactly(m_output.size()), std::move(self));
+          BOOST_ASIO_CORO_YIELD
+          {
+            auto buf = net::buffer(m_output);
+            net::async_write(m_next_layer, buf, std::move(self));
+          }
           continue;
         }
 
@@ -119,14 +126,13 @@ struct async_write_impl : boost::asio::coroutine {
         self.complete(ec, 0);
         return;
       }
-      // TODO: Figure out why we need a copy of the data here. It
-      // should be enough to keep the encrypt member in sspi_impl
-      // alive, but using that causes a segfault.
-      m_message = m_sspi_impl.encrypt.data();
-      BOOST_ASIO_CORO_YIELD net::async_write(m_next_layer,
-                                             net::buffer(m_message),
-                                             net::transfer_exactly(m_message.size()),
-                                             std::move(self));
+
+      BOOST_ASIO_CORO_YIELD {
+        // TODO: Avoid this copy by consuming from the buffer in sspi_encrypt instead
+        m_message = m_sspi_impl.encrypt.data();
+        auto buf = net::buffer(m_message);
+        net::async_write(m_next_layer, buf, std::move(self));
+      }
       self.complete(ec, m_bytes_consumed);
     }
   }
@@ -161,12 +167,15 @@ struct async_read_impl : boost::asio::coroutine {
       return m_entry_count > 1;
     };
 
+    detail::sspi_decrypt::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      detail::sspi_decrypt::state state;
       while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
-        // TODO: Use a fixed size buffer instead
-        m_input.resize(0x10000);
-        BOOST_ASIO_CORO_YIELD m_next_layer.async_read_some(net::buffer(m_input), std::move(self));
+        BOOST_ASIO_CORO_YIELD {
+          // TODO: Use a fixed size buffer instead
+          m_input.resize(0x10000);
+          auto buf = net::buffer(m_input);
+          m_next_layer.async_read_some(buf, std::move(self));
+        }
         m_sspi_impl.decrypt.put({m_input.begin(), m_input.begin() + length});
         m_input.clear();
         continue;
@@ -288,7 +297,7 @@ public:
         case detail::sspi_handshake::state::data_available:
           {
             auto data = m_sspi_impl.handshake.get();
-            net::write(m_next_layer, net::buffer(data), net::transfer_exactly(data.size()), ec);
+            net::write(m_next_layer, net::buffer(data), ec);
             if (ec) {
               return;
             }

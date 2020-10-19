@@ -159,15 +159,17 @@ public:
         return state::data_needed;
 
       case SEC_E_OK: {
-        cert_context remote_cert;
-        m_last_error = detail::sspi_functions::QueryContextAttributes(m_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
-        if (m_last_error != SEC_E_OK) {
-          return state::error;
-        }
+        if (m_context.m_verify_mode != verify_none) {
+          cert_context remote_cert;
+          m_last_error = detail::sspi_functions::QueryContextAttributes(m_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
+          if (m_last_error != SEC_E_OK) {
+            return state::error;
+          }
 
-        m_last_error = m_context.verify_certificate(remote_cert.ptr);
-        if (m_last_error != SEC_E_OK) {
-          return state::error;
+          m_last_error = m_context.verify_certificate(remote_cert.ptr);
+          if (m_last_error != SEC_E_OK) {
+            return state::error;
+          }
         }
 
         BOOST_ASSERT_MSG(InBuffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");

@@ -27,7 +27,41 @@ TEST_CASE("handshake") {
 
   client_stream.next_layer().connect(server_stream.next_layer());
 
+  SECTION("invalid certificate data") {
+    boost::system::error_code error{};
+    const std::string bad_cert = "DECAFBAD";
+    client_ctx.add_certificate_authority(net::buffer(bad_cert), error);
+    CHECK(error.category() == boost::system::system_category());
+    CHECK(error.value() == ERROR_INVALID_DATA);
+  }
+
+  SECTION("no certificate validation") {
+    boost::system::error_code verify_error{};
+    client_ctx.set_verify_mode(boost::windows_sspi::verify_none, verify_error);
+    REQUIRE_FALSE(verify_error);
+
+    boost::system::error_code client_error{};
+    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+                                  [&client_error, &io_context](const boost::system::error_code& ec) {
+                                    client_error = ec;
+                                    io_context.stop();
+                                  });
+
+    boost::system::error_code server_error{};
+    server_stream.async_handshake(boost::asio::ssl::stream_base::server,
+                                  [&server_error](const boost::system::error_code& ec) {
+                                    server_error = ec;
+                                  });
+    io_context.run();
+    CHECK_FALSE(client_error);
+    CHECK_FALSE(server_error);
+  }
+
   SECTION("no trusted certificate") {
+    boost::system::error_code verify_error{};
+    client_ctx.set_verify_mode(boost::windows_sspi::verify_peer, verify_error);
+    REQUIRE_FALSE(verify_error);
+
     boost::system::error_code client_error{};
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&client_error](const boost::system::error_code& ec) {
@@ -47,8 +81,14 @@ TEST_CASE("handshake") {
   }
 
   SECTION("trusted certificate verified") {
+    boost::system::error_code verify_error{};
+    client_ctx.set_verify_mode(boost::windows_sspi::verify_peer, verify_error);
+    REQUIRE_FALSE(verify_error);
+
     boost::system::error_code certificate_error{};
     client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, certificate_error);
+    REQUIRE_FALSE(certificate_error);
+
     boost::system::error_code client_error{};
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {

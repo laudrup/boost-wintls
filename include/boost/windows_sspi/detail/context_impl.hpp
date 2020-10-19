@@ -158,6 +158,8 @@ struct context_impl {
   }
 
   boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
+    // TODO: No reason to build a certificate chain engine if no
+    // certificates have been added to the in memory store by the user
     CERT_CHAIN_ENGINE_CONFIG chain_engine_config{};
     chain_engine_config.cbSize = sizeof(chain_engine_config);
     chain_engine_config.hExclusiveRoot = m_cert_store;
@@ -166,12 +168,26 @@ struct context_impl {
     if(!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
       return boost::winapi::GetLastError();
     }
+    boost::winapi::DWORD_ status = verify_certificate_chain(cert, chain_engine.ptr);
 
+    // Calling CertGetCertificateChain with a NULL pointer engine uses
+    // the default system certificate store
+    if (status != boost::winapi::ERROR_SUCCESS_ && use_default_cert_store) {
+      status = verify_certificate_chain(cert, nullptr);
+    }
+
+    return status;
+  }
+
+  bool use_default_cert_store = false;
+
+private:
+  boost::winapi::DWORD_ verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
     cert_chain_context chain_ctx;
-    if(!CertGetCertificateChain(chain_engine.ptr,
+    if(!CertGetCertificateChain(engine,
                                 cert,
                                 nullptr,
                                 cert->hCertStore,
@@ -203,7 +219,6 @@ struct context_impl {
     return policy_status.dwError;
   }
 
-private:
   HCERTSTORE m_cert_store;
   CredHandle m_handle;
 };

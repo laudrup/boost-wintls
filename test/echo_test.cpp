@@ -53,8 +53,10 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", ClientTypes) {
                                  0x10000, 0x10000 - 1, 0x10000 + 1,
                                  0x100000, 0x100000 - 1, 0x100000 + 1);
   const std::string test_data = generate_data(test_data_size);
+  boost::system::error_code ec;
 
   ClientTLSContext client_ctx(ClientTLSContext::tls_client);
+  client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, ec);
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
   server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
@@ -73,7 +75,6 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", ClientTypes) {
     std::thread server_handshake([&server_stream]() {
       server_stream.handshake(boost::asio::ssl::stream_base::server);
     });
-    boost::system::error_code ec;
     client_stream.handshake(ClientTLSStreamBase::client, ec);
     REQUIRE_FALSE(ec);
     server_handshake.join();

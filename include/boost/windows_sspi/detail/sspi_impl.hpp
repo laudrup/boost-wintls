@@ -23,6 +23,14 @@ namespace boost {
 namespace windows_sspi {
 namespace detail {
 
+struct cert_context {
+  ~cert_context() {
+    CertFreeCertificateContext(ptr);
+  }
+
+  CERT_CONTEXT* ptr = nullptr;
+};
+
 const DWORD context_flags =
   ISC_REQ_SEQUENCE_DETECT | // Detect messages received out of sequence
   ISC_REQ_REPLAY_DETECT | // Detect replayed messages
@@ -40,9 +48,9 @@ public:
     error
   };
 
-  sspi_handshake(CtxtHandle* context, CredHandle* credentials)
+  sspi_handshake(context& context, CtxtHandle* handle)
     : m_context(context)
-    , m_credentials(credentials)
+    , m_handle(handle)
     , m_last_error(SEC_E_OK) {
 
     SecBufferDesc OutBuffer;
@@ -58,7 +66,7 @@ public:
 
     DWORD out_flags = 0;
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
+    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_context.native_handle(),
                                                                      nullptr,
                                                                      nullptr,
                                                                      context_flags,
@@ -66,7 +74,7 @@ public:
                                                                      SECURITY_NATIVE_DREP,
                                                                      nullptr,
                                                                      0,
-                                                                     m_context,
+                                                                     m_handle,
                                                                      &OutBuffer,
                                                                      &out_flags,
                                                                      nullptr);
@@ -116,8 +124,8 @@ public:
 
     DWORD out_flags = 0;
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
-                                                                     m_context,
+    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_context.native_handle(),
+                                                                     m_handle,
                                                                      nullptr,
                                                                      context_flags,
                                                                      0,
@@ -150,9 +158,21 @@ public:
       case SEC_E_INCOMPLETE_MESSAGE:
         return state::data_needed;
 
-      case SEC_E_OK:
+      case SEC_E_OK: {
+        cert_context remote_cert;
+        m_last_error = detail::sspi_functions::QueryContextAttributes(m_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
+        if (m_last_error != SEC_E_OK) {
+          return state::error;
+        }
+
+        m_last_error = m_context.verify_certificate(remote_cert.ptr);
+        if (m_last_error != SEC_E_OK) {
+          return state::error;
+        }
+
         BOOST_ASSERT_MSG(InBuffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
         return state::done;
+      }
 
       case SEC_I_INCOMPLETE_CREDENTIALS:
         BOOST_ASSERT_MSG(false, "client authentication not implemented");
@@ -180,8 +200,8 @@ public:
   }
 
 private:
-  CtxtHandle* m_context;
-  CredHandle* m_credentials;
+  context& m_context;
+  CtxtHandle* m_handle;
   SECURITY_STATUS m_last_error;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
@@ -466,11 +486,11 @@ private:
 
 class sspi_impl {
 public:
-  sspi_impl(CredHandle* cred_handle)
-    : handshake(&m_context, cred_handle)
+  sspi_impl(context& ctx)
+    : handshake(ctx, &m_context)
     , encrypt(&m_context)
     , decrypt(&m_context)
-    , shutdown(&m_context, cred_handle) {
+    , shutdown(&m_context, ctx.native_handle()) {
   }
 
   sspi_impl(const sspi_impl&) = delete;

@@ -267,9 +267,13 @@ public:
 
   template <typename Arg>
   stream(Arg&& arg, context& ctx)
-    : stream_base(ctx)
-    , m_next_layer(std::forward<Arg>(arg))
-    , m_sspi_impl(ctx.native_handle()) {
+    : m_next_layer(std::forward<Arg>(arg))
+    , m_context(ctx)
+    , m_sspi_impl(ctx) {
+  }
+
+  executor_type get_executor() {
+    return next_layer().get_executor();
   }
 
   const next_layer_type& next_layer() const {
@@ -399,6 +403,7 @@ public:
 
 private:
   next_layer_type m_next_layer;
+  context& m_context;
   detail::sspi_impl m_sspi_impl;
 };
 

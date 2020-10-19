@@ -27,6 +27,45 @@ TEST_CASE("handshake") {
 
   client_stream.next_layer().connect(server_stream.next_layer());
 
+  SECTION("no trusted certificate") {
+    boost::system::error_code client_error{};
+    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+                                  [&client_error](const boost::system::error_code& ec) {
+                                    client_error = ec;
+                                  });
+
+    boost::system::error_code server_error{};
+    server_stream.async_handshake(boost::asio::ssl::stream_base::server,
+                                  [&server_error](const boost::system::error_code& ec) {
+                                    server_error = ec;
+                                  });
+
+    io_context.run();
+    CHECK(client_error.category() == boost::windows_sspi::error::get_sspi_category());
+    CHECK(client_error.value() == CERT_E_UNTRUSTEDROOT);
+    CHECK_FALSE(server_error);
+  }
+
+  SECTION("trusted certificate verified") {
+    boost::system::error_code certificate_error{};
+    client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, certificate_error);
+    boost::system::error_code client_error{};
+    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+                                  [&client_error, &io_context](const boost::system::error_code& ec) {
+                                    client_error = ec;
+                                    io_context.stop();
+                                  });
+
+    boost::system::error_code server_error{};
+    server_stream.async_handshake(boost::asio::ssl::stream_base::server,
+                                  [&server_error](const boost::system::error_code& ec) {
+                                    server_error = ec;
+                                  });
+    io_context.run();
+    CHECK_FALSE(client_error);
+    CHECK_FALSE(server_error);
+  }
+
   SECTION("invalid server reply") {
     boost::system::error_code error{};
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,

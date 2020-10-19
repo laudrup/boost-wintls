@@ -20,12 +20,8 @@ class stream_base {
 public:
   enum handshake_type { client, server };
 
-  stream_base(context& ctx)
-    : m_context_impl(ctx.m_impl) {
-  }
-
 protected:
-  std::shared_ptr<context::impl> m_context_impl;
+  ~stream_base() = default;
 };
 
 } // namespace windows_sspi

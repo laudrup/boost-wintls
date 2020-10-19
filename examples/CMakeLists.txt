@@ -4,6 +4,8 @@ if (WIN32)
   target_link_libraries(https_client PRIVATE
     boost-windows-sspi
     )
+  # Temporary workaround issue https://github.com/boostorg/beast/issues/1582
+  target_compile_options(https_client PRIVATE "$<$<CONFIG:RELEASE>:-wd4702>")
 else()
   if (NOT OPENSSL_FOUND)
     message(SEND_ERROR "OpenSSL not found. Cannot build examples.")

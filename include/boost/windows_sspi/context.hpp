@@ -29,16 +29,9 @@ class sspi_handshake;
 
 class context : public context_base {
 public:
-  using native_handle_type = CredHandle*;
-  using error_code = boost::system::error_code;
-
   explicit context(method)
     : m_impl(std::make_unique<detail::context_impl>())
     , m_verify_mode(verify_none) {
-  }
-
-  native_handle_type native_handle() const {
-    return m_impl->handle();
   }
 
   void add_certificate_authority(const net::const_buffer& ca, boost::system::error_code& ec) {

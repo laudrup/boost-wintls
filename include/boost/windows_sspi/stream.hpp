@@ -34,10 +34,11 @@ namespace windows_sspi {
 // TODO: Move away from this file
 template <typename NextLayer>
 struct async_handshake_impl : boost::asio::coroutine {
-  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
+  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, stream_base::handshake_type type)
     : m_next_layer(next_layer)
     , m_sspi_impl(sspi_impl)
     , m_entry_count(0) {
+    m_sspi_impl.handshake(type);
   }
 
   template <typename Self>
@@ -284,7 +285,9 @@ public:
     return m_next_layer;
   }
 
-  void handshake(handshake_type, boost::system::error_code& ec) {
+  void handshake(handshake_type type, boost::system::error_code& ec) {
+    m_sspi_impl.handshake(type);
+
     detail::sspi_handshake::state state;
     while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
       switch (state) {
@@ -319,11 +322,11 @@ public:
   }
 
   template <typename CompletionToken>
-  auto async_handshake(handshake_type, CompletionToken&& token) ->
-    typename net::async_result<typename std::decay<CompletionToken>::type,
+  auto async_handshake(handshake_type type, CompletionToken&& token) ->
+      typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl}, token);
+        async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, token);
   }
 
   template <typename MutableBufferSequence>

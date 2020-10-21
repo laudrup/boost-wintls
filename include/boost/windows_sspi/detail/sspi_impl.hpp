@@ -11,6 +11,8 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 
+#include <boost/windows_sspi/stream_base.hpp>
+
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
 #include <boost/windows_sspi/detail/config.hpp>
 
@@ -48,11 +50,14 @@ public:
     error
   };
 
-  sspi_handshake(context& context, CtxtHandle* handle)
+  sspi_handshake(context& context, CtxtHandle* ctx_handle, CredHandle* cred_handle)
     : m_context(context)
-    , m_handle(handle)
+    , m_ctx_handle(ctx_handle)
+    , m_cred_handle(cred_handle)
     , m_last_error(SEC_E_OK) {
+  }
 
+  void operator()(stream_base::handshake_type) {
     SecBufferDesc OutBuffer;
     SecBuffer OutBuffers[1];
 
@@ -66,7 +71,7 @@ public:
 
     DWORD out_flags = 0;
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_context.native_handle(),
+    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
                                                                      nullptr,
                                                                      nullptr,
                                                                      context_flags,
@@ -74,7 +79,7 @@ public:
                                                                      SECURITY_NATIVE_DREP,
                                                                      nullptr,
                                                                      0,
-                                                                     m_handle,
+                                                                     m_ctx_handle,
                                                                      &OutBuffer,
                                                                      &out_flags,
                                                                      nullptr);
@@ -124,8 +129,8 @@ public:
 
     DWORD out_flags = 0;
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_context.native_handle(),
-                                                                     m_handle,
+    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
+                                                                     m_ctx_handle,
                                                                      nullptr,
                                                                      context_flags,
                                                                      0,
@@ -161,7 +166,7 @@ public:
       case SEC_E_OK: {
         if (m_context.m_verify_mode != verify_none) {
           cert_context remote_cert;
-          m_last_error = detail::sspi_functions::QueryContextAttributes(m_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
+          m_last_error = detail::sspi_functions::QueryContextAttributes(m_ctx_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
           if (m_last_error != SEC_E_OK) {
             return state::error;
           }
@@ -203,7 +208,8 @@ public:
 
 private:
   context& m_context;
-  CtxtHandle* m_handle;
+  CtxtHandle* m_ctx_handle;
+  CredHandle* m_cred_handle;
   SECURITY_STATUS m_last_error;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
@@ -489,10 +495,30 @@ private:
 class sspi_impl {
 public:
   sspi_impl(context& ctx)
-    : handshake(ctx, &m_context)
+    : handshake(ctx, &m_context, &m_credentials)
     , encrypt(&m_context)
     , decrypt(&m_context)
-    , shutdown(&m_context, ctx.native_handle()) {
+    , shutdown(&m_context, &m_credentials) {
+    SCHANNEL_CRED creds{};
+    creds.dwVersion = SCHANNEL_CRED_VERSION;
+    // TODO: Set protocols to enable from method param from context
+    creds.grbitEnabledProtocols = 0;
+    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
+
+    TimeStamp expiry;
+    // TODO: As this depends on whether the credentials are used for client or server, this needs to be moved to the handshake implementation
+    SECURITY_STATUS sc = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
+                                                                          const_cast<SEC_CHAR*>(UNISP_NAME),
+                                                                          SECPKG_CRED_OUTBOUND, // TODO: Should probably be set based on client/server
+                                                                          nullptr,
+                                                                          &creds,
+                                                                          nullptr,
+                                                                          nullptr,
+                                                                          &m_credentials,
+                                                                          &expiry);
+    if (sc != SEC_E_OK) {
+      throw boost::system::system_error(error::make_error_code(sc), "AcquireCredentialsHandleA");
+    }
   }
 
   sspi_impl(const sspi_impl&) = delete;
@@ -500,10 +526,12 @@ public:
 
   ~sspi_impl() {
     detail::sspi_functions::DeleteSecurityContext(&m_context);
+    detail::sspi_functions::FreeCredentialsHandle(&m_credentials);
   }
 
 private:
-  CtxtHandle m_context;
+  CredHandle m_credentials{0, 0};
+  CtxtHandle m_context{0, 0};
 
 public:
   // TODO: Find some better names

@@ -49,36 +49,10 @@ struct context_impl {
     if (m_cert_store == nullptr) {
       throw boost::system::system_error(error::make_error_code(boost::winapi::GetLastError()), "CertOpenStore");
     }
-
-    SCHANNEL_CRED creds{};
-    creds.dwVersion = SCHANNEL_CRED_VERSION;
-    // TODO: Set protocols to enable from method param from context
-    creds.grbitEnabledProtocols = 0;
-    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
-
-    TimeStamp expiry;
-    // TODO: As this depends on whether the credentials are used for client or server, this needs to be moved to the handshake implementation
-    SECURITY_STATUS sc = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                          const_cast<SEC_CHAR*>(UNISP_NAME),
-                                                                          SECPKG_CRED_OUTBOUND, // TODO: Should probably be set based on client/server
-                                                                          nullptr,
-                                                                          &creds,
-                                                                          nullptr,
-                                                                          nullptr,
-                                                                          &m_handle,
-                                                                          &expiry);
-    if (sc != SEC_E_OK) {
-      throw boost::system::system_error(error::make_error_code(sc), "AcquireCredentialsHandleA");
-    }
   }
 
   ~context_impl() {
     CertCloseStore(m_cert_store, 0);
-    detail::sspi_functions::FreeCredentialsHandle(&m_handle);
-  }
-
-  CredHandle* handle() {
-    return &m_handle;
   }
 
   void add_certificate_authority(const net::const_buffer& ca, boost::system::error_code& ec) {
@@ -220,7 +194,6 @@ private:
   }
 
   HCERTSTORE m_cert_store;
-  CredHandle m_handle;
 };
 
 } // namespace detail

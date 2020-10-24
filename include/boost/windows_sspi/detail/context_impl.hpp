@@ -20,9 +20,6 @@
 #include <boost/winapi/handles.hpp>
 #include <boost/winapi/access_rights.hpp>
 
-// TODO: Consider adding function prototypes to avoid this include
-#include <wincrypt.h>
-
 namespace boost {
 namespace windows_sspi {
 namespace detail {
@@ -59,25 +56,25 @@ struct context_impl {
     using cert_context_type = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeCertificateContext)>;
 
     boost::winapi::DWORD_ size;
-    if (!CryptStringToBinary(reinterpret_cast<const char*>(ca.data()),
-                             static_cast<boost::winapi::DWORD_>(ca.size()),
-                             0,
-                             nullptr,
-                             &size,
-                             nullptr,
-                             nullptr)) {
+    if (!CryptStringToBinaryW(reinterpret_cast<boost::winapi::LPCWSTR_>(ca.data()),
+                              static_cast<boost::winapi::DWORD_>(ca.size()),
+                              0,
+                              nullptr,
+                              &size,
+                              nullptr,
+                              nullptr)) {
       ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
       return;
     }
 
     std::vector<boost::winapi::BYTE_> buffer(size);
-    if (!CryptStringToBinary(reinterpret_cast<const char*>(ca.data()),
-                             static_cast<boost::winapi::DWORD_>(ca.size()),
-                             0,
-                             buffer.data(),
-                             &size,
-                             nullptr,
-                             nullptr)) {
+    if (!CryptStringToBinaryW(reinterpret_cast<boost::winapi::LPCWSTR_>(ca.data()),
+                              static_cast<boost::winapi::DWORD_>(ca.size()),
+                              0,
+                              buffer.data(),
+                              &size,
+                              nullptr,
+                              nullptr)) {
       ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
       return;
     }
@@ -102,6 +99,9 @@ struct context_impl {
     using file_handle_type = std::unique_ptr<std::remove_pointer<boost::winapi::HANDLE_>::type,
                                              decltype(&boost::winapi::CloseHandle)>;
 
+    // TODO: Support unicode filenames. The proper way to do this is
+    // to use boost::filesystem or std::filesystem paths instead of
+    // strings, but that would break boost::asio compatibility
     file_handle_type handle{boost::winapi::CreateFile(filename.c_str(),
                                                       boost::winapi::GENERIC_READ_,
                                                       boost::winapi::FILE_SHARE_READ_,

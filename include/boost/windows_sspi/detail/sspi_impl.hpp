@@ -16,6 +16,8 @@
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
 #include <boost/windows_sspi/detail/config.hpp>
 
+#include <boost/winapi/basic_types.hpp>
+
 #include <boost/core/ignore_unused.hpp>
 
 #include <array>
@@ -508,7 +510,7 @@ public:
     TimeStamp expiry;
     // TODO: As this depends on whether the credentials are used for client or server, this needs to be moved to the handshake implementation
     SECURITY_STATUS sc = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                          const_cast<SEC_CHAR*>(UNISP_NAME),
+                                                                          const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
                                                                           SECPKG_CRED_OUTBOUND, // TODO: Should probably be set based on client/server
                                                                           nullptr,
                                                                           &creds,

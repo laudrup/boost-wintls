@@ -20,12 +20,23 @@
 #define BOOST_WINDOWS_SSPI_SECURITY_WIN32_DEFINED
 #endif
 
+#ifndef UNICODE
+#define UNICODE
+#else
+#define BOOST_WINDOWS_SSPI_UNICODE_DEFINED
+#endif
+
 #include <schannel.h>
 #include <security.h>
 #include <sspi.h>
+#include <wincrypt.h>
 
 #ifndef BOOST_WINDOWS_SSPI_SECURITY_WIN32_DEFINED
 #undef SECURITY_WIN32
+#endif
+
+#ifndef BOOST_WINDOWS_SSPI_UNICODE_DEFINED
+#undef UNICODE
 #endif
 
 #endif // BOOST_WINDOWS_SSPI_DETAIL_SSPI_TYPES_HPP

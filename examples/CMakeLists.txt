@@ -4,6 +4,13 @@ if (WIN32)
   target_link_libraries(https_client PRIVATE
     boost-windows-sspi
     )
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Temporary workaround issue https://github.com/boostorg/beast/issues/1582
+    target_compile_options(https_client PRIVATE "$<$<CONFIG:RELEASE>:-wd4702>")
+  endif()
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(https_client PRIVATE -Wno-unused-private-field)
+  endif()
 else()
   if (NOT OPENSSL_FOUND)
     message(SEND_ERROR "OpenSSL not found. Cannot build examples.")

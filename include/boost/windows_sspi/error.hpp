@@ -19,12 +19,12 @@
 #include <sstream>
 #include <string>
 
+typedef long SECURITY_STATUS;
+
 namespace boost {
 namespace windows_sspi {
 namespace error {
 namespace detail {
-
-typedef long SECURITY_STATUS;
 
 inline boost::winapi::UINT_ message_cp_win32() {
 #if defined(BOOST_SYSTEM_USE_UTF8)

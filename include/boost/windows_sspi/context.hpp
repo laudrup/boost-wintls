@@ -12,62 +12,90 @@
 #define BOOST_WINDOWS_SSPI_CONTEXT_HPP
 
 #include <boost/windows_sspi/context_base.hpp>
-#include <boost/windows_sspi/detail/sspi_functions.hpp>
-#include <boost/windows_sspi/error.hpp>
+#include <boost/windows_sspi/verify_mode.hpp>
+
+#include <boost/windows_sspi/detail/context_impl.hpp>
+
+#include <boost/winapi/handles.hpp>
 
 #include <memory>
-#include <stdexcept>
 
 namespace boost {
 namespace windows_sspi {
+
+namespace detail {
+class sspi_handshake;
+}
 
 class context : public context_base {
 public:
   using native_handle_type = CredHandle*;
   using error_code = boost::system::error_code;
 
-  explicit context(method m)
-    : m_impl(std::make_shared<impl>(m)) {
+  explicit context(method)
+    : m_impl(std::make_unique<detail::context_impl>())
+    , m_verify_mode(verify_none) {
   }
 
   native_handle_type native_handle() const {
-    return &m_impl->handle;
+    return m_impl->handle();
+  }
+
+  void add_certificate_authority(const net::const_buffer& ca, boost::system::error_code& ec) {
+    m_impl->add_certificate_authority(ca, ec);
+  }
+
+  void add_certificate_authority(const net::const_buffer& ca) {
+    boost::system::error_code ec;
+    m_impl->add_certificate_authority(ca, ec);
+    if (ec) {
+      throw boost::system::system_error{ec};
+    }
+  }
+
+  void load_verify_file(const std::string& filename, boost::system::error_code& ec) {
+    ec = {};
+    m_impl->load_verify_file(filename, ec);
+  }
+
+  void load_verify_file(const std::string& filename) {
+    boost::system::error_code ec;
+    m_impl->load_verify_file(filename, ec);
+    if (ec) {
+      throw boost::system::system_error{ec};
+    }
+  }
+
+  void set_verify_mode(verify_mode v, boost::system::error_code& ec) {
+    ec = {};
+    m_verify_mode = v;
+  }
+
+  void set_verify_mode(verify_mode v) {
+    m_verify_mode = v;
+  }
+
+  void set_default_verify_paths() {
+    m_impl->use_default_cert_store = true;
+  }
+
+  void set_default_verify_paths(boost::system::error_code& ec) {
+    m_impl->use_default_cert_store = true;
+    ec = {};
   }
 
 private:
-  struct impl {
-    explicit impl(method) {
-      SCHANNEL_CRED creds{};
-      creds.dwVersion = SCHANNEL_CRED_VERSION;
-      // TODO: Set protocols to enable from method param
-      creds.grbitEnabledProtocols = 0;
-      // TODO: Set proper flags based on options. This basically disables certificate validation.
-      creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
-
-      TimeStamp expiry;
-      SECURITY_STATUS sc = detail::sspi_functions::AcquireCredentialsHandle(NULL,
-                                                                            const_cast<SEC_CHAR*>(UNISP_NAME), // Yikes...
-                                                                            SECPKG_CRED_OUTBOUND, // TODO: Should probably be set based on client/server
-                                                                            NULL,
-                                                                            &creds,
-                                                                            NULL,
-                                                                            NULL,
-                                                                            &handle,
-                                                                            &expiry);
-      if (sc != SEC_E_OK) {
-        throw boost::system::system_error(error::make_error_code(sc), "AcquireCredentialsHandleA");
-      }
+  boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
+    if (m_verify_mode == verify_none) {
+      return boost::winapi::ERROR_SUCCESS_;
     }
-
-    ~impl() {
-      detail::sspi_functions::FreeCredentialsHandle(&handle);
-    }
-
-    CredHandle handle;
-  };
+    return m_impl->verify_certificate(cert);
+  }
 
   friend class stream_base;
-  std::shared_ptr<impl> m_impl;
+  friend class detail::sspi_handshake;
+  std::unique_ptr<detail::context_impl> m_impl;
+  verify_mode m_verify_mode;
 };
 
 } // namespace windows_sspi

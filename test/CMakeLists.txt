@@ -46,6 +46,20 @@ add_executable(unittest
   ${test_sources}
   )
 
+if (WIN32)
+  add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
+    COMMAND openssl rand -out "$ENV{userprofile}/.rnd"
+    VERBATIM
+    )
+
+  add_custom_target(
+    generate-random
+    DEPENDS "$ENV{userprofile}/.rnd"
+    )
+
+  add_dependencies(generate-certificate generate-random)
+endif()
+
 add_dependencies(unittest generate-certificate)
 
 target_compile_definitions(unittest PRIVATE

@@ -6,6 +6,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <boost/system/error_code.hpp>
 #include <boost/beast/_experimental/test/stream.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -28,7 +29,9 @@ TEST_CASE("handshake") {
   client_stream.next_layer().connect(server_stream.next_layer());
 
   SECTION("invalid certificate data") {
-    boost::system::error_code error{};
+    using namespace boost::system;
+
+    auto error = errc::make_error_code(errc::not_supported);
     const std::string bad_cert = "DECAFBAD";
     client_ctx.add_certificate_authority(net::buffer(bad_cert), error);
     CHECK(error.category() == boost::system::system_category());
@@ -36,18 +39,20 @@ TEST_CASE("handshake") {
   }
 
   SECTION("no certificate validation") {
-    boost::system::error_code verify_error{};
+    using namespace boost::system;
+
+    auto verify_error = errc::make_error_code(errc::not_supported);
     client_ctx.set_verify_mode(boost::windows_sspi::verify_none, verify_error);
     REQUIRE_FALSE(verify_error);
 
-    boost::system::error_code client_error{};
+    auto client_error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
                                     client_error = ec;
                                     io_context.stop();
                                   });
 
-    boost::system::error_code server_error{};
+    auto server_error = errc::make_error_code(errc::not_supported);
     server_stream.async_handshake(boost::asio::ssl::stream_base::server,
                                   [&server_error](const boost::system::error_code& ec) {
                                     server_error = ec;
@@ -58,17 +63,19 @@ TEST_CASE("handshake") {
   }
 
   SECTION("no trusted certificate") {
-    boost::system::error_code verify_error{};
+    using namespace boost::system;
+
+    auto verify_error = errc::make_error_code(errc::not_supported);
     client_ctx.set_verify_mode(boost::windows_sspi::verify_peer, verify_error);
     REQUIRE_FALSE(verify_error);
 
-    boost::system::error_code client_error{};
+    auto client_error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&client_error](const boost::system::error_code& ec) {
                                     client_error = ec;
                                   });
 
-    boost::system::error_code server_error{};
+    auto server_error = errc::make_error_code(errc::not_supported);
     server_stream.async_handshake(boost::asio::ssl::stream_base::server,
                                   [&server_error](const boost::system::error_code& ec) {
                                     server_error = ec;
@@ -81,22 +88,24 @@ TEST_CASE("handshake") {
   }
 
   SECTION("trusted certificate verified") {
-    boost::system::error_code verify_error{};
+    using namespace boost::system;
+
+    auto verify_error = errc::make_error_code(errc::not_supported);
     client_ctx.set_verify_mode(boost::windows_sspi::verify_peer, verify_error);
     REQUIRE_FALSE(verify_error);
 
-    boost::system::error_code certificate_error{};
+    auto certificate_error = errc::make_error_code(errc::not_supported);
     client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, certificate_error);
     REQUIRE_FALSE(certificate_error);
 
-    boost::system::error_code client_error{};
+    auto client_error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
                                     client_error = ec;
                                     io_context.stop();
                                   });
 
-    boost::system::error_code server_error{};
+    auto server_error = errc::make_error_code(errc::not_supported);
     server_stream.async_handshake(boost::asio::ssl::stream_base::server,
                                   [&server_error](const boost::system::error_code& ec) {
                                     server_error = ec;
@@ -107,7 +116,9 @@ TEST_CASE("handshake") {
   }
 
   SECTION("invalid server reply") {
-    boost::system::error_code error{};
+    using namespace boost::system;
+
+    auto error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&error](const boost::system::error_code& ec) {
                                     error = ec;

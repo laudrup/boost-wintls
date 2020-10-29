@@ -54,6 +54,7 @@ public:
   }
 
   void load_verify_file(const std::string& filename, boost::system::error_code& ec) {
+    ec = {};
     m_impl->load_verify_file(filename, ec);
   }
 
@@ -66,8 +67,8 @@ public:
   }
 
   void set_verify_mode(verify_mode v, boost::system::error_code& ec) {
-    m_verify_mode = v;
     ec = {};
+    m_verify_mode = v;
   }
 
   void set_verify_mode(verify_mode v) {

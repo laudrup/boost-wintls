@@ -76,8 +76,8 @@ public:
       BOOST_UNREACHABLE_RETURN(0);
     }();
 
-    if (m_handshake_type == stream_base::handshake_type::server) {
-      auto server_cert = m_context.server_cert();
+    auto server_cert = m_context.server_cert();
+    if (m_handshake_type == stream_base::handshake_type::server && server_cert != nullptr) {
       creds.cCreds = 1;
       creds.paCred = &server_cert;
     }

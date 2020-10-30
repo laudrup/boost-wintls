@@ -223,13 +223,15 @@ public:
 
       case SEC_E_OK: {
         if (m_context.m_verify_mode != verify_none) {
-          cert_context remote_cert;
-          m_last_error = detail::sspi_functions::QueryContextAttributes(m_ctx_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
+          const CERT_CONTEXT* ctx_ptr = nullptr;
+          m_last_error = detail::sspi_functions::QueryContextAttributes(m_ctx_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
           if (m_last_error != SEC_E_OK) {
             return state::error;
           }
 
-          m_last_error = m_context.verify_certificate(remote_cert.ptr);
+          cert_context remote_cert{ctx_ptr, &CertFreeCertificateContext};
+
+          m_last_error = m_context.verify_certificate(remote_cert.get());
           if (m_last_error != SEC_E_OK) {
             return state::error;
           }

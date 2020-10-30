@@ -16,53 +16,13 @@
 
 #include <boost/winapi/handles.hpp>
 
+#include <memory>
+
 namespace boost {
 namespace windows_sspi {
 namespace detail {
 
-struct cert_chain_context {
-  cert_chain_context() = default;
-  cert_chain_context(const cert_chain_context&) = delete;
-  cert_chain_context& operator=(const cert_chain_context&) = delete;
-  ~cert_chain_context() {
-    CertFreeCertificateChain(ptr);
-  }
-
-  const CERT_CHAIN_CONTEXT* ptr = nullptr;
-};
-
-struct cert_chain_engine {
-  cert_chain_engine() = default;
-  cert_chain_engine(const cert_chain_engine&) = delete;
-  cert_chain_engine& operator=(const cert_chain_engine&) = delete;
-  ~cert_chain_engine() {
-    CertFreeCertificateChainEngine(ptr);
-  }
-
-  HCERTCHAINENGINE ptr = nullptr;
-};
-
-struct cert_context {
-  cert_context() = default;
-  cert_context(const cert_context&) = delete;
-  cert_context& operator=(const cert_context&) = delete;
-  ~cert_context() {
-    CertFreeCertificateContext(ptr);
-  }
-
-  const CERT_CONTEXT* ptr = nullptr;
-};
-
-struct crypt_key {
-  crypt_key() = default;
-  crypt_key(const crypt_key&) = delete;
-  crypt_key& operator=(const crypt_key&) = delete;
-  ~crypt_key() {
-    CryptDestroyKey(ptr);
-  }
-
-  HCRYPTKEY ptr = 0;
-};
+using cert_context = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeCertificateContext)>;
 
 inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const_buffer& crypt_string) {
   using namespace boost::system;

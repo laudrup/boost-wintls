@@ -135,8 +135,8 @@ private:
     return m_impl->verify_certificate(cert);
   }
 
-  const CERT_CONTEXT* server_cert() {
-    return m_impl->server_cert.ptr;
+  const CERT_CONTEXT* server_cert() const {
+    return m_impl->server_cert.get();
   }
 
   friend class stream_base;

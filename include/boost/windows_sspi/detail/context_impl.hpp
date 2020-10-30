@@ -37,10 +37,9 @@ struct context_impl {
   }
 
   void add_certificate_authority(const net::const_buffer& ca) {
-    cert_context cert;
-    cert.ptr = pem_to_cert_context(ca);
+    cert_context cert{pem_to_cert_context(ca), &CertFreeCertificateContext};
     if(!CertAddCertificateContextToStore(m_cert_store,
-                                         cert.ptr,
+                                         cert.get(),
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
       throw boost::system::system_error(boost::winapi::GetLastError(), boost::system::system_category());
@@ -58,7 +57,13 @@ struct context_impl {
     chain_engine_config.cbSize = sizeof(chain_engine_config);
     chain_engine_config.hExclusiveRoot = m_cert_store;
 
-    cert_chain_engine chain_engine;
+    struct cert_chain_engine {
+      ~cert_chain_engine() {
+        CertFreeCertificateChainEngine(ptr);
+      }
+      HCERTCHAINENGINE ptr = nullptr;
+    } chain_engine;
+
     if(!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
       return boost::winapi::GetLastError();
     }
@@ -76,7 +81,7 @@ struct context_impl {
 
   void use_certificate(const net::const_buffer& certificate, context_base::file_format format) {
     BOOST_VERIFY_MSG(format == context_base::file_format::pem, "Only PEM format currently implemented");
-    server_cert.ptr = pem_to_cert_context(certificate);
+    server_cert.reset(pem_to_cert_context(certificate));
   }
 
   void use_certificate_file(const std::string& filename, context_base::file_format format) {
@@ -98,7 +103,14 @@ struct context_impl {
                                                               private_key_info->PrivateKey.cbData),
                                                   PKCS_RSA_PRIVATE_KEY);
 
-    crypt_key key;
+    struct crypt_key {
+      ~crypt_key() {
+        CryptDestroyKey(ptr);
+      }
+
+      HCRYPTKEY ptr = 0;
+    } key;
+
     if (!CryptImportKey(provider.ptr,
                         rsa_private_key.data(),
                         static_cast<boost::winapi::DWORD_>(rsa_private_key.size()),
@@ -115,7 +127,7 @@ struct context_impl {
     keyProvInfo.dwProvType = PROV_RSA_FULL;
     keyProvInfo.dwKeySpec = AT_KEYEXCHANGE;
 
-    if (!CertSetCertificateContextProperty(server_cert.ptr, CERT_KEY_PROV_INFO_PROP_ID, 0, &keyProvInfo)) {
+    if (!CertSetCertificateContextProperty(server_cert.get(), CERT_KEY_PROV_INFO_PROP_ID, 0, &keyProvInfo)) {
       throw system_error(GetLastError(), system_category());
     }
   }
@@ -126,14 +138,14 @@ struct context_impl {
 
   cryptographic_provider provider;
   bool use_default_cert_store = false;
-  cert_context server_cert;
+  cert_context server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
   boost::winapi::DWORD_ verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
-    cert_chain_context chain_ctx;
+    const CERT_CHAIN_CONTEXT* chain_ctx_ptr;
     if(!CertGetCertificateChain(engine,
                                 cert,
                                 nullptr,
@@ -141,9 +153,12 @@ private:
                                 &chain_parameters,
                                 0,
                                 nullptr,
-                                &chain_ctx.ptr)) {
+                                &chain_ctx_ptr)) {
       return boost::winapi::GetLastError();
     }
+
+    std::unique_ptr<const CERT_CHAIN_CONTEXT, decltype(&CertFreeCertificateChain)>
+      scoped_chain_ctx{chain_ctx_ptr, &CertFreeCertificateChain};
 
     HTTPSPolicyCallbackData https_policy{};
     https_policy.cbStruct = sizeof(https_policy);
@@ -157,7 +172,7 @@ private:
     policy_status.cbSize = sizeof(policy_status);
 
     if(!CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL,
-                                         chain_ctx.ptr,
+                                         scoped_chain_ctx.get(),
                                          &policy_params,
                                          &policy_status)) {
       return boost::winapi::GetLastError();

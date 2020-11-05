@@ -82,7 +82,7 @@ TEST_CASE("handshake") {
                                   });
 
     io_context.run();
-    CHECK(client_error.category() == boost::windows_sspi::error::get_sspi_category());
+    CHECK(client_error.category() == boost::system::system_category());
     CHECK(client_error.value() == CERT_E_UNTRUSTEDROOT);
     CHECK_FALSE(server_error);
   }
@@ -136,7 +136,7 @@ TEST_CASE("handshake") {
                     });
 
     io_context.run();
-    CHECK(error.category() == boost::windows_sspi::error::get_sspi_category());
+    CHECK(error.category() == boost::system::system_category());
     CHECK(error.value() == SEC_E_ILLEGAL_MESSAGE);
   }
 }

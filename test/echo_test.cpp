@@ -31,40 +31,59 @@ std::string generate_data(std::size_t size) {
 }
 }
 
-using SSLClientTypes = std::tuple<asio_ssl::context, asio_ssl::stream<test_stream>, asio_ssl::stream_base>;
+using SSLTypes = std::tuple<asio_ssl::context, asio_ssl::stream<test_stream>, asio_ssl::stream_base>;
 #ifdef _WIN32
-using SSPIClientTypes = std::tuple<boost::windows_sspi::context, boost::windows_sspi::stream<test_stream>, boost::windows_sspi::stream_base>;
+using SSPITypes = std::tuple<boost::windows_sspi::context,
+                             boost::windows_sspi::stream<test_stream>,
+                             boost::windows_sspi::stream_base>;
 #endif
 
 #ifdef _WIN32
-using ClientTypes = std::tuple<SSLClientTypes, SSPIClientTypes>;
+using TestTypes = std::tuple<std::tuple<SSLTypes, SSLTypes>,
+                             std::tuple<SSPITypes, SSLTypes>,
+                             std::tuple<SSLTypes, SSPITypes>,
+                             std::tuple<SSPITypes, SSPITypes>>;
 #else
-using ClientTypes = std::tuple<SSLClientTypes>;
+using TestTypes = std::tuple<std::tuple<SSLTypes, SSLTypes>>;
 #endif
 
-TEMPLATE_LIST_TEST_CASE("echo test", "", ClientTypes) {
-  static_assert(std::tuple_size<TestType>::value == 3, "Expected exactly three client TLS types");
-  using ClientTLSContext = typename std::tuple_element<0, TestType>::type;
-  using ClientTLSStream = typename std::tuple_element<1, TestType>::type;
-  using ClientTLSStreamBase = typename std::tuple_element<2, TestType>::type;
+TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
+  static_assert(std::tuple_size<TestType>::value == 2, "Expected exactly two implementation types");
+  using ClientTypes = typename std::tuple_element<0, TestType>::type;
+  static_assert(std::tuple_size<ClientTypes>::value == 3, "Expected exactly three client implementaion types");
+  using ServerTypes = typename std::tuple_element<1, TestType>::type;
+  static_assert(std::tuple_size<ServerTypes>::value == 3, "Expected exactly three server implementaion types");
+
+  using ClientTLSContext = typename std::tuple_element<0, ClientTypes>::type;
+  using ClientTLSStream = typename std::tuple_element<1, ClientTypes>::type;
+  using ClientTLSStreamBase = typename std::tuple_element<2, ClientTypes>::type;
+
+  using ServerTLSContext = typename std::tuple_element<0, ServerTypes>::type;
+  using ServerTLSStream = typename std::tuple_element<1, ServerTypes>::type;
+  using ServerTLSStreamBase = typename std::tuple_element<2, ServerTypes>::type;
 
   auto test_data_size = GENERATE(0x100, 0x100 - 1, 0x100 + 1,
                                  0x1000, 0x1000 - 1, 0x1000 + 1,
                                  0x10000, 0x10000 - 1, 0x10000 + 1,
                                  0x100000, 0x100000 - 1, 0x100000 + 1);
   const std::string test_data = generate_data(test_data_size);
-  boost::system::error_code ec;
+  boost::system::error_code client_ec;
+  boost::system::error_code server_ec;
 
-  ClientTLSContext client_ctx(ClientTLSContext::tls_client);
-  client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, ec);
+  ClientTLSContext client_ctx(ClientTLSContext::tlsv12);
+  client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, client_ec);
+  REQUIRE_FALSE(client_ec);
 
-  boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
-  server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
-  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
+  ServerTLSContext server_ctx(ServerTLSContext::tlsv12);
+  server_ctx.use_certificate_file(TEST_CERTIFICATE_PATH, ServerTLSContext::pem, server_ec);
+  REQUIRE_FALSE(server_ec);
+
+  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, ServerTLSContext::pem, server_ec);
+  REQUIRE_FALSE(server_ec);
 
   net::io_context io_context;
   ClientTLSStream client_stream(io_context, client_ctx);
-  boost::asio::ssl::stream<boost::beast::test::stream> server_stream(io_context, server_ctx);
+  ServerTLSStream server_stream(io_context, server_ctx);
 
   client_stream.next_layer().connect(server_stream.next_layer());
 
@@ -72,12 +91,15 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", ClientTypes) {
     // As the handshake requires multiple read and writes between client
     // and server, we have to run the synchronous version in a separate
     // thread. Unfortunately.
-    std::thread server_handshake([&server_stream]() {
-      server_stream.handshake(boost::asio::ssl::stream_base::server);
+    std::thread server_handshake([&server_stream, &server_ec]() {
+      server_stream.handshake(ServerTLSStreamBase::server, server_ec);
+      REQUIRE_FALSE(server_ec);
     });
-    client_stream.handshake(ClientTLSStreamBase::client, ec);
-    REQUIRE_FALSE(ec);
+    client_stream.handshake(ClientTLSStreamBase::client, client_ec);
+    REQUIRE_FALSE(client_ec);
+
     server_handshake.join();
+    REQUIRE_FALSE(server_ec);
 
     net::write(client_stream, net::buffer(test_data));
 
@@ -91,21 +113,24 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", ClientTypes) {
     // As a shutdown potentially requires multiple read and writes
     // between client and server, we have to run the synchronous version
     // in a separate thread. Unfortunately.
-    std::thread server_shutdown([&server_stream]() {
-      server_stream.shutdown();
+    std::thread server_shutdown([&server_stream, &server_ec]() {
+      server_stream.shutdown(server_ec);
+      REQUIRE_FALSE(server_ec);
     });
-    client_stream.shutdown(ec);
-    REQUIRE_FALSE(ec);
+    client_stream.shutdown(client_ec);
+    REQUIRE_FALSE(client_ec);
+
     server_shutdown.join();
+    REQUIRE_FALSE(server_ec);
 
     CHECK(std::string(net::buffers_begin(client_data.data()),
                       net::buffers_begin(client_data.data()) + client_data.size()) == test_data);
   }
 
   SECTION("async test") {
-    async_server<boost::asio::ssl::context,
-                 boost::asio::ssl::stream<boost::beast::test::stream>,
-                 boost::asio::ssl::stream_base>
+    async_server<ServerTLSContext,
+                 ServerTLSStream,
+                 ServerTLSStreamBase>
       server(server_stream, server_ctx);
 
     async_client<ClientTLSContext,

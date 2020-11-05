@@ -26,6 +26,7 @@ if (WIN32)
   target_link_libraries(boost-windows-sspi INTERFACE
     Crypt32
     Secur32
+    Rpcrt4
     )
 
   # Target Windows 7

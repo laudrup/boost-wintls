@@ -18,24 +18,24 @@ namespace windows_sspi {
 namespace detail {
 namespace sspi_functions {
 
-inline SecurityFunctionTable* sspi_function_table() {
-  static SecurityFunctionTable* impl = InitSecurityInterface();
+inline SecurityFunctionTableW* sspi_function_table() {
+  static SecurityFunctionTableW* impl = InitSecurityInterfaceW();
   // TODO: Figure out some way to signal this to the user instead of aborting
   BOOST_ASSERT_MSG(impl != nullptr, "Unable to initialize SecurityFunctionTable");
   return impl;
 }
 
-inline SECURITY_STATUS AcquireCredentialsHandleA(LPSTR pszPrincipal,
-                                                 LPSTR pszPackage,
-                                                 unsigned long fCredentialUse,
-                                                 void* pvLogonId,
-                                                 void* pAuthData,
-                                                 SEC_GET_KEY_FN pGetKeyFn,
-                                                 void* pvGetKeyArgument,
-                                                 PCredHandle phCredential,
-                                                 PTimeStamp ptsExpiry) {
-  return sspi_function_table()->AcquireCredentialsHandleA(pszPrincipal,
-                                                          pszPackage,
+inline SECURITY_STATUS AcquireCredentialsHandle(SEC_WCHAR* pPrincipal,
+                                                SEC_WCHAR* pPackage,
+                                                unsigned long fCredentialUse,
+                                                void* pvLogonId,
+                                                void* pAuthData,
+                                                SEC_GET_KEY_FN pGetKeyFn,
+                                                void* pvGetKeyArgument,
+                                                PCredHandle phCredential,
+                                                PTimeStamp ptsExpiry) {
+  return sspi_function_table()->AcquireCredentialsHandleW(pPrincipal,
+                                                          pPackage,
                                                           fCredentialUse,
                                                           pvLogonId,
                                                           pAuthData,
@@ -49,21 +49,21 @@ inline SECURITY_STATUS DeleteSecurityContext(PCtxtHandle phContext) {
   return sspi_function_table()->DeleteSecurityContext(phContext);
 }
 
-inline SECURITY_STATUS InitializeSecurityContextA(PCredHandle phCredential,
-                                                  PCtxtHandle phContext,
-                                                  SEC_CHAR* pszTargetName,
-                                                  unsigned long fContextReq,
-                                                  unsigned long Reserved1,
-                                                  unsigned long TargetDataRep,
-                                                  PSecBufferDesc pInput,
-                                                  unsigned long Reserved2,
-                                                  PCtxtHandle phNewContext,
-                                                  PSecBufferDesc pOutput,
-                                                  unsigned long* pfContextAttr,
-                                                  PTimeStamp ptsExpiry) {
-  return sspi_function_table()->InitializeSecurityContextA(phCredential,
+inline SECURITY_STATUS InitializeSecurityContext(PCredHandle phCredential,
+                                                 PCtxtHandle phContext,
+                                                 SEC_WCHAR* pTargetName,
+                                                 unsigned long fContextReq,
+                                                 unsigned long Reserved1,
+                                                 unsigned long TargetDataRep,
+                                                 PSecBufferDesc pInput,
+                                                 unsigned long Reserved2,
+                                                 PCtxtHandle phNewContext,
+                                                 PSecBufferDesc pOutput,
+                                                 unsigned long* pfContextAttr,
+                                                 PTimeStamp ptsExpiry) {
+  return sspi_function_table()->InitializeSecurityContextW(phCredential,
                                                            phContext,
-                                                           pszTargetName,
+                                                           pTargetName,
                                                            fContextReq,
                                                            Reserved1,
                                                            TargetDataRep,
@@ -99,6 +99,25 @@ inline SECURITY_STATUS ApplyControlToken(PCtxtHandle phContext, PSecBufferDesc p
   return sspi_function_table()->ApplyControlToken(phContext, pInput);
 }
 
+inline SECURITY_STATUS AcceptSecurityContext(PCredHandle phCredential,
+                                             PCtxtHandle phContext,
+                                             PSecBufferDesc pInput,
+                                             unsigned long fContextReq,
+                                             unsigned long TargetDataRep,
+                                             PCtxtHandle phNewContext,
+                                             PSecBufferDesc pOutput,
+                                             unsigned long* pfContextAttr,
+                                             PTimeStamp ptsExpiry) {
+  return sspi_function_table()->AcceptSecurityContext(phCredential,
+                                                      phContext,
+                                                      pInput,
+                                                      fContextReq,
+                                                      TargetDataRep,
+                                                      phNewContext,
+                                                      pOutput,
+                                                      pfContextAttr,
+                                                      ptsExpiry);
+}
 } // namespace sspi_functions
 } // namespace detail
 } // namespace windows_sspi

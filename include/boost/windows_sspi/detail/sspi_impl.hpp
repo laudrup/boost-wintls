@@ -11,10 +11,12 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 
+#include <boost/windows_sspi/stream_base.hpp>
+
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
 #include <boost/windows_sspi/detail/config.hpp>
 
-#include <boost/core/ignore_unused.hpp>
+#include <boost/winapi/basic_types.hpp>
 
 #include <array>
 #include <vector>
@@ -23,21 +25,21 @@ namespace boost {
 namespace windows_sspi {
 namespace detail {
 
-struct cert_context {
-  ~cert_context() {
-    CertFreeCertificateContext(ptr);
-  }
-
-  CERT_CONTEXT* ptr = nullptr;
-};
-
-const DWORD context_flags =
+const DWORD client_context_flags =
   ISC_REQ_SEQUENCE_DETECT | // Detect messages received out of sequence
   ISC_REQ_REPLAY_DETECT | // Detect replayed messages
   ISC_REQ_CONFIDENTIALITY | // Encrypt messages
   ISC_RET_EXTENDED_ERROR | // When errors occur, the remote party will be notified
   ISC_REQ_ALLOCATE_MEMORY | // Allocate buffers. Free them with FreeContextBuffer
   ISC_REQ_STREAM; // Support a stream-oriented connection
+
+const DWORD server_context_flags =
+  ASC_REQ_SEQUENCE_DETECT | // Detect messages received out of sequence
+  ASC_REQ_REPLAY_DETECT | // Detect replayed messages
+  ASC_REQ_CONFIDENTIALITY | // Encrypt messages
+  ASC_RET_EXTENDED_ERROR | // When errors occur, the remote party will be notified
+  ASC_REQ_ALLOCATE_MEMORY | // Allocate buffers. Free them with FreeContextBuffer
+  ASC_REQ_STREAM; // Support a stream-oriented connection
 
 class sspi_handshake {
 public:
@@ -48,41 +50,86 @@ public:
     error
   };
 
-  sspi_handshake(context& context, CtxtHandle* handle)
+  sspi_handshake(context& context, CtxtHandle* ctx_handle, CredHandle* cred_handle)
     : m_context(context)
-    , m_handle(handle)
+    , m_ctx_handle(ctx_handle)
+    , m_cred_handle(cred_handle)
     , m_last_error(SEC_E_OK) {
+  }
 
-    SecBufferDesc OutBuffer;
-    SecBuffer OutBuffers[1];
+  void operator()(stream_base::handshake_type type) {
+    m_handshake_type = type;
 
-    OutBuffers[0].pvBuffer = nullptr;
-    OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-    OutBuffers[0].cbBuffer = 0;
+    SCHANNEL_CRED creds{};
+    creds.dwVersion = SCHANNEL_CRED_VERSION;
+    // TODO: Set protocols to enable from method param from context
+    creds.grbitEnabledProtocols = 0;
+    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
 
-    OutBuffer.cBuffers = 1;
-    OutBuffer.pBuffers = OutBuffers;
-    OutBuffer.ulVersion = SECBUFFER_VERSION;
+    auto usage = [this]() {
+      switch (m_handshake_type) {
+        case stream_base::handshake_type::client:
+          return SECPKG_CRED_OUTBOUND;
+        case stream_base::handshake_type::server:
+          return SECPKG_CRED_INBOUND;
+      }
+      BOOST_UNREACHABLE_RETURN(0);
+    }();
 
-    DWORD out_flags = 0;
+    auto server_cert = m_context.server_cert();
+    if (m_handshake_type == stream_base::handshake_type::server && server_cert != nullptr) {
+      creds.cCreds = 1;
+      creds.paCred = &server_cert;
+    }
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_context.native_handle(),
-                                                                     nullptr,
-                                                                     nullptr,
-                                                                     context_flags,
-                                                                     0,
-                                                                     SECURITY_NATIVE_DREP,
-                                                                     nullptr,
-                                                                     0,
-                                                                     m_handle,
-                                                                     &OutBuffer,
-                                                                     &out_flags,
-                                                                     nullptr);
-    if (m_last_error == SEC_I_CONTINUE_NEEDED) {
-      // TODO: Avoid this copy
-      m_output_data = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
-        , reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
-      detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
+    TimeStamp expiry;
+    m_last_error = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
+                                                                    const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
+                                                                    usage,
+                                                                    nullptr,
+                                                                    &creds,
+                                                                    nullptr,
+                                                                    nullptr,
+                                                                    m_cred_handle,
+                                                                    &expiry);
+    if (m_last_error != SEC_E_OK) {
+      return;
+    }
+
+    if (m_handshake_type == stream_base::handshake_type::client) {
+      SecBufferDesc OutBuffer;
+      SecBuffer OutBuffers[1];
+
+      OutBuffers[0].pvBuffer = nullptr;
+      OutBuffers[0].BufferType = SECBUFFER_TOKEN;
+      OutBuffers[0].cbBuffer = 0;
+
+      OutBuffer.cBuffers = 1;
+      OutBuffer.pBuffers = OutBuffers;
+      OutBuffer.ulVersion = SECBUFFER_VERSION;
+
+      DWORD out_flags = 0;
+
+      m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
+                                                                       nullptr,
+                                                                       nullptr,
+                                                                       client_context_flags,
+                                                                       0,
+                                                                       SECURITY_NATIVE_DREP,
+                                                                       nullptr,
+                                                                       0,
+                                                                       m_ctx_handle,
+                                                                       &OutBuffer,
+                                                                       &out_flags,
+                                                                       nullptr);
+      if (m_last_error == SEC_I_CONTINUE_NEEDED) {
+        // TODO: Avoid this copy
+        m_output_data = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
+          , reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
+        detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
+      }
+    } else {
+      m_last_error = SEC_I_CONTINUE_NEEDED;
     }
   }
 
@@ -124,19 +171,35 @@ public:
 
     DWORD out_flags = 0;
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_context.native_handle(),
-                                                                     m_handle,
-                                                                     nullptr,
-                                                                     context_flags,
-                                                                     0,
-                                                                     SECURITY_NATIVE_DREP,
+    switch(m_handshake_type) {
+      case stream_base::handshake_type::client:
+        m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
+                                                                         m_ctx_handle,
+                                                                         nullptr,
+                                                                         client_context_flags,
+                                                                         0,
+                                                                         SECURITY_NATIVE_DREP,
+                                                                         &InBuffer,
+                                                                         0,
+                                                                         nullptr,
+                                                                         &OutBuffer,
+                                                                         &out_flags,
+                                                                         nullptr);
+        break;
+      case stream_base::handshake_type::server: {
+        const bool first_call = m_ctx_handle->dwLower == 0 && m_ctx_handle->dwUpper == 0;
+        TimeStamp expiry;
+        m_last_error = detail::sspi_functions::AcceptSecurityContext(m_cred_handle,
+                                                                     first_call ? nullptr : m_ctx_handle,
                                                                      &InBuffer,
-                                                                     0,
-                                                                     nullptr,
+                                                                     server_context_flags,
+                                                                     SECURITY_NATIVE_DREP,
+                                                                     first_call ? m_ctx_handle : nullptr,
                                                                      &OutBuffer,
                                                                      &out_flags,
-                                                                     nullptr);
-
+                                                                     &expiry);
+      }
+    }
     if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
       // Some data needs to be reused for the next call, move that to the front for reuse
       // TODO: Test that this works.
@@ -160,13 +223,15 @@ public:
 
       case SEC_E_OK: {
         if (m_context.m_verify_mode != verify_none) {
-          cert_context remote_cert;
-          m_last_error = detail::sspi_functions::QueryContextAttributes(m_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &remote_cert.ptr);
+          const CERT_CONTEXT* ctx_ptr = nullptr;
+          m_last_error = detail::sspi_functions::QueryContextAttributes(m_ctx_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
           if (m_last_error != SEC_E_OK) {
             return state::error;
           }
 
-          m_last_error = m_context.verify_certificate(remote_cert.ptr);
+          cert_context remote_cert{ctx_ptr, &CertFreeCertificateContext};
+
+          m_last_error = m_context.verify_certificate(remote_cert.get());
           if (m_last_error != SEC_E_OK) {
             return state::error;
           }
@@ -203,8 +268,10 @@ public:
 
 private:
   context& m_context;
-  CtxtHandle* m_handle;
+  CtxtHandle* m_ctx_handle;
+  CredHandle* m_cred_handle;
   SECURITY_STATUS m_last_error;
+  stream_base::handshake_type m_handshake_type;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
 };
@@ -321,7 +388,7 @@ public:
 
   sspi_decrypt(CtxtHandle* context)
     : m_context(context)
-    , m_last_error(SEC_E_OK){
+    , m_last_error(SEC_E_OK) {
   }
 
   state operator()() {
@@ -445,7 +512,7 @@ public:
     m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
                                                                      m_context,
                                                                      NULL,
-                                                                     context_flags,
+                                                                     client_context_flags,
                                                                      0,
                                                                      SECURITY_NATIVE_DREP,
                                                                      NULL,
@@ -467,9 +534,8 @@ public:
   }
 
   void consume(std::size_t size) {
-    boost::ignore_unused(size);
     // TODO: Handle this instead of asserting
-    BOOST_ASSERT(size == m_buf.size());
+    BOOST_VERIFY(size == m_buf.size());
     // TODO: RAII this buffer to ensure it's freed even if the consume function is never called
     detail::sspi_functions::FreeContextBuffer(const_cast<void*>(m_buf.data()));
     m_buf = net::const_buffer{};
@@ -489,10 +555,10 @@ private:
 class sspi_impl {
 public:
   sspi_impl(context& ctx)
-    : handshake(ctx, &m_context)
+    : handshake(ctx, &m_context, &m_credentials)
     , encrypt(&m_context)
     , decrypt(&m_context)
-    , shutdown(&m_context, ctx.native_handle()) {
+    , shutdown(&m_context, &m_credentials) {
   }
 
   sspi_impl(const sspi_impl&) = delete;
@@ -500,10 +566,12 @@ public:
 
   ~sspi_impl() {
     detail::sspi_functions::DeleteSecurityContext(&m_context);
+    detail::sspi_functions::FreeCredentialsHandle(&m_credentials);
   }
 
 private:
-  CtxtHandle m_context;
+  CredHandle m_credentials{0, 0};
+  CtxtHandle m_context{0, 0};
 
 public:
   // TODO: Find some better names

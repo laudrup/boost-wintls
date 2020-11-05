@@ -11,150 +11,44 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
 
+#include <boost/windows_sspi/detail/config.hpp>
+#include <boost/windows_sspi/detail/cryptographic_provider.hpp>
+#include <boost/windows_sspi/detail/sspi_functions.hpp>
+#include <boost/windows_sspi/detail/win32_crypto.hpp>
+#include <boost/windows_sspi/detail/win32_file.hpp>
 #include <boost/windows_sspi/error.hpp>
 
-#include <boost/windows_sspi/detail/sspi_functions.hpp>
-#include <boost/windows_sspi/detail/config.hpp>
-
-#include <boost/winapi/file_management.hpp>
-#include <boost/winapi/handles.hpp>
-#include <boost/winapi/access_rights.hpp>
-
-// TODO: Consider adding function prototypes to avoid this include
-#include <wincrypt.h>
+#include <boost/assert.hpp>
 
 namespace boost {
 namespace windows_sspi {
 namespace detail {
 
-struct cert_chain_context {
-  ~cert_chain_context() {
-    CertFreeCertificateChain(ptr);
-  }
-
-  PCCERT_CHAIN_CONTEXT ptr = nullptr;
-};
-
-struct cert_chain_engine {
-  ~cert_chain_engine() {
-    CertFreeCertificateChainEngine(ptr);
-  }
-
-  HCERTCHAINENGINE ptr = nullptr;
-};
-
 struct context_impl {
+
   context_impl()
     : m_cert_store(CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr)) {
     if (m_cert_store == nullptr) {
-      throw boost::system::system_error(error::make_error_code(boost::winapi::GetLastError()), "CertOpenStore");
-    }
-
-    SCHANNEL_CRED creds{};
-    creds.dwVersion = SCHANNEL_CRED_VERSION;
-    // TODO: Set protocols to enable from method param from context
-    creds.grbitEnabledProtocols = 0;
-    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
-
-    TimeStamp expiry;
-    // TODO: As this depends on whether the credentials are used for client or server, this needs to be moved to the handshake implementation
-    SECURITY_STATUS sc = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                          const_cast<SEC_CHAR*>(UNISP_NAME),
-                                                                          SECPKG_CRED_OUTBOUND, // TODO: Should probably be set based on client/server
-                                                                          nullptr,
-                                                                          &creds,
-                                                                          nullptr,
-                                                                          nullptr,
-                                                                          &m_handle,
-                                                                          &expiry);
-    if (sc != SEC_E_OK) {
-      throw boost::system::system_error(error::make_error_code(sc), "AcquireCredentialsHandleA");
+      throw_last_error("CertOpenStore");
     }
   }
 
   ~context_impl() {
     CertCloseStore(m_cert_store, 0);
-    detail::sspi_functions::FreeCredentialsHandle(&m_handle);
   }
 
-  CredHandle* handle() {
-    return &m_handle;
-  }
-
-  void add_certificate_authority(const net::const_buffer& ca, boost::system::error_code& ec) {
-    using cert_context_type = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeCertificateContext)>;
-
-    boost::winapi::DWORD_ size;
-    if (!CryptStringToBinary(reinterpret_cast<const char*>(ca.data()),
-                             static_cast<boost::winapi::DWORD_>(ca.size()),
-                             0,
-                             nullptr,
-                             &size,
-                             nullptr,
-                             nullptr)) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
-    }
-
-    std::vector<boost::winapi::BYTE_> buffer(size);
-    if (!CryptStringToBinary(reinterpret_cast<const char*>(ca.data()),
-                             static_cast<boost::winapi::DWORD_>(ca.size()),
-                             0,
-                             buffer.data(),
-                             &size,
-                             nullptr,
-                             nullptr)) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
-    }
-
-    cert_context_type cert{CertCreateCertificateContext(X509_ASN_ENCODING, buffer.data(), size),
-      CertFreeCertificateContext};
-    if (!cert) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
-    }
-
+  void add_certificate_authority(const net::const_buffer& ca) {
+    cert_context cert{pem_to_cert_context(ca), &CertFreeCertificateContext};
     if(!CertAddCertificateContextToStore(m_cert_store,
                                          cert.get(),
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
+      throw_last_error("CertAddCertificateContextToStore");
     }
   }
 
-  void load_verify_file(const std::string& filename, boost::system::error_code& ec) {
-    using file_handle_type = std::unique_ptr<std::remove_pointer<boost::winapi::HANDLE_>::type,
-                                             decltype(&boost::winapi::CloseHandle)>;
-
-    file_handle_type handle{boost::winapi::CreateFile(filename.c_str(),
-                                                      boost::winapi::GENERIC_READ_,
-                                                      boost::winapi::FILE_SHARE_READ_,
-                                                      nullptr,
-                                                      boost::winapi::OPEN_EXISTING_,
-                                                      boost::winapi::FILE_ATTRIBUTE_NORMAL_,
-                                                      nullptr),
-      boost::winapi::CloseHandle};
-    if (handle.get() == boost::winapi::INVALID_HANDLE_VALUE_) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
-    }
-
-    boost::winapi::LARGE_INTEGER_ size;
-    if(!boost::winapi::GetFileSizeEx(handle.get(), &size)) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
-    }
-
-    std::vector<char> buffer(static_cast<std::size_t>(size.QuadPart));
-    boost::winapi::DWORD_ read;
-    if(!boost::winapi::ReadFile(handle.get(), buffer.data(), static_cast<boost::winapi::DWORD_>(buffer.size()), &read, nullptr)) {
-      ec.assign(boost::winapi::GetLastError(), boost::system::system_category());
-      return;
-    }
-
-    add_certificate_authority(net::buffer(buffer), ec);
+  void load_verify_file(const std::string& filename) {
+    add_certificate_authority(net::buffer(read_file(filename)));
   }
 
   boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
@@ -164,14 +58,21 @@ struct context_impl {
     chain_engine_config.cbSize = sizeof(chain_engine_config);
     chain_engine_config.hExclusiveRoot = m_cert_store;
 
-    cert_chain_engine chain_engine;
+    struct cert_chain_engine {
+      ~cert_chain_engine() {
+        CertFreeCertificateChainEngine(ptr);
+      }
+      HCERTCHAINENGINE ptr = nullptr;
+    } chain_engine;
+
     if(!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
       return boost::winapi::GetLastError();
     }
-    boost::winapi::DWORD_ status = verify_certificate_chain(cert, chain_engine.ptr);
 
     // Calling CertGetCertificateChain with a NULL pointer engine uses
     // the default system certificate store
+    boost::winapi::DWORD_ status = verify_certificate_chain(cert, chain_engine.ptr);
+
     if (status != boost::winapi::ERROR_SUCCESS_ && use_default_cert_store) {
       status = verify_certificate_chain(cert, nullptr);
     }
@@ -179,14 +80,73 @@ struct context_impl {
     return status;
   }
 
+  void use_certificate(const net::const_buffer& certificate, context_base::file_format format) {
+    BOOST_VERIFY_MSG(format == context_base::file_format::pem, "Only PEM format currently implemented");
+    server_cert.reset(pem_to_cert_context(certificate));
+  }
+
+  void use_certificate_file(const std::string& filename, context_base::file_format format) {
+    use_certificate(net::buffer(read_file(filename)), format);
+  }
+
+  void use_private_key(const net::const_buffer& private_key, context_base::file_format format) {
+    using namespace boost::system;
+    using namespace boost::winapi;
+
+    // TODO: Handle ASN.1 DER format
+    BOOST_VERIFY_MSG(format == context_base::file_format::pem, "Only PEM format currently implemented");
+    auto data = crypt_decode_object_ex(net::buffer(crypt_string_to_binary(private_key)), PKCS_PRIVATE_KEY_INFO);
+    auto private_key_info = reinterpret_cast<CRYPT_PRIVATE_KEY_INFO*>(data.data());
+
+    // TODO: Set proper error code instead of asserting
+    BOOST_VERIFY_MSG(strcmp(private_key_info->Algorithm.pszObjId, szOID_RSA_RSA) == 0, "Only RSA keys supported");
+    auto rsa_private_key = crypt_decode_object_ex(net::buffer(private_key_info->PrivateKey.pbData,
+                                                              private_key_info->PrivateKey.cbData),
+                                                  PKCS_RSA_PRIVATE_KEY);
+
+    struct crypt_key {
+      ~crypt_key() {
+        CryptDestroyKey(ptr);
+      }
+
+      HCRYPTKEY ptr = 0;
+    } key;
+
+    if (!CryptImportKey(provider.ptr,
+                        rsa_private_key.data(),
+                        static_cast<boost::winapi::DWORD_>(rsa_private_key.size()),
+                        0,
+                        0,
+                        &key.ptr)) {
+      throw_last_error("CryptImportKey");
+    }
+
+    CRYPT_KEY_PROV_INFO keyProvInfo{};
+    keyProvInfo.pwszContainerName = const_cast<LPWSTR_>(provider.container_name.c_str());
+    keyProvInfo.pwszProvName = const_cast<LPWSTR_>(MS_ENHANCED_PROV);
+    keyProvInfo.dwFlags = CERT_SET_KEY_PROV_HANDLE_PROP_ID | CERT_SET_KEY_CONTEXT_PROP_ID;
+    keyProvInfo.dwProvType = PROV_RSA_FULL;
+    keyProvInfo.dwKeySpec = AT_KEYEXCHANGE;
+
+    if (!CertSetCertificateContextProperty(server_cert.get(), CERT_KEY_PROV_INFO_PROP_ID, 0, &keyProvInfo)) {
+      throw_last_error("CertSetCertificateContextProperty");
+    }
+  }
+
+  void use_private_key_file(const std::string& filename, context_base::file_format format) {
+    use_private_key(net::buffer(read_file(filename)), format);
+  }
+
+  cryptographic_provider provider;
   bool use_default_cert_store = false;
+  cert_context server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
   boost::winapi::DWORD_ verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
-    cert_chain_context chain_ctx;
+    const CERT_CHAIN_CONTEXT* chain_ctx_ptr;
     if(!CertGetCertificateChain(engine,
                                 cert,
                                 nullptr,
@@ -194,9 +154,12 @@ private:
                                 &chain_parameters,
                                 0,
                                 nullptr,
-                                &chain_ctx.ptr)) {
+                                &chain_ctx_ptr)) {
       return boost::winapi::GetLastError();
     }
+
+    std::unique_ptr<const CERT_CHAIN_CONTEXT, decltype(&CertFreeCertificateChain)>
+      scoped_chain_ctx{chain_ctx_ptr, &CertFreeCertificateChain};
 
     HTTPSPolicyCallbackData https_policy{};
     https_policy.cbStruct = sizeof(https_policy);
@@ -210,7 +173,7 @@ private:
     policy_status.cbSize = sizeof(policy_status);
 
     if(!CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL,
-                                         chain_ctx.ptr,
+                                         scoped_chain_ctx.get(),
                                          &policy_params,
                                          &policy_status)) {
       return boost::winapi::GetLastError();
@@ -220,7 +183,6 @@ private:
   }
 
   HCERTSTORE m_cert_store;
-  CredHandle m_handle;
 };
 
 } // namespace detail

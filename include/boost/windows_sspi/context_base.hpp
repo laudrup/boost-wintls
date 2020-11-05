@@ -91,6 +91,15 @@ public:
     /// TLS server.
     tls_server
   };
+
+  /// File format types.
+  enum file_format {
+    /// ASN.1 file.
+    asn1,
+
+    /// PEM file.
+    pem
+  };
 };
 
 } // namespace windows_sspi

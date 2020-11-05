@@ -25,10 +25,11 @@ namespace windows_sspi {
 namespace detail {
 
 struct context_impl {
+
   context_impl()
     : m_cert_store(CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr)) {
     if (m_cert_store == nullptr) {
-      throw boost::system::system_error(error::make_error_code(boost::winapi::GetLastError()), "CertOpenStore");
+      throw_last_error("CertOpenStore");
     }
   }
 
@@ -42,7 +43,7 @@ struct context_impl {
                                          cert.get(),
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
-      throw boost::system::system_error(boost::winapi::GetLastError(), boost::system::system_category());
+      throw_last_error("CertAddCertificateContextToStore");
     }
   }
 
@@ -117,7 +118,7 @@ struct context_impl {
                         0,
                         0,
                         &key.ptr)) {
-      throw system_error(GetLastError(), system_category());
+      throw_last_error("CryptImportKey");
     }
 
     CRYPT_KEY_PROV_INFO keyProvInfo{};
@@ -128,7 +129,7 @@ struct context_impl {
     keyProvInfo.dwKeySpec = AT_KEYEXCHANGE;
 
     if (!CertSetCertificateContextProperty(server_cert.get(), CERT_KEY_PROV_INFO_PROP_ID, 0, &keyProvInfo)) {
-      throw system_error(GetLastError(), system_category());
+      throw_last_error("CertSetCertificateContextProperty");
     }
   }
 

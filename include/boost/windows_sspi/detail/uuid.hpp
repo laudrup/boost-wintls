@@ -1,7 +1,4 @@
 //
-// windows_sspi/detail/uuid.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -10,6 +7,8 @@
 
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_UUID_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_UUID_HPP
+
+#include <boost/windows_sspi/error.hpp>
 
 #include <boost/winapi/error_codes.hpp>
 
@@ -36,12 +35,12 @@ inline std::wstring create_uuid() {
   UUID uuid;
   auto ret = UuidCreate(&uuid);
   if (ret != RPC_S_OK) {
-    throw boost::system::system_error(ret, boost::system::system_category());
+    throw_error(boost::windows_sspi::error::make_error_code(ret), "UuidCreate");
   }
   rpc_wstring rpc_wstr;
   ret = UuidToStringW(&uuid, &rpc_wstr.ptr);
   if (ret != RPC_S_OK) {
-    throw boost::system::system_error(ret, boost::system::system_category());
+    throw_error(boost::windows_sspi::error::make_error_code(ret), "UuidToStringW");
   }
   return std::wstring(reinterpret_cast<wchar_t*>(rpc_wstr.ptr));
 }

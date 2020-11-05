@@ -388,7 +388,7 @@ public:
 
   sspi_decrypt(CtxtHandle* context)
     : m_context(context)
-    , m_last_error(SEC_E_OK){
+    , m_last_error(SEC_E_OK) {
   }
 
   state operator()() {

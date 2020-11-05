@@ -1,7 +1,4 @@
 //
-// windows_sspi/detail/win32_file.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -10,6 +7,8 @@
 
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_WIN32_FILE_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_WIN32_FILE_HPP
+
+#include <boost/windows_sspi/error.hpp>
 
 #include <boost/winapi/file_management.hpp>
 #include <boost/winapi/access_rights.hpp>
@@ -23,7 +22,6 @@ namespace windows_sspi {
 namespace detail {
 
 inline std::vector<char> read_file(const std::string& filename) {
-  using namespace boost::system;
   using namespace boost::winapi;
   using file_handle_type = std::unique_ptr<std::remove_pointer<HANDLE_>::type, decltype(&CloseHandle)>;
 
@@ -38,18 +36,18 @@ inline std::vector<char> read_file(const std::string& filename) {
                                      FILE_ATTRIBUTE_NORMAL_,
                                      nullptr), CloseHandle};
   if (handle.get() == INVALID_HANDLE_VALUE_) {
-    throw system_error(GetLastError(), system_category());
+    throw_last_error("CreateFile");
   }
 
   LARGE_INTEGER_ size;
   if (!GetFileSizeEx(handle.get(), &size)) {
-    throw system_error(GetLastError(), system_category());
+    throw_last_error("GetFileSizeEx");
   }
 
   std::vector<char> buffer(static_cast<std::size_t>(size.QuadPart));
   DWORD_ read;
   if (!ReadFile(handle.get(), buffer.data(), static_cast<DWORD_>(buffer.size()), &read, nullptr)) {
-    throw system_error(GetLastError(), system_category());
+    throw_last_error("ReadFile");
   }
   return buffer;
 }
@@ -58,4 +56,4 @@ inline std::vector<char> read_file(const std::string& filename) {
 } // namespace windows_sspi
 } // namespace boost
 
-#endif
+#endif // BOOST_WINDOWS_SSPI_DETAIL_WIN32_FILE_HPP

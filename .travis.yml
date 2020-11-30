@@ -1,0 +1,15 @@
+language: cpp
+
+script:
+  - pwd
+  - echo "This is documentation" > docs/html/index.html
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  local_dir: doc/html
+  github-token: $GITHUB_TOKEN
+  keep-history: true
+  target_branch: gh-pages
+  on:
+    branch: master

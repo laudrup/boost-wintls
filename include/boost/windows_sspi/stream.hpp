@@ -12,13 +12,15 @@
 #include <boost/windows_sspi/error.hpp>
 #include <boost/windows_sspi/stream_base.hpp>
 
+#include <boost/windows_sspi/detail/async_handshake_impl.hpp>
+#include <boost/windows_sspi/detail/async_read_impl.hpp>
+#include <boost/windows_sspi/detail/async_shutdown_impl.hpp>
+#include <boost/windows_sspi/detail/async_write_impl.hpp>
+
 #include <boost/asio/compose.hpp>
-#include <boost/asio/coroutine.hpp>
 #include <boost/asio/io_context.hpp>
 
 #include <boost/system/error_code.hpp>
-
-#include <boost/core/ignore_unused.hpp>
 
 #include <array>
 #include <iterator>
@@ -27,235 +29,6 @@
 
 namespace boost {
 namespace windows_sspi {
-
-// TODO: Move away from this file
-template <typename NextLayer>
-struct async_handshake_impl : boost::asio::coroutine {
-  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, stream_base::handshake_type type)
-    : m_next_layer(next_layer)
-    , m_sspi_impl(sspi_impl)
-    , m_entry_count(0) {
-    m_sspi_impl.handshake(type);
-  }
-
-  template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
-    if (ec) {
-      self.complete(ec);
-      return;
-    }
-
-    ++m_entry_count;
-    auto is_continuation = [this] {
-      return m_entry_count > 1;
-    };
-
-    detail::sspi_handshake::state state;
-    BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
-        if (state == detail::sspi_handshake::state::data_needed) {
-          // TODO: Use a fixed size buffer instead
-          m_input.resize(0x10000);
-          BOOST_ASIO_CORO_YIELD {
-            auto buf = net::buffer(m_input);
-            m_next_layer.async_read_some(buf, std::move(self));
-          }
-          m_sspi_impl.handshake.put({m_input.data(), m_input.data() + length});
-          m_input.clear();
-          continue;
-        }
-
-        if (state == detail::sspi_handshake::state::data_available) {
-          m_output = m_sspi_impl.handshake.get();
-          BOOST_ASIO_CORO_YIELD
-          {
-            auto buf = net::buffer(m_output);
-            net::async_write(m_next_layer, buf, std::move(self));
-          }
-          continue;
-        }
-
-        if (state == detail::sspi_handshake::state::error) {
-          if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
-              auto e = self.get_executor();
-              net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-            }
-          }
-          self.complete(m_sspi_impl.handshake.last_error());
-          return;
-        }
-      }
-
-      if (!is_continuation()) {
-        BOOST_ASIO_CORO_YIELD {
-          auto e = self.get_executor();
-          net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-        }
-      }
-      BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
-      self.complete(m_sspi_impl.handshake.last_error());
-    }
-  }
-
-private:
-  NextLayer& m_next_layer;
-  detail::sspi_impl& m_sspi_impl;
-  int m_entry_count;
-  std::vector<char> m_input;
-  std::vector<char> m_output;
-};
-
-// TODO: Move away from this file
-template <typename NextLayer, typename ConstBufferSequence>
-struct async_write_impl : boost::asio::coroutine {
-  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_impl& sspi_impl)
-    : m_next_layer(next_layer)
-    , m_buffer(buffer)
-    , m_sspi_impl(sspi_impl) {
-  }
-
-  template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
-    boost::ignore_unused(length);
-    BOOST_ASIO_CORO_REENTER(*this) {
-      m_bytes_consumed = m_sspi_impl.encrypt(m_buffer, ec);
-      if (ec) {
-        self.complete(ec, 0);
-        return;
-      }
-
-      BOOST_ASIO_CORO_YIELD {
-        // TODO: Avoid this copy by consuming from the buffer in sspi_encrypt instead
-        m_message = m_sspi_impl.encrypt.data();
-        auto buf = net::buffer(m_message);
-        net::async_write(m_next_layer, buf, std::move(self));
-      }
-      self.complete(ec, m_bytes_consumed);
-    }
-  }
-
-private:
-  NextLayer& m_next_layer;
-  ConstBufferSequence m_buffer;
-  detail::sspi_impl& m_sspi_impl;
-  std::vector<char> m_message;
-  size_t m_bytes_consumed{0};
-};
-
-// TODO: Move away from this file
-template <typename NextLayer, typename MutableBufferSequence>
-struct async_read_impl : boost::asio::coroutine {
-  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_impl& sspi_impl)
-    : m_next_layer(next_layer)
-    , m_buffers(buffers)
-    , m_sspi_impl(sspi_impl)
-    , m_entry_count(0) {
-  }
-
-  template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
-    if (ec) {
-      self.complete(ec, length);
-      return;
-    }
-
-    ++m_entry_count;
-    auto is_continuation = [this] {
-      return m_entry_count > 1;
-    };
-
-    detail::sspi_decrypt::state state;
-    BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
-        BOOST_ASIO_CORO_YIELD {
-          // TODO: Use a fixed size buffer instead
-          m_input.resize(0x10000);
-          auto buf = net::buffer(m_input);
-          m_next_layer.async_read_some(buf, std::move(self));
-        }
-        m_sspi_impl.decrypt.put({m_input.begin(), m_input.begin() + length});
-        m_input.clear();
-        continue;
-      }
-
-      if (state == detail::sspi_decrypt::state::error) {
-        if (!is_continuation()) {
-          BOOST_ASIO_CORO_YIELD {
-            auto e = self.get_executor();
-            net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-          }
-        }
-        ec = m_sspi_impl.decrypt.last_error();
-        self.complete(ec, 0);
-        return;
-      }
-
-      // TODO: Avoid this copy if possible
-      const auto data = m_sspi_impl.decrypt.get(net::buffer_size(m_buffers));
-      std::size_t bytes_copied = net::buffer_copy(m_buffers, net::buffer(data));
-      BOOST_ASSERT(bytes_copied == data.size());
-      self.complete(boost::system::error_code{}, bytes_copied);
-    }
-  }
-
-private:
-  NextLayer& m_next_layer;
-  MutableBufferSequence m_buffers;
-  detail::sspi_impl& m_sspi_impl;
-  int m_entry_count;
-  std::vector<char> m_input;
-};
-
-// TODO: Move away from this file
-template <typename NextLayer>
-struct async_shutdown_impl : boost::asio::coroutine {
-  async_shutdown_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
-    : m_next_layer(next_layer)
-    , m_sspi_impl(sspi_impl)
-    , m_entry_count(0) {
-  }
-
-  template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
-    if (ec) {
-      self.complete(ec);
-      return;
-    }
-
-    ++m_entry_count;
-    auto is_continuation = [this] {
-      return m_entry_count > 1;
-    };
-
-    BOOST_ASIO_CORO_REENTER(*this) {
-      if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::data_available) {
-        BOOST_ASIO_CORO_YIELD {
-          net::async_write(m_next_layer, m_sspi_impl.shutdown.output(), std::move(self));
-        }
-        m_sspi_impl.shutdown.consume(length);
-        self.complete({});
-        return;
-      }
-
-      if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::error) {
-        if (!is_continuation()) {
-          BOOST_ASIO_CORO_YIELD {
-            auto e = self.get_executor();
-            net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-          }
-        }
-        self.complete(m_sspi_impl.shutdown.last_error());
-        return;
-      }
-    }
-  }
-
-private:
-  NextLayer& m_next_layer;
-  detail::sspi_impl& m_sspi_impl;
-  int m_entry_count;
-};
 
 template <typename NextLayer>
 class stream : public stream_base {
@@ -323,7 +96,7 @@ public:
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, token);
+        detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, token);
   }
 
   template <typename MutableBufferSequence>
@@ -355,7 +128,7 @@ public:
     typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
+        detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
   }
 
   template <typename ConstBufferSequence>
@@ -378,7 +151,7 @@ public:
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
+        detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
   }
 
   void shutdown(boost::system::error_code& ec) {
@@ -398,7 +171,7 @@ public:
     typename net::async_result<typename std::decay<CompletionToken>::type,
                                void(boost::system::error_code)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, token);
+        detail::async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, token);
   }
 
 private:

@@ -177,7 +177,11 @@ int main(int argc, char** argv) {
   ctx.set_default_verify_paths();
 
   // Verify the remote server's certificate
+#ifdef _WIN32
+  ctx.verify_server_certificate(true);
+#else
   ctx.set_verify_mode(ssl::verify_peer);
+#endif
 
   // Launch the asynchronous operation
   // The session is constructed with a strand to

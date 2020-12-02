@@ -15,6 +15,5 @@
 #include <boost/windows_sspi/error.hpp>
 #include <boost/windows_sspi/stream.hpp>
 #include <boost/windows_sspi/stream_base.hpp>
-#include <boost/windows_sspi/verify_mode.hpp>
 
 #endif // BOOST_WINDOWS_SSPI_HPP

@@ -222,7 +222,7 @@ public:
         return state::data_needed;
 
       case SEC_E_OK: {
-        if (m_context.m_verify_mode != verify_none) {
+        if (m_context.m_verify_server_certificate) {
           const CERT_CONTEXT* ctx_ptr = nullptr;
           m_last_error = detail::sspi_functions::QueryContextAttributes(m_ctx_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
           if (m_last_error != SEC_E_OK) {

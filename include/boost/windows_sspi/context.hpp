@@ -12,7 +12,6 @@
 #define BOOST_WINDOWS_SSPI_CONTEXT_HPP
 
 #include <boost/windows_sspi/context_base.hpp>
-#include <boost/windows_sspi/verify_mode.hpp>
 
 #include <boost/windows_sspi/detail/context_impl.hpp>
 #include <boost/windows_sspi/detail/config.hpp>
@@ -25,15 +24,17 @@
 namespace boost {
 namespace windows_sspi {
 
+/// @cond
 namespace detail {
 class sspi_handshake;
 }
+/// @endcond
 
 class context : public context_base {
 public:
   explicit context(method)
     : m_impl(std::make_unique<detail::context_impl>())
-    , m_verify_mode(verify_none) {
+    , m_verify_server_certificate(false) {
   }
 
   void add_certificate_authority(const net::const_buffer& ca, boost::system::error_code& ec) {
@@ -61,13 +62,17 @@ public:
     m_impl->load_verify_file(filename);
   }
 
-  void set_verify_mode(verify_mode v, boost::system::error_code& ec) {
-    ec = {};
-    m_verify_mode = v;
-  }
-
-  void set_verify_mode(verify_mode v) {
-    m_verify_mode = v;
+  /** Enables/disables remote server certificate verification
+   *
+   * This function may be used to enable clients to verify the
+   * certificate presented by the server with the known trusted
+   * certificates.
+   *
+   * @param verify True if the remote server certificate should be
+   * verified
+   */
+  void verify_server_certificate(bool verify) {
+    m_verify_server_certificate = verify;
   }
 
   void set_default_verify_paths() {
@@ -129,7 +134,7 @@ public:
 
 private:
   boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
-    if (m_verify_mode == verify_none) {
+    if (!m_verify_server_certificate) {
       return boost::winapi::ERROR_SUCCESS_;
     }
     return m_impl->verify_certificate(cert);
@@ -142,7 +147,7 @@ private:
   friend class stream_base;
   friend class detail::sspi_handshake;
   std::unique_ptr<detail::context_impl> m_impl;
-  verify_mode m_verify_mode;
+  bool m_verify_server_certificate;
 };
 
 } // namespace windows_sspi

@@ -41,10 +41,6 @@ TEST_CASE("handshake") {
   SECTION("no certificate validation") {
     using namespace boost::system;
 
-    auto verify_error = errc::make_error_code(errc::not_supported);
-    client_ctx.set_verify_mode(boost::windows_sspi::verify_none, verify_error);
-    REQUIRE_FALSE(verify_error);
-
     auto client_error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
@@ -65,9 +61,7 @@ TEST_CASE("handshake") {
   SECTION("no trusted certificate") {
     using namespace boost::system;
 
-    auto verify_error = errc::make_error_code(errc::not_supported);
-    client_ctx.set_verify_mode(boost::windows_sspi::verify_peer, verify_error);
-    REQUIRE_FALSE(verify_error);
+    client_ctx.verify_server_certificate(true);
 
     auto client_error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::windows_sspi::stream_base::client,
@@ -90,9 +84,7 @@ TEST_CASE("handshake") {
   SECTION("trusted certificate verified") {
     using namespace boost::system;
 
-    auto verify_error = errc::make_error_code(errc::not_supported);
-    client_ctx.set_verify_mode(boost::windows_sspi::verify_peer, verify_error);
-    REQUIRE_FALSE(verify_error);
+    client_ctx.verify_server_certificate(true);
 
     auto certificate_error = errc::make_error_code(errc::not_supported);
     client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, certificate_error);

@@ -42,7 +42,7 @@ TEST_CASE("handshake") {
     using namespace boost::system;
 
     auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
                                     client_error = ec;
                                     io_context.stop();
@@ -64,7 +64,7 @@ TEST_CASE("handshake") {
     client_ctx.verify_server_certificate(true);
 
     auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
                                   [&client_error](const boost::system::error_code& ec) {
                                     client_error = ec;
                                   });
@@ -91,7 +91,7 @@ TEST_CASE("handshake") {
     REQUIRE_FALSE(certificate_error);
 
     auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
                                     client_error = ec;
                                     io_context.stop();
@@ -111,7 +111,7 @@ TEST_CASE("handshake") {
     using namespace boost::system;
 
     auto error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::stream_base::client,
+    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
                                   [&error](const boost::system::error_code& ec) {
                                     error = ec;
                                   });

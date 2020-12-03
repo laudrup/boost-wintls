@@ -98,7 +98,7 @@ public:
       return fail(ec, "connect");
 
     // Perform the SSL handshake
-    stream_.async_handshake(ssl::stream_base::client, beast::bind_front_handler(&session::on_handshake, shared_from_this()));
+    stream_.async_handshake(ssl::handshake_type::client, beast::bind_front_handler(&session::on_handshake, shared_from_this()));
   }
 
   void on_handshake(beast::error_code ec) {

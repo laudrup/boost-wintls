@@ -8,10 +8,10 @@
 #ifndef BOOST_WINDOWS_SSPI_STREAM_HPP
 #define BOOST_WINDOWS_SSPI_STREAM_HPP
 
-#include <boost/windows_sspi/detail/sspi_impl.hpp>
 #include <boost/windows_sspi/error.hpp>
-#include <boost/windows_sspi/stream_base.hpp>
+#include <boost/windows_sspi/handshake_type.hpp>
 
+#include <boost/windows_sspi/detail/sspi_impl.hpp>
 #include <boost/windows_sspi/detail/async_handshake_impl.hpp>
 #include <boost/windows_sspi/detail/async_read_impl.hpp>
 #include <boost/windows_sspi/detail/async_shutdown_impl.hpp>
@@ -31,7 +31,7 @@ namespace boost {
 namespace windows_sspi {
 
 template <typename NextLayer>
-class stream : public stream_base {
+class stream {
 public:
   using next_layer_type = typename std::remove_reference<NextLayer>::type;
   using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;

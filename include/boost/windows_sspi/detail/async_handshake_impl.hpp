@@ -8,6 +8,8 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
 
+#include <boost/windows_sspi/handshake_type.hpp>
+
 #include <boost/asio/coroutine.hpp>
 
 namespace boost {
@@ -16,7 +18,7 @@ namespace detail {
 
 template <typename NextLayer>
 struct async_handshake_impl : boost::asio::coroutine {
-  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, stream_base::handshake_type type)
+  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, handshake_type type)
     : m_next_layer(next_layer)
     , m_sspi_impl(sspi_impl)
     , m_entry_count(0) {

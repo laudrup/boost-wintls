@@ -42,7 +42,7 @@ using SSLTypes = std::tuple<asio_ssl::context, asio_ssl::stream<test_stream>, as
 #ifdef _WIN32
 using SSPITypes = std::tuple<boost::windows_sspi::context,
                              boost::windows_sspi::stream<test_stream>,
-                             boost::windows_sspi::stream_base>;
+                             boost::windows_sspi::handshake_type>;
 #endif
 
 #ifdef _WIN32
@@ -63,11 +63,11 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
 
   using ClientTLSContext = typename std::tuple_element<0, ClientTypes>::type;
   using ClientTLSStream = typename std::tuple_element<1, ClientTypes>::type;
-  using ClientTLSStreamBase = typename std::tuple_element<2, ClientTypes>::type;
+  using ClientHandshakeType = typename std::tuple_element<2, ClientTypes>::type;
 
   using ServerTLSContext = typename std::tuple_element<0, ServerTypes>::type;
   using ServerTLSStream = typename std::tuple_element<1, ServerTypes>::type;
-  using ServerTLSStreamBase = typename std::tuple_element<2, ServerTypes>::type;
+  using ServerHandshakeType = typename std::tuple_element<2, ServerTypes>::type;
 
   auto test_data_size = GENERATE(0x100, 0x100 - 1, 0x100 + 1,
                                  0x1000, 0x1000 - 1, 0x1000 + 1,
@@ -99,10 +99,10 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
     // and server, we have to run the synchronous version in a separate
     // thread. Unfortunately.
     std::thread server_handshake([&server_stream, &server_ec]() {
-      server_stream.handshake(ServerTLSStreamBase::server, server_ec);
+      server_stream.handshake(ServerHandshakeType::server, server_ec);
       REQUIRE_FALSE(server_ec);
     });
-    client_stream.handshake(ClientTLSStreamBase::client, client_ec);
+    client_stream.handshake(ClientHandshakeType::client, client_ec);
     REQUIRE_FALSE(client_ec);
 
     server_handshake.join();
@@ -137,12 +137,12 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
   SECTION("async test") {
     async_server<ServerTLSContext,
                  ServerTLSStream,
-                 ServerTLSStreamBase>
+                 ServerHandshakeType>
       server(server_stream, server_ctx);
 
     async_client<ClientTLSContext,
                  ClientTLSStream,
-                 ClientTLSStreamBase>
+                 ClientHandshakeType>
       client(client_stream, client_ctx, test_data);
 
     io_context.run();

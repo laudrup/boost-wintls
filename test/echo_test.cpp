@@ -9,7 +9,7 @@
 #include "async_echo_client.hpp"
 
 #ifdef _WIN32
-#include <boost/windows_sspi/windows_sspi.hpp>
+#include <boost/windows_sspi.hpp>
 #endif
 
 #include <catch2/catch.hpp>

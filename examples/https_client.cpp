@@ -24,7 +24,7 @@
 #include <boost/beast/version.hpp>
 
 #ifdef _WIN32
-#include <boost/windows_sspi/windows_sspi.hpp>
+#include <boost/windows_sspi.hpp>
 #else
 #include <boost/beast/ssl.hpp>
 #endif

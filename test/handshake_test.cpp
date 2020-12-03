@@ -2,7 +2,7 @@
 #include "async_echo_client.hpp"
 #include "tls_record.hpp"
 
-#include <boost/windows_sspi/windows_sspi.hpp>
+#include <boost/windows_sspi.hpp>
 
 #include <catch2/catch.hpp>
 

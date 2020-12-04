@@ -38,11 +38,19 @@ std::string generate_data(std::size_t size) {
 }
 }
 
-using SSLTypes = std::tuple<asio_ssl::context, asio_ssl::stream<test_stream>, asio_ssl::stream_base>;
+// TODO: Find some more sane way to handle testing both OpenSSL and
+// this SSPI/SChannel implementation in a generic way
+using SSLTypes = std::tuple<asio_ssl::context,
+                            asio_ssl::stream<test_stream>,
+                            asio_ssl::stream_base,
+                            asio_ssl::context_base,
+                            asio_ssl::context_base>;
 #ifdef _WIN32
 using SSPITypes = std::tuple<boost::windows_sspi::context,
                              boost::windows_sspi::stream<test_stream>,
-                             boost::windows_sspi::handshake_type>;
+                             boost::windows_sspi::handshake_type,
+                             boost::windows_sspi::method,
+                             boost::windows_sspi::file_format>;
 #endif
 
 #ifdef _WIN32
@@ -57,17 +65,21 @@ using TestTypes = std::tuple<std::tuple<SSLTypes, SSLTypes>>;
 TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
   static_assert(std::tuple_size<TestType>::value == 2, "Expected exactly two implementation types");
   using ClientTypes = typename std::tuple_element<0, TestType>::type;
-  static_assert(std::tuple_size<ClientTypes>::value == 3, "Expected exactly three client implementaion types");
+  static_assert(std::tuple_size<ClientTypes>::value == 5, "Expected exactly five client implementaion types");
   using ServerTypes = typename std::tuple_element<1, TestType>::type;
-  static_assert(std::tuple_size<ServerTypes>::value == 3, "Expected exactly three server implementaion types");
+  static_assert(std::tuple_size<ServerTypes>::value == 5, "Expected exactly five server implementaion types");
 
   using ClientTLSContext = typename std::tuple_element<0, ClientTypes>::type;
   using ClientTLSStream = typename std::tuple_element<1, ClientTypes>::type;
   using ClientHandshakeType = typename std::tuple_element<2, ClientTypes>::type;
+  using ClientMethodType = typename std::tuple_element<3, ClientTypes>::type;
+  using ClientFileFormatType = typename std::tuple_element<4, ClientTypes>::type;
 
   using ServerTLSContext = typename std::tuple_element<0, ServerTypes>::type;
   using ServerTLSStream = typename std::tuple_element<1, ServerTypes>::type;
   using ServerHandshakeType = typename std::tuple_element<2, ServerTypes>::type;
+  using ServerMethodType = typename std::tuple_element<3, ServerTypes>::type;
+  using ServerFileFormatType = typename std::tuple_element<4, ServerTypes>::type;
 
   auto test_data_size = GENERATE(0x100, 0x100 - 1, 0x100 + 1,
                                  0x1000, 0x1000 - 1, 0x1000 + 1,
@@ -77,15 +89,15 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
   boost::system::error_code client_ec;
   boost::system::error_code server_ec;
 
-  ClientTLSContext client_ctx(ClientTLSContext::tlsv12);
+  ClientTLSContext client_ctx(ClientMethodType::tlsv12);
   client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, client_ec);
   REQUIRE_FALSE(client_ec);
 
-  ServerTLSContext server_ctx(ServerTLSContext::tlsv12);
-  server_ctx.use_certificate_file(TEST_CERTIFICATE_PATH, ServerTLSContext::pem, server_ec);
+  ServerTLSContext server_ctx(ServerMethodType::tlsv12);
+  server_ctx.use_certificate_file(TEST_CERTIFICATE_PATH, ServerFileFormatType::pem, server_ec);
   REQUIRE_FALSE(server_ec);
 
-  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, ServerTLSContext::pem, server_ec);
+  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, ServerFileFormatType::pem, server_ec);
   REQUIRE_FALSE(server_ec);
 
   net::io_context io_context;

@@ -13,7 +13,9 @@
 
 #include <boost/windows_sspi/context.hpp>
 #include <boost/windows_sspi/error.hpp>
+#include <boost/windows_sspi/file_format.hpp>
 #include <boost/windows_sspi/handshake_type.hpp>
+#include <boost/windows_sspi/method.hpp>
 #include <boost/windows_sspi/stream.hpp>
 
 #endif // BOOST_WINDOWS_SSPI_HPP

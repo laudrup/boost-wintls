@@ -16,7 +16,7 @@ namespace net = boost::asio;
 TEST_CASE("handshake") {
   using namespace std::string_literals;
 
-  boost::windows_sspi::context client_ctx(boost::windows_sspi::context::tls_client);
+  boost::windows_sspi::context client_ctx(boost::windows_sspi::method::tls_client);
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
   server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);

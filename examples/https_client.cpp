@@ -40,9 +40,13 @@ namespace http = beast::http;        // from <boost/beast/http.hpp>
 namespace net = boost::asio;         // from <boost/asio.hpp>
 
 #ifdef _WIN32
-namespace ssl = boost::windows_sspi; // from <boost/windows_sspi/windows_sspi.hpp>
+namespace ssl = boost::windows_sspi;                        // from <boost/windows_sspi/windows_sspi.hpp>
+using method = boost::windows_sspi::method;                 // from <boost/windows_sspi/method.hpp>
+using handshake_type = boost::windows_sspi::handshake_type; // from <boost/windows_sspi/handshake_type.hpp>
 #else
-namespace ssl = boost::asio::ssl;    // from <boost/asio/ssl.hpp>
+namespace ssl = boost::asio::ssl;                                     // from <boost/asio/ssl.hpp>
+using method = boost::asio::ssl::context_base::method;                // from <boost/asio/ssl/context_base.hpp>
+using handshake_type = boost::asio::ssl::stream_base::handshake_type; // from <boost/asio/ssl/context_base.hpp>
 #endif
 
 using tcp = boost::asio::ip::tcp;    // from <boost/asio/ip/tcp.hpp>
@@ -98,7 +102,7 @@ public:
       return fail(ec, "connect");
 
     // Perform the SSL handshake
-    stream_.async_handshake(ssl::handshake_type::client, beast::bind_front_handler(&session::on_handshake, shared_from_this()));
+    stream_.async_handshake(handshake_type::client, beast::bind_front_handler(&session::on_handshake, shared_from_this()));
   }
 
   void on_handshake(beast::error_code ec) {
@@ -171,7 +175,7 @@ int main(int argc, char** argv) {
   net::io_context ioc;
 
   // The SSL context is required, and holds certificates
-  ssl::context ctx{ssl::context::tlsv12_client};
+  ssl::context ctx{method::tlsv12_client};
 
   // Use the operating systems default certficates for verification
   ctx.set_default_verify_paths();

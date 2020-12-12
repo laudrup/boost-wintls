@@ -73,7 +73,6 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
   using ClientTLSStream = typename std::tuple_element<1, ClientTypes>::type;
   using ClientHandshakeType = typename std::tuple_element<2, ClientTypes>::type;
   using ClientMethodType = typename std::tuple_element<3, ClientTypes>::type;
-  using ClientFileFormatType = typename std::tuple_element<4, ClientTypes>::type;
 
   using ServerTLSContext = typename std::tuple_element<0, ServerTypes>::type;
   using ServerTLSStream = typename std::tuple_element<1, ServerTypes>::type;

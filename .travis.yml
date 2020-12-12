@@ -1,5 +1,15 @@
 language: cpp
 
+addons:
+  apt:
+    packages:
+      - docbook
+      - docbook-xml
+      - docbook-xsl
+      - xsltproc
+      - libsaxonhe-java
+      - default-jre-headless
+
 script:
   - export SELF=$(basename $TRAVIS_BUILD_DIR)
   - cd ..

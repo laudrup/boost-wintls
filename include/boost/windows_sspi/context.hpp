@@ -1,7 +1,4 @@
 //
-// windows_sspi/context.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -11,7 +8,7 @@
 #ifndef BOOST_WINDOWS_SSPI_CONTEXT_HPP
 #define BOOST_WINDOWS_SSPI_CONTEXT_HPP
 
-#include <boost/windows_sspi/context_base.hpp>
+#include <boost/windows_sspi/method.hpp>
 
 #include <boost/windows_sspi/detail/context_impl.hpp>
 #include <boost/windows_sspi/detail/config.hpp>
@@ -30,7 +27,7 @@ class sspi_handshake;
 }
 /// @endcond
 
-class context : public context_base {
+class context {
 public:
   explicit context(method)
     : m_impl(std::make_unique<detail::context_impl>())

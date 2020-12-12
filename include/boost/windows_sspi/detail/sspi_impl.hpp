@@ -11,7 +11,7 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
 
-#include <boost/windows_sspi/stream_base.hpp>
+#include <boost/windows_sspi/handshake_type.hpp>
 
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
 #include <boost/windows_sspi/detail/config.hpp>
@@ -57,7 +57,7 @@ public:
     , m_last_error(SEC_E_OK) {
   }
 
-  void operator()(stream_base::handshake_type type) {
+  void operator()(handshake_type type) {
     m_handshake_type = type;
 
     SCHANNEL_CRED creds{};
@@ -68,16 +68,16 @@ public:
 
     auto usage = [this]() {
       switch (m_handshake_type) {
-        case stream_base::handshake_type::client:
+        case handshake_type::client:
           return SECPKG_CRED_OUTBOUND;
-        case stream_base::handshake_type::server:
+        case handshake_type::server:
           return SECPKG_CRED_INBOUND;
       }
       BOOST_UNREACHABLE_RETURN(0);
     }();
 
     auto server_cert = m_context.server_cert();
-    if (m_handshake_type == stream_base::handshake_type::server && server_cert != nullptr) {
+    if (m_handshake_type == handshake_type::server && server_cert != nullptr) {
       creds.cCreds = 1;
       creds.paCred = &server_cert;
     }
@@ -96,7 +96,7 @@ public:
       return;
     }
 
-    if (m_handshake_type == stream_base::handshake_type::client) {
+    if (m_handshake_type == handshake_type::client) {
       SecBufferDesc OutBuffer;
       SecBuffer OutBuffers[1];
 
@@ -172,7 +172,7 @@ public:
     DWORD out_flags = 0;
 
     switch(m_handshake_type) {
-      case stream_base::handshake_type::client:
+      case handshake_type::client:
         m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
                                                                          m_ctx_handle,
                                                                          nullptr,
@@ -186,7 +186,7 @@ public:
                                                                          &out_flags,
                                                                          nullptr);
         break;
-      case stream_base::handshake_type::server: {
+      case handshake_type::server: {
         const bool first_call = m_ctx_handle->dwLower == 0 && m_ctx_handle->dwUpper == 0;
         TimeStamp expiry;
         m_last_error = detail::sspi_functions::AcceptSecurityContext(m_cred_handle,
@@ -271,7 +271,7 @@ private:
   CtxtHandle* m_ctx_handle;
   CredHandle* m_cred_handle;
   SECURITY_STATUS m_last_error;
-  stream_base::handshake_type m_handshake_type;
+  handshake_type m_handshake_type;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
 };

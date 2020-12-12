@@ -11,6 +11,8 @@
 #ifndef BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
 #define BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
 
+#include <boost/windows_sspi/file_format.hpp>
+
 #include <boost/windows_sspi/detail/config.hpp>
 #include <boost/windows_sspi/detail/cryptographic_provider.hpp>
 #include <boost/windows_sspi/detail/sspi_functions.hpp>
@@ -80,21 +82,21 @@ struct context_impl {
     return status;
   }
 
-  void use_certificate(const net::const_buffer& certificate, context_base::file_format format) {
-    BOOST_VERIFY_MSG(format == context_base::file_format::pem, "Only PEM format currently implemented");
+  void use_certificate(const net::const_buffer& certificate, file_format format) {
+    BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
     server_cert.reset(pem_to_cert_context(certificate));
   }
 
-  void use_certificate_file(const std::string& filename, context_base::file_format format) {
+  void use_certificate_file(const std::string& filename, file_format format) {
     use_certificate(net::buffer(read_file(filename)), format);
   }
 
-  void use_private_key(const net::const_buffer& private_key, context_base::file_format format) {
+  void use_private_key(const net::const_buffer& private_key, file_format format) {
     using namespace boost::system;
     using namespace boost::winapi;
 
     // TODO: Handle ASN.1 DER format
-    BOOST_VERIFY_MSG(format == context_base::file_format::pem, "Only PEM format currently implemented");
+    BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
     auto data = crypt_decode_object_ex(net::buffer(crypt_string_to_binary(private_key)), PKCS_PRIVATE_KEY_INFO);
     auto private_key_info = reinterpret_cast<CRYPT_PRIVATE_KEY_INFO*>(data.data());
 
@@ -133,7 +135,7 @@ struct context_impl {
     }
   }
 
-  void use_private_key_file(const std::string& filename, context_base::file_format format) {
+  void use_private_key_file(const std::string& filename, file_format format) {
     use_private_key(net::buffer(read_file(filename)), format);
   }
 

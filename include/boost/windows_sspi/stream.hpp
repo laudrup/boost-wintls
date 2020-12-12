@@ -91,6 +91,14 @@ public:
     }
   }
 
+  void handshake(handshake_type type) {
+    boost::system::error_code ec{};
+    handshake(type, ec);
+    if (ec) {
+      detail::throw_error(ec);
+    }
+  }
+
   template <typename CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& token) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
@@ -123,6 +131,15 @@ public:
     return bytes_copied;
   }
 
+  template <typename MutableBufferSequence>
+  size_t read_some(const MutableBufferSequence& buffers) {
+    boost::system::error_code ec{};
+    read_some(buffers, ec);
+    if (ec) {
+      detail::throw_error(ec);
+    }
+  }
+
   template <typename MutableBufferSequence, typename CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffer, CompletionToken&& token) ->
     typename net::async_result<typename std::decay<CompletionToken>::type,
@@ -146,6 +163,15 @@ public:
     return bytes_consumed;
   }
 
+  template <typename ConstBufferSequence>
+  std::size_t write_some(const ConstBufferSequence& buffers) {
+    boost::system::error_code ec{};
+    write_some(buffers, ec);
+    if (ec) {
+      detail::throw_error(ec);
+    }
+  }
+
   template <typename ConstBufferSequence, typename CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffer, CompletionToken&& token) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
@@ -163,6 +189,14 @@ public:
       }
       case detail::sspi_shutdown::state::error:
         ec = m_sspi_impl.shutdown.last_error();
+    }
+  }
+
+  void shutdown() {
+    boost::system::error_code ec{};
+    shutdown(ec);
+    if (ec) {
+      detail::throw_error(ec);
     }
   }
 

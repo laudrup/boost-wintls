@@ -276,7 +276,7 @@ boostbook windows_sspi
     :
         windows_sspi_doc
     :
-        <xsl:param>boost.root=../../../..
+        <xsl:param>boost.root="https://www.boost.org/doc/libs/develop" # TODO: Figure out the correct way to handle this
         <xsl:param>chapter.autolabel=1
         <xsl:param>chunk.section.depth=8                # Depth to which sections should be chunked
         <xsl:param>chunk.first.sections=1               # Chunk the first top-level section?

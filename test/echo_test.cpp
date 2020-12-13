@@ -9,7 +9,7 @@
 #include "async_echo_client.hpp"
 
 #ifdef _WIN32
-#include <boost/windows_tls.hpp>
+#include <boost/wintls.hpp>
 #endif
 
 #include <catch2/catch.hpp>
@@ -46,11 +46,11 @@ using SSLTypes = std::tuple<asio_ssl::context,
                             asio_ssl::context_base,
                             asio_ssl::context_base>;
 #ifdef _WIN32
-using SSPITypes = std::tuple<boost::windows_tls::context,
-                             boost::windows_tls::stream<test_stream>,
-                             boost::windows_tls::handshake_type,
-                             boost::windows_tls::method,
-                             boost::windows_tls::file_format>;
+using SSPITypes = std::tuple<boost::wintls::context,
+                             boost::wintls::stream<test_stream>,
+                             boost::wintls::handshake_type,
+                             boost::wintls::method,
+                             boost::wintls::file_format>;
 #endif
 
 #ifdef _WIN32

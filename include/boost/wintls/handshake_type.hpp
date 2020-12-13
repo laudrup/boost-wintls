@@ -5,11 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_HANDSHAKE_TYPE_HPP
-#define BOOST_WINDOWS_TLS_HANDSHAKE_TYPE_HPP
+#ifndef BOOST_WINTLS_HANDSHAKE_TYPE_HPP
+#define BOOST_WINTLS_HANDSHAKE_TYPE_HPP
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 
 /// Different handshake types.
 enum class handshake_type {
@@ -20,7 +20,7 @@ enum class handshake_type {
   server
 };
 
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
 #endif

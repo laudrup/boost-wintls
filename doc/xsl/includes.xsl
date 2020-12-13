@@ -10,6 +10,6 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template mode="convenience-header" match="@file[contains(., 'boost/windows_tls')]">windows_tls.hpp</xsl:template>
+  <xsl:template mode="convenience-header" match="@file[contains(., 'boost/wintls')]">wintls.hpp</xsl:template>
   <xsl:template mode="convenience-header" match="@file"/>
 <!-- INCLUDES_FOOT_TEMPLATE END -->

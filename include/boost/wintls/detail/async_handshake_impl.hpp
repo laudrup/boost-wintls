@@ -5,15 +5,15 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
+#define BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
 
-#include <boost/windows_tls/handshake_type.hpp>
+#include <boost/wintls/handshake_type.hpp>
 
 #include <boost/asio/coroutine.hpp>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
@@ -94,7 +94,7 @@ private:
 };
 
 } // namespace detail
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif //BOOST_WINDOWS_TLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
+#endif //BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP

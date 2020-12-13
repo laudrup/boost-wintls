@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_SSPI_IMPL_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_SSPI_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_SSPI_IMPL_HPP
+#define BOOST_WINTLS_DETAIL_SSPI_IMPL_HPP
 
-#include <boost/windows_tls/handshake_type.hpp>
+#include <boost/wintls/handshake_type.hpp>
 
-#include <boost/windows_tls/detail/sspi_functions.hpp>
-#include <boost/windows_tls/detail/config.hpp>
+#include <boost/wintls/detail/sspi_functions.hpp>
+#include <boost/wintls/detail/config.hpp>
 
 #include <boost/winapi/basic_types.hpp>
 
@@ -19,7 +19,7 @@
 #include <vector>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 namespace detail {
 
 const DWORD client_context_flags =
@@ -579,7 +579,7 @@ public:
 };
 
 } // namespace detail
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_DETAIL_SSPI_IMPL_HPP
+#endif // BOOST_WINTLS_DETAIL_SSPI_IMPL_HPP

@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_WIN32_FILE_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_WIN32_FILE_HPP
+#ifndef BOOST_WINTLS_DETAIL_WIN32_FILE_HPP
+#define BOOST_WINTLS_DETAIL_WIN32_FILE_HPP
 
-#include <boost/windows_tls/error.hpp>
+#include <boost/wintls/error.hpp>
 
 #include <boost/winapi/file_management.hpp>
 #include <boost/winapi/access_rights.hpp>
@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 namespace detail {
 
 inline std::vector<char> read_file(const std::string& filename) {
@@ -53,7 +53,7 @@ inline std::vector<char> read_file(const std::string& filename) {
 }
 
 } // namespace detail
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_DETAIL_WIN32_FILE_HPP
+#endif // BOOST_WINTLS_DETAIL_WIN32_FILE_HPP

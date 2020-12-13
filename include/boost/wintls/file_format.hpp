@@ -5,17 +5,22 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_CONFIG_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_CONFIG_HPP
-
-#include <boost/asio.hpp>
+#ifndef BOOST_WINTLS_FILE_FORMAT_HPP
+#define BOOST_WINTLS_FILE_FORMAT_HPP
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 
-namespace net = boost::asio;
+/// File format types.
+enum class file_format {
+  /// ASN.1 file.
+  asn1,
 
-} // namespace windows_tls
+  /// PEM file.
+  pem
+};
+
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_DETAIL_CONFIG_HPP
+#endif // BOOST_WINTLS_FILE_FORMAT_HPP

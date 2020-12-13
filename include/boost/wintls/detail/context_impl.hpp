@@ -5,22 +5,22 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_CONTEXT_IMPL_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_CONTEXT_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_CONTEXT_IMPL_HPP
+#define BOOST_WINTLS_DETAIL_CONTEXT_IMPL_HPP
 
-#include <boost/windows_tls/file_format.hpp>
+#include <boost/wintls/file_format.hpp>
 
-#include <boost/windows_tls/detail/config.hpp>
-#include <boost/windows_tls/detail/cryptographic_provider.hpp>
-#include <boost/windows_tls/detail/sspi_functions.hpp>
-#include <boost/windows_tls/detail/win32_crypto.hpp>
-#include <boost/windows_tls/detail/win32_file.hpp>
-#include <boost/windows_tls/error.hpp>
+#include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/cryptographic_provider.hpp>
+#include <boost/wintls/detail/sspi_functions.hpp>
+#include <boost/wintls/detail/win32_crypto.hpp>
+#include <boost/wintls/detail/win32_file.hpp>
+#include <boost/wintls/error.hpp>
 
 #include <boost/assert.hpp>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 namespace detail {
 
 struct context_impl {
@@ -185,7 +185,7 @@ private:
 };
 
 } // namespace detail
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_DETAIL_CONTEXT_IMPL_HPP
+#endif // BOOST_WINTLS_DETAIL_CONTEXT_IMPL_HPP

@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/windows_tls/error.hpp>
+#include <boost/wintls/error.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -16,7 +16,7 @@ extern "C" __declspec(dllimport) void __stdcall SetLastError(unsigned long);
 
 TEST_CASE("SECURITY_STATUS error code") {
   SECURITY_STATUS sc = SEC_E_ILLEGAL_MESSAGE;
-  auto ec = boost::windows_tls::error::make_error_code(sc);
+  auto ec = boost::wintls::error::make_error_code(sc);
   CHECK(ec.value() == sc);
   CHECK(ec.message() == "The message received was unexpected or badly formatted");
 }
@@ -27,7 +27,7 @@ TEST_CASE("throw last error") {
 
   ::SetLastError(ERROR_FAIL_I24);
   try {
-    boost::windows_tls::detail::throw_last_error("YetAnotherUglyWindowsAPIFunctionEx3");
+    boost::wintls::detail::throw_last_error("YetAnotherUglyWindowsAPIFunctionEx3");
   } catch (const boost::system::system_error& ex) {
     error = ex;
   }

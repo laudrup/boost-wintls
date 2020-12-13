@@ -5,8 +5,8 @@
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ]
 
-[library Boost.WindowsSSPI
-    [id windows_tls]
+[library Boost.WinTLS
+    [id wintls]
     [quickbook 1.6]
     [copyright 2020 Kasper Laudrup]
     [purpose Windows TLS]
@@ -24,7 +24,7 @@
 [template indexterm1[term1] '''<indexterm><primary>'''[term1]'''</primary></indexterm>''']
 [template indexterm2[term1 term2] '''<indexterm><primary>'''[term1]'''</primary><secondary>'''[term2]'''</secondary></indexterm>''']
 
-[template include_file[path][^<'''<ulink url="https://github.com/laudrup/boost-windows-tls/blob/master/include/'''[path]'''">'''[path]'''</ulink>'''>]]
+[template include_file[path][^<'''<ulink url="https://github.com/laudrup/boost-wintls/blob/master/include/'''[path]'''">'''[path]'''</ulink>'''>]]
 
 [/ Named Requirements ]
 
@@ -40,7 +40,7 @@
 [section:quickref Reference]
 [xinclude quickref.xml]
 [endsect]
-[block'''<reference id="windows_tls_hidden"><title>This Page Intentionally Left Blank 1/2</title>''']
+[block'''<reference id="wintls_hidden"><title>This Page Intentionally Left Blank 1/2</title>''']
 [section:ref This Page Intentionally Left Blank 2/2]
 [include reference.qbk]
 [endsect]

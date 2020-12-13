@@ -5,17 +5,17 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_STREAM_HPP
-#define BOOST_WINDOWS_TLS_STREAM_HPP
+#ifndef BOOST_WINTLS_STREAM_HPP
+#define BOOST_WINTLS_STREAM_HPP
 
-#include <boost/windows_tls/error.hpp>
-#include <boost/windows_tls/handshake_type.hpp>
+#include <boost/wintls/error.hpp>
+#include <boost/wintls/handshake_type.hpp>
 
-#include <boost/windows_tls/detail/sspi_impl.hpp>
-#include <boost/windows_tls/detail/async_handshake_impl.hpp>
-#include <boost/windows_tls/detail/async_read_impl.hpp>
-#include <boost/windows_tls/detail/async_shutdown_impl.hpp>
-#include <boost/windows_tls/detail/async_write_impl.hpp>
+#include <boost/wintls/detail/sspi_impl.hpp>
+#include <boost/wintls/detail/async_handshake_impl.hpp>
+#include <boost/wintls/detail/async_read_impl.hpp>
+#include <boost/wintls/detail/async_shutdown_impl.hpp>
+#include <boost/wintls/detail/async_write_impl.hpp>
 
 #include <boost/asio/compose.hpp>
 #include <boost/asio/io_context.hpp>
@@ -28,7 +28,7 @@
 #include <type_traits>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 
 template <typename NextLayer>
 class stream {
@@ -214,7 +214,7 @@ private:
   detail::sspi_impl m_sspi_impl;
 };
 
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_STREAM_HPP
+#endif // BOOST_WINTLS_STREAM_HPP

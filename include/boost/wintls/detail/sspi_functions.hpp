@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_SSPI_FUNCTIONS_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_SSPI_FUNCTIONS_HPP
+#ifndef BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
+#define BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 
-#include <boost/windows_tls/detail/sspi_types.h>
+#include <boost/wintls/detail/sspi_types.h>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 namespace detail {
 namespace sspi_functions {
 
@@ -117,7 +117,7 @@ inline SECURITY_STATUS AcceptSecurityContext(PCredHandle phCredential,
 }
 } // namespace sspi_functions
 } // namespace detail
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_DETAIL_SSPI_FUNCTIONS_HPP
+#endif // BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP

@@ -21,7 +21,7 @@ before_build:
   - cmake -H. -B./build -T "%TOOLSET%" -DBOOST_ROOT="C:/Libraries/boost_1_73_0"
 
 build:
-  project: build/boost-windows-tls.sln
+  project: build/boost-wintls.sln
 
 test_script:
   - cd build

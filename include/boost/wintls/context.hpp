@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_CONTEXT_HPP
-#define BOOST_WINDOWS_TLS_CONTEXT_HPP
+#ifndef BOOST_WINTLS_CONTEXT_HPP
+#define BOOST_WINTLS_CONTEXT_HPP
 
-#include <boost/windows_tls/method.hpp>
+#include <boost/wintls/method.hpp>
 
-#include <boost/windows_tls/detail/context_impl.hpp>
-#include <boost/windows_tls/detail/config.hpp>
+#include <boost/wintls/detail/context_impl.hpp>
+#include <boost/wintls/detail/config.hpp>
 
 #include <boost/winapi/handles.hpp>
 
@@ -19,7 +19,7 @@
 #include <string>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 
 /// @cond
 namespace detail {
@@ -147,7 +147,7 @@ private:
   bool m_verify_server_certificate;
 };
 
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_CONTEXT_HPP
+#endif // BOOST_WINTLS_CONTEXT_HPP

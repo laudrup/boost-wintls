@@ -2,7 +2,7 @@ add_executable(https_client https_client.cpp)
 
 if (WIN32)
   target_link_libraries(https_client PRIVATE
-    boost-windows-tls
+    boost-wintls
     )
   if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Temporary workaround issue https://github.com/boostorg/beast/issues/1582

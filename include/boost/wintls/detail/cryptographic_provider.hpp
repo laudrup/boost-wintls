@@ -5,14 +5,14 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_TLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
-#define BOOST_WINDOWS_TLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
+#ifndef BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
+#define BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
 
-#include <boost/windows_tls/detail/sspi_types.h>
-#include <boost/windows_tls/detail/uuid.hpp>
+#include <boost/wintls/detail/sspi_types.h>
+#include <boost/wintls/detail/uuid.hpp>
 
 namespace boost {
-namespace windows_tls {
+namespace wintls {
 namespace detail {
 
 class cryptographic_provider {
@@ -55,7 +55,7 @@ public:
 };
 
 } // namespace detail
-} // namespace windows_tls
+} // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_TLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
+#endif // BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP

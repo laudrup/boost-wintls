@@ -2,7 +2,7 @@
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT = $(LIB_DIR)/include/boost/windows_tls/
+INPUT = $(LIB_DIR)/include/boost/wintls/
 
 ALIASES                =
 INPUT_ENCODING         = UTF-8

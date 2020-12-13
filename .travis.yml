@@ -44,7 +44,7 @@ script:
 
 deploy:
   provider: pages
-  local_dir: doc/html
+  local_dir: libs/boost-windows-sspi/doc/html
   github_token: $GITHUB_TOKEN
   keep_history: true
   on:

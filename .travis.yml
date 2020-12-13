@@ -39,13 +39,13 @@ script:
   - ./bootstrap.sh
   - ./b2 headers
   - echo "using doxygen ; using boostbook ; using saxonhe ;" > ~/user-config.jam
-  - export SELF=`basename $TRAVIS_BUILD_DIR`
   - ./b2 -j3 libs/${SELF}/doc//boostrelease
 
 deploy:
   provider: pages
-  local_dir: libs/boost-windows-sspi/doc/html
+  local_dir: ../boost-root/libs/boost-windows-sspi/doc/html
   github_token: $GITHUB_TOKEN
+  skip_cleanup: true
   keep_history: true
   on:
     branch: master

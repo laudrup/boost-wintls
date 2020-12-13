@@ -5,15 +5,15 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_ASYNC_WRITE_IMPL_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_ASYNC_WRITE_IMPL_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_ASYNC_WRITE_IMPL_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_ASYNC_WRITE_IMPL_HPP
 
 #include <boost/asio/coroutine.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 
 template <typename NextLayer, typename ConstBufferSequence>
@@ -53,7 +53,7 @@ private:
 };
 
 } // detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
 

@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_UUID_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_UUID_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_UUID_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_UUID_HPP
 
-#include <boost/windows_sspi/error.hpp>
+#include <boost/windows_tls/error.hpp>
 
 #include <boost/winapi/error_codes.hpp>
 
@@ -17,7 +17,7 @@
 #include <rpc.h>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 
 struct rpc_wstring {
@@ -35,18 +35,18 @@ inline std::wstring create_uuid() {
   UUID uuid;
   auto ret = UuidCreate(&uuid);
   if (ret != RPC_S_OK) {
-    throw_error(boost::windows_sspi::error::make_error_code(ret), "UuidCreate");
+    throw_error(boost::windows_tls::error::make_error_code(ret), "UuidCreate");
   }
   rpc_wstring rpc_wstr;
   ret = UuidToStringW(&uuid, &rpc_wstr.ptr);
   if (ret != RPC_S_OK) {
-    throw_error(boost::windows_sspi::error::make_error_code(ret), "UuidToStringW");
+    throw_error(boost::windows_tls::error::make_error_code(ret), "UuidToStringW");
   }
   return std::wstring(reinterpret_cast<wchar_t*>(rpc_wstr.ptr));
 }
 
 } // namespace detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_UUID_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_UUID_HPP

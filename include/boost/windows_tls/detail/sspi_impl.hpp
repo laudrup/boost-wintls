@@ -1,20 +1,17 @@
 //
-// windows_sspi/detail/sspi_impl.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_SSPI_IMPL_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_SSPI_IMPL_HPP
 
-#include <boost/windows_sspi/handshake_type.hpp>
+#include <boost/windows_tls/handshake_type.hpp>
 
-#include <boost/windows_sspi/detail/sspi_functions.hpp>
-#include <boost/windows_sspi/detail/config.hpp>
+#include <boost/windows_tls/detail/sspi_functions.hpp>
+#include <boost/windows_tls/detail/config.hpp>
 
 #include <boost/winapi/basic_types.hpp>
 
@@ -22,7 +19,7 @@
 #include <vector>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 
 const DWORD client_context_flags =
@@ -582,7 +579,7 @@ public:
 };
 
 } // namespace detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_SSPI_IMPL_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_SSPI_IMPL_HPP

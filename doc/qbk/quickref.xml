@@ -18,12 +18,12 @@
       <entry valign="top">
         <bridgehead renderas="sect3">Classes</bridgehead>
         <simplelist type="vert" columns="1">
-          <member><link linkend="windows_sspi.ref.boost__windows_sspi__stream">stream</link></member>
-          <member><link linkend="windows_sspi.ref.boost__windows_sspi__context">context</link></member>
+          <member><link linkend="windows_tls.ref.boost__windows_tls__stream">stream</link></member>
+          <member><link linkend="windows_tls.ref.boost__windows_tls__context">context</link></member>
         </simplelist>
         <bridgehead renderas="sect3">Enumerations</bridgehead>
         <simplelist type="vert" columns="1">
-          <member><link linkend="windows_sspi.ref.boost__windows_sspi__handshake_type">handshake_type</link></member>
+          <member><link linkend="windows_tls.ref.boost__windows_tls__handshake_type">handshake_type</link></member>
         </simplelist>
       </entry>
     </row></tbody>

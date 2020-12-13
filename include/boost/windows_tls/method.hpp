@@ -5,11 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_METHOD_HPP
-#define BOOST_WINDOWS_SSPI_METHOD_HPP
+#ifndef BOOST_WINDOWS_TLS_METHOD_HPP
+#define BOOST_WINDOWS_TLS_METHOD_HPP
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 // TODO: Map to grbitEnabledProtocols member of SCHANNEL_CRED struct (and acutally use it).
 
 /// Different methods supported by a context.
@@ -87,7 +87,7 @@ enum class method {
   tls_server
 };
 
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_METHOD_HPP
+#endif // BOOST_WINDOWS_TLS_METHOD_HPP

@@ -2,7 +2,7 @@
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT = $(LIB_DIR)/include/boost/windows_sspi/
+INPUT = $(LIB_DIR)/include/boost/windows_tls/
 
 ALIASES                =
 INPUT_ENCODING         = UTF-8
@@ -39,9 +39,9 @@ SKIP_FUNCTION_MACROS   = YES
 # Project related configuration options
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = "WindowsSSPI"
+PROJECT_NAME           = "WindowsTLS"
 PROJECT_NUMBER         =
-PROJECT_BRIEF          = Windows SSPI
+PROJECT_BRIEF          = Windows TLS
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       =
 CREATE_SUBDIRS         = NO

@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_CONTEXT_HPP
-#define BOOST_WINDOWS_SSPI_CONTEXT_HPP
+#ifndef BOOST_WINDOWS_TLS_CONTEXT_HPP
+#define BOOST_WINDOWS_TLS_CONTEXT_HPP
 
-#include <boost/windows_sspi/method.hpp>
+#include <boost/windows_tls/method.hpp>
 
-#include <boost/windows_sspi/detail/context_impl.hpp>
-#include <boost/windows_sspi/detail/config.hpp>
+#include <boost/windows_tls/detail/context_impl.hpp>
+#include <boost/windows_tls/detail/config.hpp>
 
 #include <boost/winapi/handles.hpp>
 
@@ -19,7 +19,7 @@
 #include <string>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 
 /// @cond
 namespace detail {
@@ -147,7 +147,7 @@ private:
   bool m_verify_server_certificate;
 };
 
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_CONTEXT_HPP
+#endif // BOOST_WINDOWS_TLS_CONTEXT_HPP

@@ -1,20 +1,17 @@
 //
-// windows_sspi/detail/sspi_functions.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_SSPI_FUNCTIONS_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_SSPI_FUNCTIONS_HPP
 
-#include <boost/windows_sspi/detail/sspi_types.h>
+#include <boost/windows_tls/detail/sspi_types.h>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 namespace sspi_functions {
 
@@ -120,7 +117,7 @@ inline SECURITY_STATUS AcceptSecurityContext(PCredHandle phCredential,
 }
 } // namespace sspi_functions
 } // namespace detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_SSPI_FUNCTIONS_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_SSPI_FUNCTIONS_HPP

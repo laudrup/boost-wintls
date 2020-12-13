@@ -5,11 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_FILE_FORMAT_HPP
-#define BOOST_WINDOWS_SSPI_FILE_FORMAT_HPP
+#ifndef BOOST_WINDOWS_TLS_FILE_FORMAT_HPP
+#define BOOST_WINDOWS_TLS_FILE_FORMAT_HPP
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 
 /// File format types.
 enum class file_format {
@@ -20,7 +20,7 @@ enum class file_format {
   pem
 };
 
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_FILE_FORMAT_HPP
+#endif // BOOST_WINDOWS_TLS_FILE_FORMAT_HPP

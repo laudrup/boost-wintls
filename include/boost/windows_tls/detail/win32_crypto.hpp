@@ -5,19 +5,19 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_WIN32_CRYPTO_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_WIN32_CRYPTO_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_WIN32_CRYPTO_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_WIN32_CRYPTO_HPP
 
-#include <boost/windows_sspi/detail/config.hpp>
-#include <boost/windows_sspi/detail/sspi_types.h>
-#include <boost/windows_sspi/error.hpp>
+#include <boost/windows_tls/detail/config.hpp>
+#include <boost/windows_tls/detail/sspi_types.h>
+#include <boost/windows_tls/error.hpp>
 
 #include <boost/winapi/handles.hpp>
 
 #include <memory>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 
 using cert_context = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeCertificateContext)>;
@@ -83,7 +83,7 @@ inline const CERT_CONTEXT* pem_to_cert_context(const net::const_buffer& ca) {
 }
 
 } // namespace detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_WIN32_CRYPTO_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_WIN32_CRYPTO_HPP

@@ -77,7 +77,7 @@ target_link_libraries(unittest PRIVATE
 
 if (WIN32)
   target_link_libraries(unittest PRIVATE
-    boost-windows-sspi
+    boost-windows-tls
     )
 endif()
 

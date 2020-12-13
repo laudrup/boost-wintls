@@ -1,15 +1,12 @@
 //
-// windows_sspi/detail/sspi_types.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_SSPI_TYPES_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_SSPI_TYPES_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_SSPI_TYPES_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_SSPI_TYPES_HPP
 
 // TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
 // Maybe copy some relevant parts from here:
@@ -17,13 +14,13 @@
 #ifndef SECURITY_WIN32
 #define SECURITY_WIN32
 #else
-#define BOOST_WINDOWS_SSPI_SECURITY_WIN32_DEFINED
+#define BOOST_WINDOWS_TLS_SECURITY_WIN32_DEFINED
 #endif
 
 #ifndef UNICODE
 #define UNICODE
 #else
-#define BOOST_WINDOWS_SSPI_UNICODE_DEFINED
+#define BOOST_WINDOWS_TLS_UNICODE_DEFINED
 #endif
 
 #include <schannel.h>
@@ -31,12 +28,12 @@
 #include <sspi.h>
 #include <wincrypt.h>
 
-#ifndef BOOST_WINDOWS_SSPI_SECURITY_WIN32_DEFINED
+#ifndef BOOST_WINDOWS_TLS_SECURITY_WIN32_DEFINED
 #undef SECURITY_WIN32
 #endif
 
-#ifndef BOOST_WINDOWS_SSPI_UNICODE_DEFINED
+#ifndef BOOST_WINDOWS_TLS_UNICODE_DEFINED
 #undef UNICODE
 #endif
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_SSPI_TYPES_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_SSPI_TYPES_HPP

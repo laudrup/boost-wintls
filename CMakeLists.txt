@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(boost-windows-sspi CXX)
+project(boost-windows-tls CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -22,23 +22,23 @@ find_package(OpenSSL COMPONENTS SSL Crypto)
 find_package(Threads)
 
 if (WIN32)
-  add_library(boost-windows-sspi INTERFACE)
-  target_link_libraries(boost-windows-sspi INTERFACE
+  add_library(boost-windows-tls INTERFACE)
+  target_link_libraries(boost-windows-tls INTERFACE
     Boost::headers
     )
 
-  target_link_libraries(boost-windows-sspi INTERFACE
+  target_link_libraries(boost-windows-tls INTERFACE
     Crypt32
     Secur32
     Rpcrt4
     )
 
   # Target Windows 7
-  target_compile_definitions(boost-windows-sspi INTERFACE
+  target_compile_definitions(boost-windows-tls INTERFACE
     _WIN32_WINNT=0x0601
     )
 
-  target_compile_definitions(boost-windows-sspi INTERFACE
+  target_compile_definitions(boost-windows-tls INTERFACE
     BOOST_DATE_TIME_NO_LIB
     BOOST_REGEX_NO_LIB
     )
@@ -68,9 +68,9 @@ if (WIN32)
     /WX
     )
 
-  target_include_directories(boost-windows-sspi INTERFACE include)
-  target_compile_options(boost-windows-sspi INTERFACE ${MSVC_WARNINGS})
-  target_compile_definitions(boost-windows-sspi INTERFACE _CRT_SECURE_NO_WARNINGS)
+  target_include_directories(boost-windows-tls INTERFACE include)
+  target_compile_options(boost-windows-tls INTERFACE ${MSVC_WARNINGS})
+  target_compile_definitions(boost-windows-tls INTERFACE _CRT_SECURE_NO_WARNINGS)
 endif()
 
 if(ENABLE_TESTING)

@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
 
 #include <boost/asio/coroutine.hpp>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 
 template <typename NextLayer>
@@ -64,7 +64,7 @@ private:
 };
 
 } // namespace detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP

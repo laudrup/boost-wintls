@@ -12,7 +12,7 @@
 #include <boost/beast/version.hpp>
 
 #ifdef _WIN32
-#include <boost/windows_sspi.hpp>
+#include <boost/windows_tls.hpp>
 #else
 #include <boost/beast/ssl.hpp>
 #endif
@@ -26,9 +26,9 @@ namespace http = beast::http;        // from <boost/beast/http.hpp>
 namespace net = boost::asio;         // from <boost/asio.hpp>
 
 #ifdef _WIN32
-namespace ssl = boost::windows_sspi;                        // from <boost/windows_sspi/windows_sspi.hpp>
-using method = boost::windows_sspi::method;                 // from <boost/windows_sspi/method.hpp>
-using handshake_type = boost::windows_sspi::handshake_type; // from <boost/windows_sspi/handshake_type.hpp>
+namespace ssl = boost::windows_tls;                        // from <boost/windows_tls/windows_tls.hpp>
+using method = boost::windows_tls::method;                 // from <boost/windows_tls/method.hpp>
+using handshake_type = boost::windows_tls::handshake_type; // from <boost/windows_tls/handshake_type.hpp>
 #else
 namespace ssl = boost::asio::ssl;                                     // from <boost/asio/ssl.hpp>
 using method = boost::asio::ssl::context_base::method;                // from <boost/asio/ssl/context_base.hpp>

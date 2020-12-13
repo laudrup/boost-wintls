@@ -1,29 +1,26 @@
 //
-// windows_sspi/detail/context_impl.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
 // Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
-#define BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
+#ifndef BOOST_WINDOWS_TLS_DETAIL_CONTEXT_IMPL_HPP
+#define BOOST_WINDOWS_TLS_DETAIL_CONTEXT_IMPL_HPP
 
-#include <boost/windows_sspi/file_format.hpp>
+#include <boost/windows_tls/file_format.hpp>
 
-#include <boost/windows_sspi/detail/config.hpp>
-#include <boost/windows_sspi/detail/cryptographic_provider.hpp>
-#include <boost/windows_sspi/detail/sspi_functions.hpp>
-#include <boost/windows_sspi/detail/win32_crypto.hpp>
-#include <boost/windows_sspi/detail/win32_file.hpp>
-#include <boost/windows_sspi/error.hpp>
+#include <boost/windows_tls/detail/config.hpp>
+#include <boost/windows_tls/detail/cryptographic_provider.hpp>
+#include <boost/windows_tls/detail/sspi_functions.hpp>
+#include <boost/windows_tls/detail/win32_crypto.hpp>
+#include <boost/windows_tls/detail/win32_file.hpp>
+#include <boost/windows_tls/error.hpp>
 
 #include <boost/assert.hpp>
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace detail {
 
 struct context_impl {
@@ -188,7 +185,7 @@ private:
 };
 
 } // namespace detail
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_DETAIL_CONTEXT_IMPL_HPP
+#endif // BOOST_WINDOWS_TLS_DETAIL_CONTEXT_IMPL_HPP

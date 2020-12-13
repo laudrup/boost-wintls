@@ -6,7 +6,7 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
-project windows_sspi/doc ;
+project windows_tls/doc ;
 
 import os ;
 import path ;
@@ -25,7 +25,7 @@ import common ;
 # docs can be rebuild if any of the header files change.
 #
 
-local sources = [ path.glob-tree ../include/boost/windows_sspi : *.hpp *.ipp : detail impl ] ;
+local sources = [ path.glob-tree ../include/boost/windows_tls : *.hpp *.ipp : detail impl ] ;
 
 # Get the configured paths to doxygen and xsltproc
 
@@ -251,12 +251,12 @@ install images
     :
         #images/message.png
     :
-        <location>html/windows_sspi/images
+        <location>html/windows_tls/images
     ;
 
 explicit images ;
 
-xml windows_sspi_doc
+xml windows_tls_doc
     :
         qbk/main.qbk
     :
@@ -264,7 +264,7 @@ xml windows_sspi_doc
         <dependency>qbk
     ;
 
-explicit windows_sspi_doc ;
+explicit windows_tls_doc ;
 
 #-------------------------------------------------------------------------------
 #
@@ -272,9 +272,9 @@ explicit windows_sspi_doc ;
 #
 #-------------------------------------------------------------------------------
 
-boostbook windows_sspi
+boostbook windows_tls
     :
-        windows_sspi_doc
+        windows_tls_doc
     :
         <xsl:param>boost.root="https://www.boost.org/doc/libs/develop" # TODO: Figure out the correct way to handle this
         <xsl:param>chapter.autolabel=1
@@ -298,5 +298,5 @@ boostbook windows_sspi
 alias boostdoc ;
 explicit boostdoc ;
 
-alias boostrelease : windows_sspi ;
+alias boostrelease : windows_tls ;
 explicit boostrelease ;

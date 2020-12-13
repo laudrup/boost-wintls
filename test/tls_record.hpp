@@ -1,5 +1,5 @@
-#ifndef BOOST_WINDOWS_SSPI_TEST_TLS_RECORD
-#define BOOST_WINDOWS_SSPI_TEST_TLS_RECORD
+#ifndef BOOST_WINDOWS_TLS_TEST_TLS_RECORD
+#define BOOST_WINDOWS_TLS_TEST_TLS_RECORD
 
 #include <boost/asio.hpp>
 #include <boost/variant.hpp>

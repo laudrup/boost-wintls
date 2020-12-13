@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINDOWS_SSPI_ERROR_HPP
-#define BOOST_WINDOWS_SSPI_ERROR_HPP
+#ifndef BOOST_WINDOWS_TLS_ERROR_HPP
+#define BOOST_WINDOWS_TLS_ERROR_HPP
 
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
@@ -16,7 +16,7 @@
 typedef long SECURITY_STATUS;
 
 namespace boost {
-namespace windows_sspi {
+namespace windows_tls {
 namespace error {
 
 inline boost::system::error_code make_error_code(SECURITY_STATUS sc) {
@@ -48,7 +48,7 @@ inline void throw_error(const boost::system::error_code& ec, const char* msg) {
 
 } // namespace detail
 
-} // namespace windows_sspi
+} // namespace windows_tls
 } // namespace boost
 
-#endif // BOOST_WINDOWS_SSPI_ERROR_HPP
+#endif // BOOST_WINDOWS_TLS_ERROR_HPP

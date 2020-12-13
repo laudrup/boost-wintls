@@ -1,8 +1,15 @@
+//
+// Copyright (c) 2020 Kasper Laudrup (laudrup at stacktrace dot dk)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
 #include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
 #include "tls_record.hpp"
 
-#include <boost/windows_sspi.hpp>
+#include <boost/windows_tls.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -16,14 +23,14 @@ namespace net = boost::asio;
 TEST_CASE("handshake") {
   using namespace std::string_literals;
 
-  boost::windows_sspi::context client_ctx(boost::windows_sspi::method::tls_client);
+  boost::windows_tls::context client_ctx(boost::windows_tls::method::tls_client);
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
   server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
   server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
 
   net::io_context io_context;
-  boost::windows_sspi::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
+  boost::windows_tls::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
   boost::asio::ssl::stream<boost::beast::test::stream> server_stream(io_context, server_ctx);
 
   client_stream.next_layer().connect(server_stream.next_layer());
@@ -42,7 +49,7 @@ TEST_CASE("handshake") {
     using namespace boost::system;
 
     auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
+    client_stream.async_handshake(boost::windows_tls::handshake_type::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
                                     client_error = ec;
                                     io_context.stop();
@@ -64,7 +71,7 @@ TEST_CASE("handshake") {
     client_ctx.verify_server_certificate(true);
 
     auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
+    client_stream.async_handshake(boost::windows_tls::handshake_type::client,
                                   [&client_error](const boost::system::error_code& ec) {
                                     client_error = ec;
                                   });
@@ -91,7 +98,7 @@ TEST_CASE("handshake") {
     REQUIRE_FALSE(certificate_error);
 
     auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
+    client_stream.async_handshake(boost::windows_tls::handshake_type::client,
                                   [&client_error, &io_context](const boost::system::error_code& ec) {
                                     client_error = ec;
                                     io_context.stop();
@@ -111,7 +118,7 @@ TEST_CASE("handshake") {
     using namespace boost::system;
 
     auto error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::windows_sspi::handshake_type::client,
+    client_stream.async_handshake(boost::windows_tls::handshake_type::client,
                                   [&error](const boost::system::error_code& ec) {
                                     error = ec;
                                   });

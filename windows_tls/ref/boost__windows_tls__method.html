@@ -1,0 +1,377 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>method</title>
+<link rel="stylesheet" href="https://www.boost.org/doc/libs/develop/doc/src/boostbook.css" type="text/css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
+<link rel="home" href="../../index.html" title="Chapter 1. Boost.WindowsSSPI">
+<link rel="up" href="../ref.html" title="This Page Intentionally Left Blank 2/2">
+<link rel="prev" href="boost__windows_tls__handshake_type.html" title="handshake_type">
+<link rel="next" href="boost__windows_tls__error__make_error_code.html" title="error::make_error_code">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table cellpadding="2" width="100%"><tr>
+<td valign="top"><img alt="Boost C++ Libraries" width="277" height="86" src="https://www.boost.org/doc/libs/develop/boost.png"></td>
+<td align="center"><a href="https://www.boost.org/doc/libs/develop/index.html">Home</a></td>
+<td align="center"><a href="https://www.boost.org/doc/libs/develop/libs/libraries.htm">Libraries</a></td>
+<td align="center"><a href="http://www.boost.org/users/people.html">People</a></td>
+<td align="center"><a href="http://www.boost.org/users/faq.html">FAQ</a></td>
+<td align="center"><a href="https://www.boost.org/doc/libs/develop/more/index.htm">More</a></td>
+</tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="boost__windows_tls__handshake_type.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/prev.png" alt="Prev"></a><a accesskey="u" href="../ref.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/up.png" alt="Up"></a><a accesskey="h" href="../../index.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/home.png" alt="Home"></a><a accesskey="n" href="boost__windows_tls__error__make_error_code.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/next.png" alt="Next"></a>
+</div>
+<div class="section">
+<div class="titlepage"><div><div><h4 class="title">
+<a name="windows_tls.ref.boost__windows_tls__method"></a><a class="link" href="boost__windows_tls__method.html" title="method">method</a>
+</h4></div></div></div>
+<p>
+        <a class="indexterm" name="idm46129411346112"></a>
+      </p>
+<p>
+        Different methods supported by a context.
+      </p>
+<h5>
+<a name="windows_tls.ref.boost__windows_tls__method.h0"></a>
+        <span class="phrase"><a name="windows_tls.ref.boost__windows_tls__method.synopsis"></a></span><a class="link" href="boost__windows_tls__method.html#windows_tls.ref.boost__windows_tls__method.synopsis">Synopsis</a>
+      </h5>
+<p>
+        Defined in header <code class="literal">&lt;<a href="https://github.com/laudrup/boost-windows-tls/blob/master/include/boost/windows_tls/method.hpp" target="_top">boost/windows_tls/method.hpp</a>&gt;</code>
+      </p>
+<pre class="programlisting"><span class="keyword">enum</span> <span class="identifier">method</span>
+</pre>
+<h5>
+<a name="windows_tls.ref.boost__windows_tls__method.h1"></a>
+        <span class="phrase"><a name="windows_tls.ref.boost__windows_tls__method.values"></a></span><a class="link" href="boost__windows_tls__method.html#windows_tls.ref.boost__windows_tls__method.values">Values</a>
+      </h5>
+<div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                <p>
+                  Name
+                </p>
+              </th>
+<th>
+                <p>
+                  Description
+                </p>
+              </th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv2</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic SSL version 2.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv2_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  SSL version 2 client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv2_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  SSL version 2 server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv3</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic SSL version 3.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv3_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  SSL version 3 client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv3_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  SSL version 3 server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv1</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic TLS version 1.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv1_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1 client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv1_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1 server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv23</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic SSL/TLS.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv23_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  SSL/TLS client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">sslv23_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  SSL/TLS server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv11</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic TLS version 1.1.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv11_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1.1 client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv11_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1.1 server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv12</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic TLS version 1.2.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv12_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1.2 client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv12_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1.2 server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv13</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic TLS version 1.3.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv13_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1.3 client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tlsv13_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS version 1.3 server.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tls</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  Generic TLS.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tls_client</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS client.
+                </p>
+              </td>
+</tr>
+<tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">tls_server</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  TLS server.
+                </p>
+              </td>
+</tr>
+</tbody>
+</table></div>
+<h5>
+<a name="windows_tls.ref.boost__windows_tls__method.h2"></a>
+        <span class="phrase"><a name="windows_tls.ref.boost__windows_tls__method.description"></a></span><a class="link" href="boost__windows_tls__method.html#windows_tls.ref.boost__windows_tls__method.description">Description</a>
+      </h5>
+<p>
+        Convenience header <code class="literal">&lt;<a href="https://github.com/laudrup/boost-windows-tls/blob/master/include/boost/windows_tls.hpp" target="_top">boost/windows_tls.hpp</a>&gt;</code>
+      </p>
+</div>
+<table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
+<td align="left"></td>
+<td align="right"><div class="copyright-footer">Copyright © 2020 Kasper Laudrup<p>
+        Distributed under the Boost Software License, Version 1.0. (See accompanying
+        file LICENSE_1_0.txt or copy at <a href="http://www.boost.org/LICENSE_1_0.txt" target="_top">http://www.boost.org/LICENSE_1_0.txt</a>)
+      </p>
+</div></td>
+</tr></table>
+<hr>
+<div class="spirit-nav">
+<a accesskey="p" href="boost__windows_tls__handshake_type.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/prev.png" alt="Prev"></a><a accesskey="u" href="../ref.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/up.png" alt="Up"></a><a accesskey="h" href="../../index.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/home.png" alt="Home"></a><a accesskey="n" href="boost__windows_tls__error__make_error_code.html"><img src="https://www.boost.org/doc/libs/develop/doc/src/images/next.png" alt="Next"></a>
+</div>
+</body>
+</html>

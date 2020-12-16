@@ -1,4 +1,5 @@
 language: cpp
+dist: focal
 
 addons:
   apt:
@@ -7,6 +8,7 @@ addons:
       - docbook-xml
       - docbook-xsl
       - xsltproc
+      - doxygen
       - libsaxonhe-java
       - default-jre-headless
 
@@ -14,12 +16,6 @@ script:
   - export SELF=$(basename $TRAVIS_BUILD_DIR)
   - cd ..
   - mkdir tmp && cd tmp
-  - git clone -b 'Release_1_8_15' --depth 1 https://github.com/doxygen/doxygen.git
-  - cd doxygen
-  - cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Release
-  - cd build
-  - sudo make install
-  - cd ../..
   - wget -O saxonhe.zip https://sourceforge.net/projects/saxon/files/Saxon-HE/9.9/SaxonHE9-9-1-4J.zip/download
   - unzip saxonhe.zip
   - sudo rm /usr/share/java/Saxon-HE.jar

@@ -27,9 +27,9 @@
 [template include_file[path][^<'''<ulink url="https://github.com/laudrup/boost-wintls/blob/master/include/'''[path]'''">'''[path]'''</ulink>'''>]]
 
 [/ Named Requirements ]
-
-[def __Allocator__              [@https://en.cppreference.com/w/cpp/named_req/Allocator ['Allocator]]]
-
+[def __ConstBufferSequence__[@boost:/doc/html/boost_asio/reference/ConstBufferSequence.html ['ConstBufferSequence]]]
+[def __CompletionToken__ [@boost:/doc/html/boost_asio/reference/asynchronous_operations.html#boost_asio.reference.asynchronous_operations.completion_tokens_and_handlers ['CompletionToken]]]
+[def __MutableBufferSequence__ [@boost:/doc/html/boost_asio/reference/MutableBufferSequence.html ['MutableBufferSequence]]]
 [/-----------------------------------------------------------------------------]
 
 [import ../../examples/https_client.cpp]

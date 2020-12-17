@@ -30,31 +30,88 @@
 namespace boost {
 namespace wintls {
 
-template <typename NextLayer>
+/** Provides stream-oriented functionality using Windows SSPI/Schannel.
+ *
+ * The stream class template provides asynchronous and blocking
+ * stream-oriented functionality using Windows SSPI/Schannel.
+ *
+ * @tparam NextLayer The type representing the next layer, to which
+ * data will be read and written during operations. For synchronous
+ * operations, the type must support the <em>SyncStream</em> concept.
+ * For asynchronous operations, the type must support the
+ * <em>AsyncStream</em> concept.
+ */
+template<class NextLayer>
 class stream {
 public:
+  /// The type of the next layer.
   using next_layer_type = typename std::remove_reference<NextLayer>::type;
+
+  /// The type of the executor associated with the object.
   using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;
 
-  template <typename Arg>
+  /** Construct a stream.
+   *
+   * This constructor creates a stream and initialises the underlying
+   * stream object.
+   *
+   *  @param arg The argument to be passed to initialise the
+   *  underlying stream.
+   *  @param ctx The wintls @ref context to be used for the stream.
+   */
+  template <class Arg>
   stream(Arg&& arg, context& ctx)
     : m_next_layer(std::forward<Arg>(arg))
     , m_context(ctx)
     , m_sspi_impl(ctx) {
   }
 
+  /** Get the executor associated with the object.
+   *
+   * This function may be used to obtain the executor object that the
+   * stream uses to dispatch handlers for asynchronous operations.
+   *
+   * @return A copy of the executor that stream will use to dispatch
+   * handlers.
+   */
   executor_type get_executor() {
     return next_layer().get_executor();
   }
 
+  /** Get a reference to the next layer.
+   *
+   * This function returns a reference to the next layer in a stack of
+   * stream layers.
+   *
+   * @return A reference to the next layer in the stack of stream
+   * layers.  Ownership is not transferred to the caller.
+   */
   const next_layer_type& next_layer() const {
     return m_next_layer;
   }
 
+  /** Get a reference to the next layer.
+   *
+   * This function returns a reference to the next layer in a stack of
+   * stream layers.
+   *
+   * @return A reference to the next layer in the stack of stream
+   * layers.  Ownership is not transferred to the caller.
+   */
   next_layer_type& next_layer() {
     return m_next_layer;
   }
 
+  /** Perform TLS handshaking.
+   *
+   * This function is used to perform TLS handshaking on the
+   * stream. The function call will block until handshaking is
+   * complete or an error occurs.
+   *
+   * @param type The @ref handshake_type to be performed, i.e. client
+   * or server.
+   * @param ec Set to indicate what error occurred, if any.
+   */
   void handshake(handshake_type type, boost::system::error_code& ec) {
     m_sspi_impl.handshake(type);
 
@@ -91,6 +148,17 @@ public:
     }
   }
 
+  /** Perform TLS handshaking.
+   *
+   * This function is used to perform TLS handshaking on the
+   * stream. The function call will block until handshaking is
+   * complete or an error occurs.
+   *
+   * @param type The @ref handshake_type to be performed, i.e. client
+   * or server.
+   *
+   * @throws boost::system::system_error Thrown on failure.
+   */
   void handshake(handshake_type type) {
     boost::system::error_code ec{};
     handshake(type, ec);
@@ -99,7 +167,30 @@ public:
     }
   }
 
-  template <typename CompletionToken>
+  /** Start an asynchronous TLS handshake.
+   *
+   * This function is used to asynchronously perform an TLS
+   * handshake on the stream. This function call always returns
+   * immediately.
+   *
+   * @param type The @ref handshake_type to be performed, i.e. client
+   * or server.
+   * @param token The handler to be called when the operation
+   * completes. The implementation takes ownership of the handler by
+   * performing a decay-copy. The handler must be invocable with this
+   * signature:
+   * @code
+   * void handler(
+   *     boost::system::error_code // Result of operation.
+   * );
+   * @endcode
+   *
+   * @note Regardless of whether the asynchronous operation completes
+   * immediately or not, the handler will not be invoked from within
+   * this function. Invocation of the handler will be performed in a
+   * manner equivalent to using `net::post`.
+   */
+  template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& token) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code)>::return_type {
@@ -107,7 +198,23 @@ public:
         detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, token);
   }
 
-  template <typename MutableBufferSequence>
+  /** Read some data from the stream.
+   *
+   * This function is used to read data from the stream. The function
+   * call will block until one or more bytes of data has been read
+   * successfully, or until an error occurs.
+   *
+   * @param ec Set to indicate what error occurred, if any.
+   * @param buffers The buffers into which the data will be read.
+   *
+   * @returns The number of bytes read.
+   *
+   * @note The `read_some` operation may not read all of the requested
+   * number of bytes. Consider using the `net::read` function if you
+   * need to ensure that the requested amount of data is read before
+   * the blocking operation completes.
+   */
+  template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     detail::sspi_decrypt::state state;
     while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
@@ -131,7 +238,24 @@ public:
     return bytes_copied;
   }
 
-  template <typename MutableBufferSequence>
+  /** Read some data from the stream.
+   *
+   * This function is used to read data from the stream. The function
+   * call will block until one or more bytes of data has been read
+   * successfully, or until an error occurs.
+   *
+   * @param buffers The buffers into which the data will be read.
+   *
+   * @returns The number of bytes read.
+   *
+   * @throws boost::system::system_error Thrown on failure.
+   *
+   * @note The `read_some` operation may not read all of the requested
+   * number of bytes. Consider using the `net::read` function if you
+   * need to ensure that the requested amount of data is read before
+   * the blocking operation completes.
+   */
+  template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers) {
     boost::system::error_code ec{};
     read_some(buffers, ec);
@@ -140,15 +264,56 @@ public:
     }
   }
 
-  template <typename MutableBufferSequence, typename CompletionToken>
-  auto async_read_some(const MutableBufferSequence& buffer, CompletionToken&& token) ->
+  /** Start an asynchronous read.
+   *
+   * This function is used to asynchronously read one or more bytes of
+   * data from the stream. The function call always returns
+   * immediately.
+   *
+   * @param buffers The buffers into which the data will be
+   * read. Although the buffers object may be copied as necessary,
+   * ownership of the underlying buffers is retained by the caller,
+   * which must guarantee that they remain valid until the handler is
+   * called.
+   * @param token The handler to be called when the read operation
+   * completes.  Copies will be made of the handler as required. The
+   * equivalent function signature of the handler must be:
+   * @code
+   * void handler(
+   *     const boost::system::error_code& error, // Result of operation.
+   *     std::size_t bytes_transferred           // Number of bytes read.
+   * ); @endcode
+   *
+   * @note The `async_read_some` operation may not read all of the
+   * requested number of bytes. Consider using the `net::async_read`
+   * function if you need to ensure that the requested amount of data
+   * is read before the asynchronous operation completes.
+   */
+  template <class MutableBufferSequence, class CompletionToken>
+  auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& token) ->
     typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
+        detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffers, m_sspi_impl}, token);
   }
 
-  template <typename ConstBufferSequence>
+  /** Write some data to the stream.
+   *
+   * This function is used to write data on the stream. The function
+   * call will block until one or more bytes of data has been written
+   * successfully, or until an error occurs.
+   *
+   * @param buffers The data to be written.
+   * @param ec Set to indicate what error occurred, if any.
+   *
+   * @returns The number of bytes written.
+   *
+   * @note The `write_some` operation may not transmit all of the data
+   * to the peer. Consider using the `net::write` function if you need
+   * to ensure that all data is written before the blocking operation
+   * completes.
+   */
+  template <class ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
     std::size_t bytes_consumed = m_sspi_impl.encrypt(buffers, ec);
     if (ec) {
@@ -163,7 +328,24 @@ public:
     return bytes_consumed;
   }
 
-  template <typename ConstBufferSequence>
+  /** Write some data to the stream.
+   *
+   * This function is used to write data on the stream. The function
+   * call will block until one or more bytes of data has been written
+   * successfully, or until an error occurs.
+   *
+   * @param buffers The data to be written.
+   *
+   * @returns The number of bytes written.
+   *
+   * @throws boost::system::system_error Thrown on failure.
+   *
+   * @note The `write_some` operation may not transmit all of the data
+   * to the peer. Consider using the `net::write` function if you need
+   * to ensure that all data is written before the blocking operation
+   * completes.
+   */
+  template <class ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers) {
     boost::system::error_code ec{};
     write_some(buffers, ec);
@@ -172,14 +354,48 @@ public:
     }
   }
 
-  template <typename ConstBufferSequence, typename CompletionToken>
-  auto async_write_some(const ConstBufferSequence& buffer, CompletionToken&& token) ->
+
+  /** Start an asynchronous write.
+   *
+   * This function is used to asynchronously write one or more bytes
+   * of data to the stream. The function call always returns
+   * immediately.
+   *
+   * @param buffers The data to be written to the stream. Although the
+   * buffers object may be copied as necessary, ownership of the
+   * underlying buffers is retained by the caller, which must
+   * guarantee that they remain valid until the handler is called.
+   * @param token The handler to be called when the write operation
+   * completes.  Copies will be made of the handler as required. The
+   * equivalent function signature of the handler must be:
+   * @code
+   * void handler(
+   *     const boost::system::error_code& error, // Result of operation.
+   *     std::size_t bytes_transferred           // Number of bytes written.
+   * );
+   * @endcode
+   *
+   * @note The `async_write_some` operation may not transmit all of
+   * the data to the peer. Consider using the `net::async_write`
+   * function if you need to ensure that all data is written before
+   * the asynchronous operation completes.
+   */
+  template <class ConstBufferSequence, class CompletionToken>
+  auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& token) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffer, m_sspi_impl}, token);
+        detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffers, m_sspi_impl}, token);
   }
 
+  /** Shut down TLS on the stream.
+   *
+   * This function is used to shut down TLS on the stream. The
+   * function call will block until TLS has been shut down or an
+   * error occurs.
+   *
+   * @param ec Set to indicate what error occurred, if any.
+   */
   void shutdown(boost::system::error_code& ec) {
     switch(m_sspi_impl.shutdown()) {
       case detail::sspi_shutdown::state::data_available: {
@@ -192,6 +408,14 @@ public:
     }
   }
 
+  /** Shut down TLS on the stream.
+   *
+   * This function is used to shut down TLS on the stream. The
+   * function call will block until TLS has been shut down or an error
+   * occurs.
+   *
+   * @throws boost::system::system_error Thrown on failure.
+   */
   void shutdown() {
     boost::system::error_code ec{};
     shutdown(ec);
@@ -200,7 +424,21 @@ public:
     }
   }
 
-  template <typename CompletionToken>
+  /** Asynchronously shut down TLS on the stream.
+   *
+   * This function is used to asynchronously shut down TLS on the
+   * stream. This function call always returns immediately.
+   *
+   * @param handler The handler to be called when the handshake
+   * operation completes. Copies will be made of the handler as
+   * required. The equivalent function signature of the handler must
+   * be:
+   * @code void handler(
+   *     const boost::system::error_code& error // Result of operation.
+   *);
+   * @endcode
+   */
+  template <class CompletionToken>
   auto async_shutdown(CompletionToken&& token) ->
     typename net::async_result<typename std::decay<CompletionToken>::type,
                                void(boost::system::error_code)>::return_type {

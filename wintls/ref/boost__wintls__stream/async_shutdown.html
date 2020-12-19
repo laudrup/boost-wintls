@@ -27,14 +27,17 @@
 <a name="wintls.ref.boost__wintls__stream.async_shutdown"></a><a class="link" href="async_shutdown.html" title="stream::async_shutdown">stream::async_shutdown</a>
 </h5></div></div></div>
 <p>
-          <a class="indexterm" name="idm3217"></a>
+          <a class="indexterm" name="idm2822"></a>
+        </p>
+<p>
+          Asynchronously shut down TLS on the stream.
         </p>
 <h6>
 <a name="wintls.ref.boost__wintls__stream.async_shutdown.h0"></a>
           <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_shutdown.synopsis"></a></span><a class="link" href="async_shutdown.html#wintls.ref.boost__wintls__stream.async_shutdown.synopsis">Synopsis</a>
         </h6>
 <pre class="programlisting"><span class="keyword">template</span><span class="special">&lt;</span>
-    <span class="special">[</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">]&gt;</span>
+    <span class="keyword">class</span> <a href="https://www.boost.org/doc/libs/develop/doc/html/boost_asio/reference/asynchronous_operations.html#boost_asio.reference.asynchronous_operations.completion_tokens_and_handlers" target="_top"><span class="emphasis"><em>CompletionToken</em></span></a><span class="special">&gt;</span>
 <span class="keyword">auto</span>
 <span class="identifier">async_shutdown</span><span class="special">(</span>
     <span class="identifier">CompletionToken</span><span class="special">&amp;&amp;</span> <span class="identifier">token</span><span class="special">);</span>
@@ -43,6 +46,50 @@
 <a name="wintls.ref.boost__wintls__stream.async_shutdown.h1"></a>
           <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_shutdown.description"></a></span><a class="link" href="async_shutdown.html#wintls.ref.boost__wintls__stream.async_shutdown.description">Description</a>
         </h6>
+<p>
+          This function is used to asynchronously shut down TLS on the stream. This
+          function call always returns immediately.
+        </p>
+<h6>
+<a name="wintls.ref.boost__wintls__stream.async_shutdown.h2"></a>
+          <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_shutdown.parameters"></a></span><a class="link" href="async_shutdown.html#wintls.ref.boost__wintls__stream.async_shutdown.parameters">Parameters</a>
+        </h6>
+<div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                  <p>
+                    Name
+                  </p>
+                </th>
+<th>
+                  <p>
+                    Description
+                  </p>
+                </th>
+</tr></thead>
+<tbody><tr>
+<td>
+                  <p>
+                    <code class="computeroutput"><span class="identifier">handler</span></code>
+                  </p>
+                </td>
+<td>
+                  <p>
+                    The handler to be called when the handshake operation completes.
+                    Copies will be made of the handler as required. The equivalent
+                    function signature of the handler must be:
+                  </p>
+<pre xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" class="table-programlisting"> <span class="keyword">void</span> <span class="identifier">handler</span><span class="special">(</span>
+     <span class="keyword">const</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">system</span><span class="special">::</span><span class="identifier">error_code</span><span class="special">&amp;</span> <span class="identifier">error</span> <span class="comment">// Result of operation.</span>
+<span class="special">);</span>
+</pre>
+                </td>
+</tr></tbody>
+</table></div>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>

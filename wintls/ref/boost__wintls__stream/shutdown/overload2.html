@@ -27,6 +27,9 @@
 <a name="wintls.ref.boost__wintls__stream.shutdown.overload2"></a><a class="link" href="overload2.html" title="stream::shutdown (2 of 2 overloads)">stream::shutdown
           (2 of 2 overloads)</a>
 </h6></div></div></div>
+<p>
+            Shut down TLS on the stream.
+          </p>
 <h7><a name="wintls.ref.boost__wintls__stream.shutdown.overload2.h0"></a>
             <span class="phrase"><a name="wintls.ref.boost__wintls__stream.shutdown.overload2.synopsis"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.shutdown.overload2.synopsis">Synopsis</a>
           </h7><pre class="programlisting"><span class="keyword">void</span>
@@ -34,7 +37,42 @@
 </pre>
 <h7><a name="wintls.ref.boost__wintls__stream.shutdown.overload2.h1"></a>
             <span class="phrase"><a name="wintls.ref.boost__wintls__stream.shutdown.overload2.description"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.shutdown.overload2.description">Description</a>
-          </h7>
+          </h7><p>
+            This function is used to shut down TLS on the stream. The function call
+            will block until TLS has been shut down or an error occurs.
+          </p>
+<h7><a name="wintls.ref.boost__wintls__stream.shutdown.overload2.h2"></a>
+            <span class="phrase"><a name="wintls.ref.boost__wintls__stream.shutdown.overload2.exceptions"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.shutdown.overload2.exceptions">Exceptions</a>
+          </h7><div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                    <p>
+                      Type
+                    </p>
+                  </th>
+<th>
+                    <p>
+                      Thrown On
+                    </p>
+                  </th>
+</tr></thead>
+<tbody><tr>
+<td>
+                    <p>
+                      <code class="computeroutput"><span class="identifier">boost</span><span class="special">::</span><span class="identifier">system</span><span class="special">::</span><span class="identifier">system_error</span></code>
+                    </p>
+                  </td>
+<td>
+                    <p>
+                      Thrown on failure.
+                    </p>
+                  </td>
+</tr></tbody>
+</table></div>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>

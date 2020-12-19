@@ -27,14 +27,17 @@
 <a name="wintls.ref.boost__wintls__stream.stream"></a><a class="link" href="stream.html" title="stream::stream">stream::stream</a>
 </h5></div></div></div>
 <p>
-          <a class="indexterm" name="idm1726"></a>
+          <a class="indexterm" name="idm1698"></a>
+        </p>
+<p>
+          Construct a stream.
         </p>
 <h6>
 <a name="wintls.ref.boost__wintls__stream.stream.h0"></a>
           <span class="phrase"><a name="wintls.ref.boost__wintls__stream.stream.synopsis"></a></span><a class="link" href="stream.html#wintls.ref.boost__wintls__stream.stream.synopsis">Synopsis</a>
         </h6>
 <pre class="programlisting"><span class="keyword">template</span><span class="special">&lt;</span>
-    <span class="special">[</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">]&gt;</span>
+    <span class="keyword">class</span> <span class="identifier">Arg</span><span class="special">&gt;</span>
 <span class="identifier">stream</span><span class="special">(</span>
     <span class="identifier">Arg</span><span class="special">&amp;&amp;</span> <span class="identifier">arg</span><span class="special">,</span>
     <span class="identifier">context</span><span class="special">&amp;</span> <span class="identifier">ctx</span><span class="special">);</span>
@@ -43,6 +46,59 @@
 <a name="wintls.ref.boost__wintls__stream.stream.h1"></a>
           <span class="phrase"><a name="wintls.ref.boost__wintls__stream.stream.description"></a></span><a class="link" href="stream.html#wintls.ref.boost__wintls__stream.stream.description">Description</a>
         </h6>
+<p>
+          This constructor creates a stream and initialises the underlying stream
+          object.
+        </p>
+<h6>
+<a name="wintls.ref.boost__wintls__stream.stream.h2"></a>
+          <span class="phrase"><a name="wintls.ref.boost__wintls__stream.stream.parameters"></a></span><a class="link" href="stream.html#wintls.ref.boost__wintls__stream.stream.parameters">Parameters</a>
+        </h6>
+<div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                  <p>
+                    Name
+                  </p>
+                </th>
+<th>
+                  <p>
+                    Description
+                  </p>
+                </th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                  <p>
+                    <code class="computeroutput"><span class="identifier">arg</span></code>
+                  </p>
+                </td>
+<td>
+                  <p>
+                    The argument to be passed to initialise the underlying stream.
+                  </p>
+                </td>
+</tr>
+<tr>
+<td>
+                  <p>
+                    <code class="computeroutput"><span class="identifier">ctx</span></code>
+                  </p>
+                </td>
+<td>
+                  <p>
+                    The wintls <a class="link" href="../boost__wintls__context.html" title="context"><code class="computeroutput"><span class="identifier">context</span></code></a> to be used for
+                    the stream.
+                  </p>
+                </td>
+</tr>
+</tbody>
+</table></div>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>

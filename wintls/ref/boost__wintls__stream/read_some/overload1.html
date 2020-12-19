@@ -27,10 +27,13 @@
 <a name="wintls.ref.boost__wintls__stream.read_some.overload1"></a><a class="link" href="overload1.html" title="stream::read_some (1 of 2 overloads)">stream::read_some
           (1 of 2 overloads)</a>
 </h6></div></div></div>
+<p>
+            Read some data from the stream.
+          </p>
 <h7><a name="wintls.ref.boost__wintls__stream.read_some.overload1.h0"></a>
             <span class="phrase"><a name="wintls.ref.boost__wintls__stream.read_some.overload1.synopsis"></a></span><a class="link" href="overload1.html#wintls.ref.boost__wintls__stream.read_some.overload1.synopsis">Synopsis</a>
           </h7><pre class="programlisting"><span class="keyword">template</span><span class="special">&lt;</span>
-    <span class="special">[</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">]&gt;</span>
+    <span class="keyword">class</span> <a href="https://www.boost.org/doc/libs/develop/doc/html/boost_asio/reference/MutableBufferSequence.html" target="_top"><span class="emphasis"><em>MutableBufferSequence</em></span></a><span class="special">&gt;</span>
 <span class="identifier">size_t</span>
 <span class="identifier">read_some</span><span class="special">(</span>
     <span class="keyword">const</span> <span class="identifier">MutableBufferSequence</span><span class="special">&amp;</span> <span class="identifier">buffers</span><span class="special">,</span>
@@ -38,7 +41,72 @@
 </pre>
 <h7><a name="wintls.ref.boost__wintls__stream.read_some.overload1.h1"></a>
             <span class="phrase"><a name="wintls.ref.boost__wintls__stream.read_some.overload1.description"></a></span><a class="link" href="overload1.html#wintls.ref.boost__wintls__stream.read_some.overload1.description">Description</a>
-          </h7>
+          </h7><p>
+            This function is used to read data from the stream. The function call
+            will block until one or more bytes of data has been read successfully,
+            or until an error occurs.
+          </p>
+<h7><a name="wintls.ref.boost__wintls__stream.read_some.overload1.h2"></a>
+            <span class="phrase"><a name="wintls.ref.boost__wintls__stream.read_some.overload1.parameters"></a></span><a class="link" href="overload1.html#wintls.ref.boost__wintls__stream.read_some.overload1.parameters">Parameters</a>
+          </h7><div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                    <p>
+                      Name
+                    </p>
+                  </th>
+<th>
+                    <p>
+                      Description
+                    </p>
+                  </th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                    <p>
+                      <code class="computeroutput"><span class="identifier">ec</span></code>
+                    </p>
+                  </td>
+<td>
+                    <p>
+                      Set to indicate what error occurred, if any.
+                    </p>
+                  </td>
+</tr>
+<tr>
+<td>
+                    <p>
+                      <code class="computeroutput"><span class="identifier">buffers</span></code>
+                    </p>
+                  </td>
+<td>
+                    <p>
+                      The buffers into which the data will be read.
+                    </p>
+                  </td>
+</tr>
+</tbody>
+</table></div>
+<h7><a name="wintls.ref.boost__wintls__stream.read_some.overload1.h3"></a>
+            <span class="phrase"><a name="wintls.ref.boost__wintls__stream.read_some.overload1.return_value"></a></span><a class="link" href="overload1.html#wintls.ref.boost__wintls__stream.read_some.overload1.return_value">Return
+            Value</a>
+          </h7><p>
+            The number of bytes read.
+          </p>
+<h7><a name="wintls.ref.boost__wintls__stream.read_some.overload1.h4"></a>
+            <span class="phrase"><a name="wintls.ref.boost__wintls__stream.read_some.overload1.remarks"></a></span><a class="link" href="overload1.html#wintls.ref.boost__wintls__stream.read_some.overload1.remarks">Remarks</a>
+          </h7><p>
+            The <code class="computeroutput"><span class="identifier">read_some</span></code> operation
+            may not read all of the requested number of bytes. Consider using the
+            <code class="computeroutput"><span class="identifier">net</span><span class="special">::</span><span class="identifier">read</span></code> function if you need to ensure
+            that the requested amount of data is read before the blocking operation
+            completes.
+          </p>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>

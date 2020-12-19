@@ -27,6 +27,9 @@
 <a name="wintls.ref.boost__wintls__stream.handshake.overload2"></a><a class="link" href="overload2.html" title="stream::handshake (2 of 2 overloads)">stream::handshake
           (2 of 2 overloads)</a>
 </h6></div></div></div>
+<p>
+            Perform TLS handshaking.
+          </p>
 <h7><a name="wintls.ref.boost__wintls__stream.handshake.overload2.h0"></a>
             <span class="phrase"><a name="wintls.ref.boost__wintls__stream.handshake.overload2.synopsis"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.handshake.overload2.synopsis">Synopsis</a>
           </h7><pre class="programlisting"><span class="keyword">void</span>
@@ -35,7 +38,75 @@
 </pre>
 <h7><a name="wintls.ref.boost__wintls__stream.handshake.overload2.h1"></a>
             <span class="phrase"><a name="wintls.ref.boost__wintls__stream.handshake.overload2.description"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.handshake.overload2.description">Description</a>
-          </h7>
+          </h7><p>
+            This function is used to perform TLS handshaking on the stream. The function
+            call will block until handshaking is complete or an error occurs.
+          </p>
+<h7><a name="wintls.ref.boost__wintls__stream.handshake.overload2.h2"></a>
+            <span class="phrase"><a name="wintls.ref.boost__wintls__stream.handshake.overload2.parameters"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.handshake.overload2.parameters">Parameters</a>
+          </h7><div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                    <p>
+                      Name
+                    </p>
+                  </th>
+<th>
+                    <p>
+                      Description
+                    </p>
+                  </th>
+</tr></thead>
+<tbody><tr>
+<td>
+                    <p>
+                      <code class="computeroutput"><span class="identifier">type</span></code>
+                    </p>
+                  </td>
+<td>
+                    <p>
+                      The <a class="link" href="../../boost__wintls__handshake_type.html" title="handshake_type"><code class="computeroutput"><span class="identifier">handshake_type</span></code></a> to
+                      be performed, i.e. client or server.
+                    </p>
+                  </td>
+</tr></tbody>
+</table></div>
+<h7><a name="wintls.ref.boost__wintls__stream.handshake.overload2.h3"></a>
+            <span class="phrase"><a name="wintls.ref.boost__wintls__stream.handshake.overload2.exceptions"></a></span><a class="link" href="overload2.html#wintls.ref.boost__wintls__stream.handshake.overload2.exceptions">Exceptions</a>
+          </h7><div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                    <p>
+                      Type
+                    </p>
+                  </th>
+<th>
+                    <p>
+                      Thrown On
+                    </p>
+                  </th>
+</tr></thead>
+<tbody><tr>
+<td>
+                    <p>
+                      <code class="computeroutput"><span class="identifier">boost</span><span class="special">::</span><span class="identifier">system</span><span class="special">::</span><span class="identifier">system_error</span></code>
+                    </p>
+                  </td>
+<td>
+                    <p>
+                      Thrown on failure.
+                    </p>
+                  </td>
+</tr></tbody>
+</table></div>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>

@@ -27,14 +27,17 @@
 <a name="wintls.ref.boost__wintls__stream.async_handshake"></a><a class="link" href="async_handshake.html" title="stream::async_handshake">stream::async_handshake</a>
 </h5></div></div></div>
 <p>
-          <a class="indexterm" name="idm1976"></a>
+          <a class="indexterm" name="idm2011"></a>
+        </p>
+<p>
+          Start an asynchronous TLS handshake.
         </p>
 <h6>
 <a name="wintls.ref.boost__wintls__stream.async_handshake.h0"></a>
           <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_handshake.synopsis"></a></span><a class="link" href="async_handshake.html#wintls.ref.boost__wintls__stream.async_handshake.synopsis">Synopsis</a>
         </h6>
 <pre class="programlisting"><span class="keyword">template</span><span class="special">&lt;</span>
-    <span class="special">[</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">]&gt;</span>
+    <span class="keyword">class</span> <a href="https://www.boost.org/doc/libs/develop/doc/html/boost_asio/reference/asynchronous_operations.html#boost_asio.reference.asynchronous_operations.completion_tokens_and_handlers" target="_top"><span class="emphasis"><em>CompletionToken</em></span></a><span class="special">&gt;</span>
 <span class="keyword">auto</span>
 <span class="identifier">async_handshake</span><span class="special">(</span>
     <span class="identifier">handshake_type</span> <span class="identifier">type</span><span class="special">,</span>
@@ -44,6 +47,74 @@
 <a name="wintls.ref.boost__wintls__stream.async_handshake.h1"></a>
           <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_handshake.description"></a></span><a class="link" href="async_handshake.html#wintls.ref.boost__wintls__stream.async_handshake.description">Description</a>
         </h6>
+<p>
+          This function is used to asynchronously perform an TLS handshake on the
+          stream. This function call always returns immediately.
+        </p>
+<h6>
+<a name="wintls.ref.boost__wintls__stream.async_handshake.h2"></a>
+          <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_handshake.parameters"></a></span><a class="link" href="async_handshake.html#wintls.ref.boost__wintls__stream.async_handshake.parameters">Parameters</a>
+        </h6>
+<div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                  <p>
+                    Name
+                  </p>
+                </th>
+<th>
+                  <p>
+                    Description
+                  </p>
+                </th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+                  <p>
+                    <code class="computeroutput"><span class="identifier">type</span></code>
+                  </p>
+                </td>
+<td>
+                  <p>
+                    The <a class="link" href="../boost__wintls__handshake_type.html" title="handshake_type"><code class="computeroutput"><span class="identifier">handshake_type</span></code></a> to be
+                    performed, i.e. client or server.
+                  </p>
+                </td>
+</tr>
+<tr>
+<td>
+                  <p>
+                    <code class="computeroutput"><span class="identifier">token</span></code>
+                  </p>
+                </td>
+<td>
+                  <p>
+                    The handler to be called when the operation completes. The implementation
+                    takes ownership of the handler by performing a decay-copy. The
+                    handler must be invocable with this signature:
+                  </p>
+<pre xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" class="table-programlisting"><span class="keyword">void</span> <span class="identifier">handler</span><span class="special">(</span>
+    <span class="identifier">boost</span><span class="special">::</span><span class="identifier">system</span><span class="special">::</span><span class="identifier">error_code</span> <span class="comment">// Result of operation.</span>
+<span class="special">);</span>
+</pre>
+                </td>
+</tr>
+</tbody>
+</table></div>
+<h6>
+<a name="wintls.ref.boost__wintls__stream.async_handshake.h3"></a>
+          <span class="phrase"><a name="wintls.ref.boost__wintls__stream.async_handshake.remarks"></a></span><a class="link" href="async_handshake.html#wintls.ref.boost__wintls__stream.async_handshake.remarks">Remarks</a>
+        </h6>
+<p>
+          Regardless of whether the asynchronous operation completes immediately
+          or not, the handler will not be invoked from within this function. Invocation
+          of the handler will be performed in a manner equivalent to using <code class="computeroutput"><span class="identifier">net</span><span class="special">::</span><span class="identifier">post</span></code>.
+        </p>
 </div>
 <table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
 <td align="left"></td>

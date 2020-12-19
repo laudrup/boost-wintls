@@ -26,6 +26,9 @@
 <div class="titlepage"><div><div><h4 class="title">
 <a name="wintls.ref.boost__wintls__stream"></a><a class="link" href="boost__wintls__stream.html" title="stream">stream</a>
 </h4></div></div></div>
+<p>
+        Provides stream-oriented functionality using Windows SSPI/Schannel.
+      </p>
 <h5>
 <a name="wintls.ref.boost__wintls__stream.h0"></a>
         <span class="phrase"><a name="wintls.ref.boost__wintls__stream.synopsis"></a></span><a class="link" href="boost__wintls__stream.html#wintls.ref.boost__wintls__stream.synopsis">Synopsis</a>
@@ -34,7 +37,7 @@
         Defined in header <code class="literal">&lt;<a href="https://github.com/laudrup/boost-wintls/blob/master/include/boost/wintls/stream.hpp" target="_top">boost/wintls/stream.hpp</a>&gt;</code>
       </p>
 <pre class="programlisting"><span class="keyword">template</span><span class="special">&lt;</span>
-    <span class="special">[</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">][</span><span class="identifier">role</span> <span class="identifier">red</span> <span class="identifier">error</span><span class="special">.</span><span class="identifier">param</span> <span class="identifier">neither</span> <span class="identifier">has</span> <span class="identifier">a</span> <span class="identifier">declname</span> <span class="identifier">nor</span> <span class="identifier">a</span> <span class="char">'class '</span> <span class="identifier">prefix</span> <span class="identifier">in</span> <span class="identifier">the</span> <span class="identifier">type</span><span class="special">]&gt;</span>
+    <span class="keyword">class</span> <span class="identifier">NextLayer</span><span class="special">&gt;</span>
 <span class="keyword">class</span> <span class="identifier">stream</span>
 </pre>
 <h5>
@@ -66,6 +69,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  The type of the executor associated with the object.
+                </p>
               </td>
 </tr>
 <tr>
@@ -75,6 +81,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  The type of the next layer.
+                </p>
               </td>
 </tr>
 </tbody>
@@ -109,6 +118,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Start an asynchronous TLS handshake.
+                </p>
               </td>
 </tr>
 <tr>
@@ -118,6 +130,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Start an asynchronous read.
+                </p>
               </td>
 </tr>
 <tr>
@@ -127,6 +142,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Asynchronously shut down TLS on the stream.
+                </p>
               </td>
 </tr>
 <tr>
@@ -136,6 +154,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Start an asynchronous write.
+                </p>
               </td>
 </tr>
 <tr>
@@ -145,6 +166,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Get the executor associated with the object.
+                </p>
               </td>
 </tr>
 <tr>
@@ -154,6 +178,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Perform TLS handshaking.
+                </p>
               </td>
 </tr>
 <tr>
@@ -163,6 +190,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Get a reference to the next layer.
+                </p>
               </td>
 </tr>
 <tr>
@@ -172,6 +202,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Read some data from the stream.
+                </p>
               </td>
 </tr>
 <tr>
@@ -181,6 +214,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Shut down TLS on the stream.
+                </p>
               </td>
 </tr>
 <tr>
@@ -190,6 +226,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Construct a stream.
+                </p>
               </td>
 </tr>
 <tr>
@@ -199,6 +238,9 @@
                 </p>
               </td>
 <td>
+                <p>
+                  Write some data to the stream.
+                </p>
               </td>
 </tr>
 </tbody>
@@ -207,6 +249,48 @@
 <a name="wintls.ref.boost__wintls__stream.h3"></a>
         <span class="phrase"><a name="wintls.ref.boost__wintls__stream.description"></a></span><a class="link" href="boost__wintls__stream.html#wintls.ref.boost__wintls__stream.description">Description</a>
       </h5>
+<p>
+        The stream class template provides asynchronous and blocking stream-oriented
+        functionality using Windows SSPI/Schannel.
+      </p>
+<h5>
+<a name="wintls.ref.boost__wintls__stream.h4"></a>
+        <span class="phrase"><a name="wintls.ref.boost__wintls__stream.template_parameters"></a></span><a class="link" href="boost__wintls__stream.html#wintls.ref.boost__wintls__stream.template_parameters">Template Parameters</a>
+      </h5>
+<div class="informaltable"><table class="table">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<thead><tr>
+<th>
+                <p>
+                  Type
+                </p>
+              </th>
+<th>
+                <p>
+                  Description
+                </p>
+              </th>
+</tr></thead>
+<tbody><tr>
+<td>
+                <p>
+                  <code class="computeroutput"><span class="identifier">NextLayer</span></code>
+                </p>
+              </td>
+<td>
+                <p>
+                  The type representing the next layer, to which data will be read
+                  and written during operations. For synchronous operations, the
+                  type must support the <span class="emphasis"><em>SyncStream</em></span> concept.
+                  For asynchronous operations, the type must support the <span class="emphasis"><em>AsyncStream</em></span>
+                  concept.
+                </p>
+              </td>
+</tr></tbody>
+</table></div>
 <p>
         Convenience header <code class="literal">&lt;<a href="https://github.com/laudrup/boost-wintls/blob/master/include/boost/wintls.hpp" target="_top">boost/wintls.hpp</a>&gt;</code>
       </p>

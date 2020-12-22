@@ -1,4 +1,5 @@
 on: [push]
+name: docs
 
 jobs:
   generate_documentation:

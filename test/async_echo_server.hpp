@@ -1,55 +1,55 @@
 #ifndef BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER
 #define BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER
 
+#include <catch2/catch.hpp>
+
 #include <boost/asio.hpp>
 
-template<typename TLSContext, typename TLSStream, typename TLSStreamBase>
-class async_server {
+template<typename Stream>
+class async_server : public Stream {
 public:
-  async_server(TLSStream& stream, TLSContext& context)
-    : m_context(context)
-    , m_stream(stream) {
+  using Stream::stream;
+
+  async_server(boost::asio::io_context& context)
+    : Stream(context) {
+  }
+
+  void run() {
     do_handshake();
   }
 
+private:
   void do_handshake() {
-    m_stream.async_handshake(TLSStreamBase::server,
-                             [this](const boost::system::error_code& ec) {
-                               if (!ec) {
-                                 do_read();
-                               }
-                             });
+    stream.async_handshake(Stream::handshake_type::server,
+                           [this](const boost::system::error_code& ec) {
+                             REQUIRE_FALSE(ec);
+                             do_read();
+                           });
   }
 
   void do_read() {
-    boost::asio::async_read_until(m_stream, m_data, '\0',
+    boost::asio::async_read_until(stream, recv_buffer, '\0',
                                   [this](const boost::system::error_code& ec, std::size_t) {
-                                    if (!ec) {
-                                      do_write();
-                                    }
+                                    REQUIRE_FALSE(ec);
+                                    do_write();
                                   });
   }
 
   void do_write() {
-    boost::asio::async_write(m_stream, m_data,
+    boost::asio::async_write(stream, recv_buffer,
                              [this](const boost::system::error_code& ec, std::size_t) {
-                               if (!ec) {
-                                 do_shutdown();
-                               }
+                               REQUIRE_FALSE(ec);
+                               do_shutdown();
                              });
   }
 
   void do_shutdown() {
-    m_stream.async_shutdown([](const boost::system::error_code& ec) {
-      if (!ec) {
-      }
+    stream.async_shutdown([](const boost::system::error_code& ec) {
+      REQUIRE_FALSE(ec);
     });
   }
 
-private:
-  TLSContext& m_context;
-  TLSStream& m_stream;
-  boost::asio::streambuf m_data;
+  boost::asio::streambuf recv_buffer;
 };
 
 #endif

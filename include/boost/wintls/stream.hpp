@@ -175,7 +175,7 @@ public:
    *
    * @param type The @ref handshake_type to be performed, i.e. client
    * or server.
-   * @param token The handler to be called when the operation
+   * @param handler The handler to be called when the operation
    * completes. The implementation takes ownership of the handler by
    * performing a decay-copy. The handler must be invocable with this
    * signature:
@@ -191,11 +191,11 @@ public:
    * manner equivalent to using `net::post`.
    */
   template <class CompletionToken>
-  auto async_handshake(handshake_type type, CompletionToken&& token) ->
+  auto async_handshake(handshake_type type, CompletionToken&& handler) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, token);
+        detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, handler);
   }
 
   /** Read some data from the stream.
@@ -275,7 +275,7 @@ public:
    * ownership of the underlying buffers is retained by the caller,
    * which must guarantee that they remain valid until the handler is
    * called.
-   * @param token The handler to be called when the read operation
+   * @param handler The handler to be called when the read operation
    * completes.  Copies will be made of the handler as required. The
    * equivalent function signature of the handler must be:
    * @code
@@ -290,11 +290,11 @@ public:
    * is read before the asynchronous operation completes.
    */
   template <class MutableBufferSequence, class CompletionToken>
-  auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& token) ->
+  auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) ->
     typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffers, m_sspi_impl}, token);
+        detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
   }
 
   /** Write some data to the stream.
@@ -365,7 +365,7 @@ public:
    * buffers object may be copied as necessary, ownership of the
    * underlying buffers is retained by the caller, which must
    * guarantee that they remain valid until the handler is called.
-   * @param token The handler to be called when the write operation
+   * @param handler The handler to be called when the write operation
    * completes.  Copies will be made of the handler as required. The
    * equivalent function signature of the handler must be:
    * @code
@@ -381,11 +381,11 @@ public:
    * the asynchronous operation completes.
    */
   template <class ConstBufferSequence, class CompletionToken>
-  auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& token) ->
+  auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) ->
       typename net::async_result<typename std::decay<CompletionToken>::type,
                                  void(boost::system::error_code, std::size_t)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffers, m_sspi_impl}, token);
+        detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
   }
 
   /** Shut down TLS on the stream.
@@ -439,11 +439,11 @@ public:
    * @endcode
    */
   template <class CompletionToken>
-  auto async_shutdown(CompletionToken&& token) ->
+  auto async_shutdown(CompletionToken&& handler) ->
     typename net::async_result<typename std::decay<CompletionToken>::type,
                                void(boost::system::error_code)>::return_type {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, token);
+        detail::async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, handler);
   }
 
 private:

@@ -12,13 +12,8 @@ configuration:
   - Debug
   - Release
 
-environment:
-  matrix:
-  - TOOLSET: ""
-  - TOOLSET: ClangCL
-
 before_build:
-  - cmake -H. -B./build -T "%TOOLSET%" -DBOOST_ROOT="C:/Libraries/boost_1_73_0"
+  - cmake -H. -B./build -DBOOST_ROOT="C:/Libraries/boost_1_73_0"
 
 build:
   project: build/boost-wintls.sln

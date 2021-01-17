@@ -59,8 +59,7 @@ public:
 
     SCHANNEL_CRED creds{};
     creds.dwVersion = SCHANNEL_CRED_VERSION;
-    // TODO: Set protocols to enable from method param from context
-    creds.grbitEnabledProtocols = 0;
+    creds.grbitEnabledProtocols = static_cast<int>(m_context.m_method);
     creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
 
     auto usage = [this]() {

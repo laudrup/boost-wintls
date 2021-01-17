@@ -20,10 +20,10 @@
 
 namespace net = boost::asio;
 
-TEST_CASE("handshake") {
+TEST_CASE("certificates") {
   using namespace std::string_literals;
 
-  boost::wintls::context client_ctx(boost::wintls::method::tls_client);
+  boost::wintls::context client_ctx(boost::wintls::method::system_default);
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
   server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
@@ -113,6 +113,15 @@ TEST_CASE("handshake") {
     CHECK_FALSE(client_error);
     CHECK_FALSE(server_error);
   }
+}
+
+TEST_CASE("failing handshakes") {
+  boost::wintls::context client_ctx(boost::wintls::method::system_default);
+  net::io_context io_context;
+  boost::wintls::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
+  boost::beast::test::stream server_stream(io_context);
+
+  client_stream.next_layer().connect(server_stream);
 
   SECTION("invalid server reply") {
     using namespace boost::system;
@@ -124,18 +133,56 @@ TEST_CASE("handshake") {
                                   });
 
     std::array<char, 1024> buffer;
-    server_stream.next_layer().async_read_some(net::buffer(buffer, buffer.size()),
-                                               [&buffer, &server_stream](const boost::system::error_code&, std::size_t length) {
-                                                 tls_record rec(net::buffer(buffer, length));
-                                                 REQUIRE(rec.type == tls_record::record_type::handshake);
-                                                 auto handshake = boost::get<tls_handshake>(rec.message);
-                                                 REQUIRE(handshake.type == tls_handshake::handshake_type::client_hello);
-                                                 // Echoing the client_hello message back should cause the handshake to fail
-                                                 net::write(server_stream.next_layer(), net::buffer(buffer));
-                    });
+    server_stream.async_read_some(net::buffer(buffer, buffer.size()),
+                                  [&buffer, &server_stream](const boost::system::error_code&, std::size_t length) {
+                                    tls_record rec(net::buffer(buffer, length));
+                                    REQUIRE(rec.type == tls_record::record_type::handshake);
+                                    auto handshake = boost::get<tls_handshake>(rec.message);
+                                    REQUIRE(handshake.type == tls_handshake::handshake_type::client_hello);
+                                    // Echoing the client_hello message back should cause the handshake to fail
+                                    net::write(server_stream, net::buffer(buffer));
+                                  });
 
     io_context.run();
     CHECK(error.category() == boost::system::system_category());
     CHECK(error.value() == SEC_E_ILLEGAL_MESSAGE);
   }
+}
+
+TEST_CASE("ssl/tls versions") {
+  const auto value = GENERATE(values<std::pair<boost::wintls::method, tls_version>>({
+        { boost::wintls::method::tlsv1, tls_version::tls_1_0 },
+        { boost::wintls::method::tlsv1_client, tls_version::tls_1_0 },
+        { boost::wintls::method::tlsv11, tls_version::tls_1_1 },
+        { boost::wintls::method::tlsv11_client, tls_version::tls_1_1 },
+        { boost::wintls::method::tlsv12, tls_version::tls_1_2 },
+        { boost::wintls::method::tlsv12_client, tls_version::tls_1_2 }
+      })
+    );
+
+  const auto method = value.first;
+  const auto version = value.second;
+
+  boost::wintls::context client_ctx(method);
+  net::io_context io_context;
+  boost::wintls::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
+  boost::beast::test::stream server_stream(io_context);
+
+  client_stream.next_layer().connect(server_stream);
+
+  client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                [](const boost::system::error_code& ec) {
+                                  REQUIRE(ec == boost::asio::error::eof);
+                                });
+
+  std::array<char, 1024> buffer;
+  server_stream.async_read_some(net::buffer(buffer, buffer.size()),
+                                [&buffer, &server_stream, &version](const boost::system::error_code&, std::size_t length) {
+                                  tls_record rec(net::buffer(buffer, length));
+                                  REQUIRE(rec.type == tls_record::record_type::handshake);
+                                  CHECK(rec.version == version);
+                                  server_stream.close();
+                                  });
+
+    io_context.run();
 }

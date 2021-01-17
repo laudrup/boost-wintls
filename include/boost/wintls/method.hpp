@@ -8,83 +8,51 @@
 #ifndef BOOST_WINTLS_METHOD_HPP
 #define BOOST_WINTLS_METHOD_HPP
 
+#include <boost/wintls/detail/sspi_types.h>
+
 namespace boost {
 namespace wintls {
-// TODO: Map to grbitEnabledProtocols member of SCHANNEL_CRED struct (and acutally use it).
 
 /// Different methods supported by a context.
 enum class method {
-  /// Generic SSL version 2.
-  sslv2,
-
-  /// SSL version 2 client.
-  sslv2_client,
-
-  /// SSL version 2 server.
-  sslv2_server,
+  /// Operating systemd defaults.
+  system_default = 0,
 
   /// Generic SSL version 3.
-  sslv3,
+  sslv3 = SP_PROT_SSL3_SERVER | SP_PROT_SSL3_CLIENT,
 
   /// SSL version 3 client.
-  sslv3_client,
+  sslv3_client = SP_PROT_SSL3_CLIENT,
 
   /// SSL version 3 server.
-  sslv3_server,
+  sslv3_server = SP_PROT_SSL3_SERVER,
 
   /// Generic TLS version 1.
-  tlsv1,
+  tlsv1 = SP_PROT_TLS1_SERVER | SP_PROT_TLS1_CLIENT,
 
   /// TLS version 1 client.
-  tlsv1_client,
+  tlsv1_client = SP_PROT_TLS1_CLIENT,
 
   /// TLS version 1 server.
-  tlsv1_server,
-
-  /// Generic SSL/TLS.
-  sslv23,
-
-  /// SSL/TLS client.
-  sslv23_client,
-
-  /// SSL/TLS server.
-  sslv23_server,
+  tlsv1_server = SP_PROT_TLS1_SERVER,
 
   /// Generic TLS version 1.1.
-  tlsv11,
+  tlsv11 = SP_PROT_TLS1_1_SERVER | SP_PROT_TLS1_1_CLIENT,
 
   /// TLS version 1.1 client.
-  tlsv11_client,
+  tlsv11_client = SP_PROT_TLS1_1_CLIENT,
 
   /// TLS version 1.1 server.
-  tlsv11_server,
+  tlsv11_server = SP_PROT_TLS1_1_SERVER,
 
   /// Generic TLS version 1.2.
-  tlsv12,
+  tlsv12 = SP_PROT_TLS1_2_SERVER | SP_PROT_TLS1_2_CLIENT,
 
   /// TLS version 1.2 client.
-  tlsv12_client,
+  tlsv12_client = SP_PROT_TLS1_2_CLIENT,
 
   /// TLS version 1.2 server.
-  tlsv12_server,
-
-  /// Generic TLS version 1.3.
-  tlsv13,
-
-  /// TLS version 1.3 client.
-  tlsv13_client,
-
-  /// TLS version 1.3 server.
-  tlsv13_server,
-
-  /// Generic TLS.
-  tls,
-
-  /// TLS client.
-  tls_client,
-
-  /// TLS server.
-  tls_server
+  tlsv12_server = SP_PROT_TLS1_2_SERVER
 };
 
 } // namespace wintls

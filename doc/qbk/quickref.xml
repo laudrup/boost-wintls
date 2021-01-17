@@ -24,6 +24,7 @@
         <bridgehead renderas="sect3">Enumerations</bridgehead>
         <simplelist type="vert" columns="1">
           <member><link linkend="wintls.ref.boost__wintls__handshake_type">handshake_type</link></member>
+          <member><link linkend="wintls.ref.boost__wintls__method">method</link></member>
         </simplelist>
       </entry>
     </row></tbody>

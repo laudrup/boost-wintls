@@ -29,8 +29,13 @@ class sspi_handshake;
 
 class context {
 public:
-  explicit context(method)
+  /** Construct a context.
+   *
+   * @param method The @ref method to use for connections.
+   */
+  explicit context(method connection_method)
     : m_impl(std::make_unique<detail::context_impl>())
+    , m_method(connection_method)
     , m_verify_server_certificate(false) {
   }
 
@@ -141,9 +146,9 @@ private:
     return m_impl->server_cert.get();
   }
 
-  friend class stream_base;
   friend class detail::sspi_handshake;
   std::unique_ptr<detail::context_impl> m_impl;
+  method m_method;
   bool m_verify_server_certificate;
 };
 

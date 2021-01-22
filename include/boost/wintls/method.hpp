@@ -15,7 +15,7 @@ namespace wintls {
 
 /// Different methods supported by a context.
 enum class method {
-  /// Operating systemd defaults.
+  /// Operating system defaults.
   system_default = 0,
 
   /// Generic SSL version 3.

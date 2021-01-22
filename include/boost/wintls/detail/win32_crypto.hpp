@@ -9,7 +9,7 @@
 #define BOOST_WINTLS_DETAIL_WIN32_CRYPTO_HPP
 
 #include <boost/wintls/detail/config.hpp>
-#include <boost/wintls/detail/sspi_types.h>
+#include <boost/wintls/detail/sspi_types.hpp>
 #include <boost/wintls/error.hpp>
 
 #include <boost/winapi/handles.hpp>

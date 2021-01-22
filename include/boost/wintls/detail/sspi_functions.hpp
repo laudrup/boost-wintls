@@ -8,7 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 
-#include <boost/wintls/detail/sspi_types.h>
+#include <boost/wintls/detail/sspi_types.hpp>
 
 namespace boost {
 namespace wintls {

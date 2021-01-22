@@ -8,7 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
 #define BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
 
-#include <boost/wintls/detail/sspi_types.h>
+#include <boost/wintls/detail/sspi_types.hpp>
 #include <boost/wintls/detail/uuid.hpp>
 
 namespace boost {

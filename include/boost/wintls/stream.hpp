@@ -191,9 +191,7 @@ public:
    * manner equivalent to using `net::post`.
    */
   template <class CompletionToken>
-  auto async_handshake(handshake_type type, CompletionToken&& handler) ->
-      typename net::async_result<typename std::decay<CompletionToken>::type,
-                                 void(boost::system::error_code)>::return_type {
+  auto async_handshake(handshake_type type, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
         detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, handler);
   }
@@ -290,9 +288,7 @@ public:
    * is read before the asynchronous operation completes.
    */
   template <class MutableBufferSequence, class CompletionToken>
-  auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) ->
-    typename net::async_result<typename std::decay<CompletionToken>::type,
-                                 void(boost::system::error_code, std::size_t)>::return_type {
+  auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
         detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
   }
@@ -381,9 +377,7 @@ public:
    * the asynchronous operation completes.
    */
   template <class ConstBufferSequence, class CompletionToken>
-  auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) ->
-      typename net::async_result<typename std::decay<CompletionToken>::type,
-                                 void(boost::system::error_code, std::size_t)>::return_type {
+  auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
         detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
   }
@@ -439,9 +433,7 @@ public:
    * @endcode
    */
   template <class CompletionToken>
-  auto async_shutdown(CompletionToken&& handler) ->
-    typename net::async_result<typename std::decay<CompletionToken>::type,
-                               void(boost::system::error_code)>::return_type {
+  auto async_shutdown(CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
         detail::async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, handler);
   }

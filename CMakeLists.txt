@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 
 project(boost-wintls CXX)
 
-set(CMAKE_CXX_STANDARD 11)
-
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_EXAMPLES "Enable Examples Builds" ON)
 

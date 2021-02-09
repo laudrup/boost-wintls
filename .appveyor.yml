@@ -23,7 +23,7 @@ configuration:
 before_build:
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
   - mkdir build && cd build
-  - cmake %CMAKE_OPTIONS% -DBOOST_ROOT="C:/Libraries/boost_1_73_0" "%APPVEYOR_BUILD_FOLDER%"
+  - cmake %CMAKE_OPTIONS% -DBOOST_ROOT="C:/Libraries/boost_1_73_0" -DENABLE_DOCUMENTATION=OFF "%APPVEYOR_BUILD_FOLDER%"
 
 build:
   project: build/boost-wintls.sln

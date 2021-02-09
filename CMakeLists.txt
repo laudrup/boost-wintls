@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.15)
 
 project(boost-wintls CXX)
 
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_EXAMPLES "Enable Examples Builds" ON)
+option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ON)
 
 if (WIN32)
   set(Boost_USE_STATIC_LIBS ON)
@@ -15,6 +18,7 @@ if (WIN32)
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
 endif()
 
+# TODO: We don't need these if we're only generating documentation
 find_package(Boost REQUIRED)
 find_package(OpenSSL COMPONENTS SSL Crypto)
 find_package(Threads)
@@ -80,4 +84,9 @@ endif()
 if(ENABLE_EXAMPLES)
   message(STATUS "Building Examples.")
   add_subdirectory(examples)
+endif()
+
+if(ENABLE_DOCUMENTATION)
+  message(STATUS "Building Documentation.")
+  add_subdirectory(doc)
 endif()

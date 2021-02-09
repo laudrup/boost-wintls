@@ -9,12 +9,18 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Generate
-      uses: ./doc/docker
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get -yq install python3-sphinx python3-breathe doxygen libboost-dev libssl-dev
+        mkdir build
+        cmake -Bbuild -H.
+        cmake --build build/ --target sphinx
     - name: Deploy
       if: ${{ github.ref == 'refs/heads/master' }}
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages
-        FOLDER: doc/html
+        FOLDER: build/doc/sphinx
         CLEAN: true

@@ -16,6 +16,7 @@ jobs:
         mkdir build
         cmake -Bbuild -H.
         cmake --build build/ --target sphinx
+        touch build/doc/sphinx/.nojekyll
     - name: Deploy
       if: ${{ github.ref == 'refs/heads/master' }}
       uses: JamesIves/github-pages-deploy-action@3.7.1

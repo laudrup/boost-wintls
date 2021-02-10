@@ -12,7 +12,13 @@ primary_domain = 'cpp'
 
 templates_path = ['_templates']
 
+html_static_path = ['_static']
+
 html_title = 'boost::wintls'
+
+html_css_files = [
+  project +'.css',
+]
 
 html_theme_options = {
   "fixed_sidebar": True,

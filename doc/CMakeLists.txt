@@ -39,8 +39,8 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	DEPENDS
 		${CMAKE_CURRENT_SOURCE_DIR}/index.rst
-    ${CMAKE_CURRENT_SOURCE_DIR}/_templates/localtoc.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/_static/boost-wintls.css
+    ${CMAKE_CURRENT_SOURCE_DIR}/templates/localtoc.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/static/boost-wintls.css
 		${DOXYGEN_INDEX_FILE}
 	MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
 	COMMENT "Generating documentation with Sphinx")

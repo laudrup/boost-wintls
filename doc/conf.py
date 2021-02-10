@@ -10,9 +10,9 @@ highlight_language = 'c++'
 
 primary_domain = 'cpp'
 
-templates_path = ['_templates']
+templates_path = ['templates']
 
-html_static_path = ['_static']
+html_static_path = ['static']
 
 html_title = 'boost::wintls'
 

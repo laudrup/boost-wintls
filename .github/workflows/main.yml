@@ -1,14 +1,63 @@
 on: [push]
-name: docs
+name: build
 
 jobs:
+  unittest:
+    runs-on: windows-latest
+    name: Build and run unittests
+    strategy:
+      matrix:
+        config: [Debug, Release]
+        toolset: [ClangCl, v141, v142]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install packages
+      run: cinst openssl
+    - name: Configure
+      env:
+        TOOLSET: ${{ matrix.toolset }}
+      shell: bash
+      run: cmake -B build -DBOOST_ROOT="${BOOST_ROOT_1_72_0}" -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
+    - name: Build
+      env:
+        CONFIG: ${{ matrix.config }}
+      shell: bash
+      run: cmake --build build/ --config $CONFIG
+    - name: Run tests
+      env:
+        CONFIG: ${{ matrix.config }}
+      shell: bash
+      run: ctest -C $CONFIG --output-on-failure
+      working-directory: build/
+
+  codecoverage:
+    runs-on: windows-latest
+    name: Generate and upload code coverage
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install packages
+      run: cinst openssl opencppcoverage codecov
+    - name: Configure
+      shell: bash
+      run: cmake -B build -DBOOST_ROOT="${BOOST_ROOT_1_72_0}" -DENABLE_DOCUMENTATION=OFF
+    - name: Build
+      run: cmake --build build/ --target unittest
+    - name: Generate code coverage
+      shell: bash
+      run: exec "${PROGRAMFILES}"/opencppcoverage/opencppcoverage --cover_children --sources="${GITHUB_WORKSPACE}"\\include --modules=unittest.exe --export_type=cobertura:cobertura.xml -- ctest
+      working-directory: build/
+    - name: Upload code coverage
+      run: codecov --no-color -f build/cobertura.xml
+
   generate_documentation:
     runs-on: ubuntu-latest
     name: Generate and publish HTML documentation to Github Pages
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Generate
+    - name: Generate # TODO: Use different steps
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -18,7 +67,7 @@ jobs:
         cmake --build build/ --target sphinx
         touch build/doc/sphinx/.nojekyll
     - name: Deploy
-      if: ${{ github.ref == 'refs/heads/master' }}
+      if: github.ref == 'refs/heads/master'
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

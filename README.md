@@ -20,9 +20,8 @@ Pull requests and reporting of issues is very much welcome.
 Build status
 ------------
 
-[![Build status](https://ci.appveyor.com/api/projects/status/yhdf39xo0d8a8nyo/branch/master?svg=true)](https://ci.appveyor.com/project/laudrup/boost-wintls/branch/master)
+[![Build status](https://github.com/laudrup/boost-wintls/workflows/build/badge.svg?branch=master)](https://github.com/laudrup/boost-wintls/actions)
 [![codecov](https://codecov.io/gh/laudrup/boost-wintls/branch/master/graph/badge.svg)](https://codecov.io/gh/laudrup/boost-wintls)
-[![Documentation](https://github.com/laudrup/boost-wintls/workflows/docs/badge.svg)](https://laudrup.github.io/boost-wintls/)
 
 Documentation
 -------------

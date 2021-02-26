@@ -102,6 +102,21 @@ public:
     return m_next_layer;
   }
 
+  /** Set SNI hostname
+   *
+   * Sets the SNI hostname the client will use for requesting and
+   * validating the server certificate.
+   *
+   * Only used when handshake is performed as @ref
+   * handshake_type::client
+   *
+   * @param hostname The @ref hostname to use in certificate
+   * validation
+   */
+  void set_server_hostname(const std::string& hostname) {
+    m_sspi_impl.set_server_hostname(hostname);
+  }
+
   /** Perform TLS handshaking.
    *
    * This function is used to perform TLS handshaking on the

@@ -60,7 +60,7 @@ public:
     SCHANNEL_CRED creds{};
     creds.dwVersion = SCHANNEL_CRED_VERSION;
     creds.grbitEnabledProtocols = static_cast<int>(m_context.m_method);
-    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_SERVERNAME_CHECK;
+    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION;
 
     auto usage = [this]() {
       switch (m_handshake_type) {
@@ -108,7 +108,7 @@ public:
 
       m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
                                                                        nullptr,
-                                                                       nullptr,
+                                                                       m_server_hostname.get(),
                                                                        client_context_flags,
                                                                        0,
                                                                        SECURITY_NATIVE_DREP,
@@ -262,6 +262,13 @@ public:
     return error::make_error_code(m_last_error);
   }
 
+  void set_server_hostname(const std::string& hostname) {
+    const auto size = hostname.size() + 1;
+    m_server_hostname = std::make_unique<boost::winapi::WCHAR_[]>(size);
+    const auto size_converted = mbstowcs(m_server_hostname.get(), hostname.c_str(), size);
+    BOOST_VERIFY_MSG(size_converted == hostname.size(), "mbstowcs");
+  }
+
 private:
   context& m_context;
   CtxtHandle* m_ctx_handle;
@@ -270,6 +277,7 @@ private:
   handshake_type m_handshake_type;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
+  std::unique_ptr<boost::winapi::WCHAR_[]> m_server_hostname;
 };
 
 class sspi_encrypt {
@@ -563,6 +571,10 @@ public:
   ~sspi_impl() {
     detail::sspi_functions::DeleteSecurityContext(&m_context);
     detail::sspi_functions::FreeCredentialsHandle(&m_credentials);
+  }
+
+  void set_server_hostname(const std::string& hostname) {
+    handshake.set_server_hostname(hostname);
   }
 
 private:

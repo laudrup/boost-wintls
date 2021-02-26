@@ -69,6 +69,9 @@ int main(int argc, char** argv) {
     // Construct the TLS stream with the parameters from the context
     ssl::stream<beast::tcp_stream> stream(ioc, ctx);
 
+    // Set SNI hostname (many hosts need this to handshake successfully)
+    stream.set_server_hostname(host);
+
     // Look up the domain name
     tcp::resolver resolver(ioc);
     auto const results = resolver.resolve(host, port);

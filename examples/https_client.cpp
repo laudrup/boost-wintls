@@ -5,17 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-//[example_https_client
-
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 
-#ifdef _WIN32
 #include <boost/wintls.hpp>
-#else
-#include <boost/beast/ssl.hpp>
-#endif
 
 #include <iostream>
 #include <regex>
@@ -24,16 +18,7 @@
 namespace beast = boost::beast;      // from <boost/beast.hpp>
 namespace http = beast::http;        // from <boost/beast/http.hpp>
 namespace net = boost::asio;         // from <boost/asio.hpp>
-
-#ifdef _WIN32
-namespace ssl = boost::wintls;                        // from <boost/wintls/wintls.hpp>
-using method = boost::wintls::method;                 // from <boost/wintls/method.hpp>
-using handshake_type = boost::wintls::handshake_type; // from <boost/wintls/handshake_type.hpp>
-#else
-namespace ssl = boost::asio::ssl;                                     // from <boost/asio/ssl.hpp>
-using method = boost::asio::ssl::context_base::method;                // from <boost/asio/ssl/context_base.hpp>
-using handshake_type = boost::asio::ssl::stream_base::handshake_type; // from <boost/asio/ssl/context_base.hpp>
-#endif
+namespace ssl = boost::wintls;       // from <boost/wintls/wintls.hpp>
 
 using tcp = boost::asio::ip::tcp;    // from <boost/asio/ip/tcp.hpp>
 
@@ -73,17 +58,13 @@ int main(int argc, char** argv) {
     net::io_context ioc;
 
     // The SSL context is required, and holds certificates
-    ssl::context ctx{method::tlsv12_client};
+    ssl::context ctx{boost::wintls::method::system_default};
 
     // Use the operating systems default certficates for verification
     ctx.set_default_verify_paths();
 
     // Verify the remote server's certificate
-#ifdef _WIN32
     ctx.verify_server_certificate(true);
-#else
-    ctx.set_verify_mode(ssl::verify_peer);
-#endif
 
     // Construct the TLS stream with the parameters from the context
     ssl::stream<beast::tcp_stream> stream(ioc, ctx);
@@ -96,7 +77,7 @@ int main(int argc, char** argv) {
     beast::get_lowest_layer(stream).connect(results);
 
     // Perform the TLS handshake
-    stream.handshake(handshake_type::client);
+    stream.handshake(boost::wintls::handshake_type::client);
 
     // Set up an HTTP GET request message
     http::request<http::string_body> req{http::verb::get, path, version};
@@ -120,12 +101,9 @@ int main(int argc, char** argv) {
 
     // Shutdown the TLS connection
     stream.shutdown();
-  }
-  catch(std::exception const& e) {
+  } catch(std::exception const& e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
-
-//]

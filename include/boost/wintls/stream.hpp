@@ -110,8 +110,7 @@ public:
    * Only used when handshake is performed as @ref
    * handshake_type::client
    *
-   * @param hostname The @ref hostname to use in certificate
-   * validation
+   * @param hostname The hostname to use in certificate validation
    */
   void set_server_hostname(const std::string& hostname) {
     m_sspi_impl.set_server_hostname(hostname);

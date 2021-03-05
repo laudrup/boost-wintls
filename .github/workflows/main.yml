@@ -60,7 +60,10 @@ jobs:
     - name: Install APT packages
       env:
         DEBIAN_FRONTEND: noninteractive
-      run: sudo apt-get -yq install python3-sphinx python3-breathe doxygen libboost-dev libssl-dev
+      run: sudo apt-get -yq install doxygen libboost-dev libssl-dev python3-pip
+    - name: Install PIP packages
+      # TODO: Consider using requirements.txt to ensure specific versions are used
+      run: sudo pip3 install sphinx breathe
     - name: Configure build system
       run: mkdir build && cmake -Bbuild -H.
     - name: Build documentation

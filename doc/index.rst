@@ -1,3 +1,6 @@
+.. figure:: logo.jpg
+   :alt: Boost.Wintls logo
+
 Overview
 ========
 

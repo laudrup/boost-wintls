@@ -31,7 +31,7 @@ class context {
 public:
   /** Construct a context.
    *
-   * @param method The @ref method to use for connections.
+   * @param connection_method The @ref method to use for connections.
    */
   explicit context(method connection_method)
     : m_impl(std::make_unique<detail::context_impl>())

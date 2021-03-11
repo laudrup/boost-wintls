@@ -17,7 +17,7 @@ html_static_path = ['static']
 html_title = 'boost::wintls'
 
 html_css_files = [
-  project +'.css',
+  project + '.css',
 ]
 
 html_theme_options = {

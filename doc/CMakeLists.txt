@@ -8,10 +8,12 @@ set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
 set(WINTLS_PUBLIC_HEADERS
+  ${DOXYGEN_INPUT_DIR}/certificate.hpp
   ${DOXYGEN_INPUT_DIR}/context.hpp
-  ${DOXYGEN_INPUT_DIR}/stream.hpp
+  ${DOXYGEN_INPUT_DIR}/file_format.hpp
   ${DOXYGEN_INPUT_DIR}/handshake_type.hpp
   ${DOXYGEN_INPUT_DIR}/method.hpp
+  ${DOXYGEN_INPUT_DIR}/stream.hpp
 )
 
 string(REPLACE ";" " " DOXYGEN_INPUT_FILES "${WINTLS_PUBLIC_HEADERS}")

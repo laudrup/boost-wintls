@@ -18,7 +18,17 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
+#include <fstream>
+
 namespace net = boost::asio;
+
+namespace {
+std::vector<char> pem_cert_bytes() {
+  std::ifstream ifs{TEST_CERTIFICATE_PATH};
+  REQUIRE(ifs.good());
+  return {std::istreambuf_iterator<char>{ifs}, {}};
+}
+}
 
 TEST_CASE("certificates") {
   using namespace std::string_literals;
@@ -39,10 +49,18 @@ TEST_CASE("certificates") {
     using namespace boost::system;
 
     auto error = errc::make_error_code(errc::not_supported);
-    const std::string bad_cert = "DECAFBAD";
-    client_ctx.add_certificate_authority(net::buffer(bad_cert), error);
+
+    CERT_INFO cert_info{};
+    const CERT_CONTEXT bad_cert{
+      X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+      nullptr,
+      0,
+      &cert_info,
+      0};
+    client_ctx.add_certificate_authority(&bad_cert, error);
+
     CHECK(error.category() == boost::system::system_category());
-    CHECK(error.value() == ERROR_INVALID_DATA);
+    CHECK(error.value() == CRYPT_E_ASN1_EOD);
   }
 
   SECTION("no certificate validation") {
@@ -93,9 +111,9 @@ TEST_CASE("certificates") {
 
     client_ctx.verify_server_certificate(true);
 
-    auto certificate_error = errc::make_error_code(errc::not_supported);
-    client_ctx.load_verify_file(TEST_CERTIFICATE_PATH, certificate_error);
-    REQUIRE_FALSE(certificate_error);
+    const auto x509 = pem_cert_bytes();
+    const auto cert_ptr = x509_to_cert_context(net::buffer(x509), boost::wintls::file_format::pem);
+    client_ctx.add_certificate_authority(cert_ptr.get());
 
     auto client_error = errc::make_error_code(errc::not_supported);
     client_stream.async_handshake(boost::wintls::handshake_type::client,

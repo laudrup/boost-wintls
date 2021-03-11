@@ -20,8 +20,6 @@ namespace boost {
 namespace wintls {
 namespace detail {
 
-using cert_context = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeCertificateContext)>;
-
 inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const_buffer& crypt_string) {
   boost::winapi::DWORD_ size;
   if (!CryptStringToBinaryA(reinterpret_cast<boost::winapi::LPCSTR_>(crypt_string.data()),
@@ -71,15 +69,6 @@ inline std::vector<boost::winapi::BYTE_> crypt_decode_object_ex(const net::const
     throw_last_error("CryptDecodeObjectEx");
   }
   return data;
-}
-
-inline const CERT_CONTEXT* pem_to_cert_context(const net::const_buffer& ca) {
-  auto data = crypt_string_to_binary(ca);
-  auto cert = CertCreateCertificateContext(X509_ASN_ENCODING, data.data(), static_cast<boost::winapi::DWORD_>(data.size()));
-  if (!cert) {
-    throw_last_error("CertCreateCertificateContext");
-  }
-  return cert;
 }
 
 } // namespace detail

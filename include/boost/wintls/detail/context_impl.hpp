@@ -8,6 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_CONTEXT_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_CONTEXT_IMPL_HPP
 
+#include <boost/wintls/certificate.hpp>
 #include <boost/wintls/file_format.hpp>
 
 #include <boost/wintls/detail/config.hpp>
@@ -36,18 +37,13 @@ struct context_impl {
     CertCloseStore(m_cert_store, 0);
   }
 
-  void add_certificate_authority(const net::const_buffer& ca) {
-    cert_context cert{pem_to_cert_context(ca), &CertFreeCertificateContext};
+  void add_certificate_authority(const CERT_CONTEXT* cert) {
     if(!CertAddCertificateContextToStore(m_cert_store,
-                                         cert.get(),
+                                         cert,
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
       throw_last_error("CertAddCertificateContextToStore");
     }
-  }
-
-  void load_verify_file(const std::string& filename) {
-    add_certificate_authority(net::buffer(read_file(filename)));
   }
 
   boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
@@ -68,11 +64,11 @@ struct context_impl {
       return boost::winapi::GetLastError();
     }
 
-    // Calling CertGetCertificateChain with a NULL pointer engine uses
-    // the default system certificate store
     boost::winapi::DWORD_ status = verify_certificate_chain(cert, chain_engine.ptr);
 
     if (status != boost::winapi::ERROR_SUCCESS_ && use_default_cert_store) {
+      // Calling CertGetCertificateChain with a NULL pointer engine uses
+      // the default system certificate store
       status = verify_certificate_chain(cert, nullptr);
     }
 
@@ -80,8 +76,7 @@ struct context_impl {
   }
 
   void use_certificate(const net::const_buffer& certificate, file_format format) {
-    BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
-    server_cert.reset(pem_to_cert_context(certificate));
+    server_cert = boost::wintls::x509_to_cert_context(certificate, format);
   }
 
   void use_certificate_file(const std::string& filename, file_format format) {
@@ -138,7 +133,7 @@ struct context_impl {
 
   cryptographic_provider provider;
   bool use_default_cert_store = false;
-  cert_context server_cert{nullptr, &CertFreeCertificateContext};
+  cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
   boost::winapi::DWORD_ verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {

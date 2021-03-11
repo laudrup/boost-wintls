@@ -66,6 +66,8 @@ public:
     , m_sspi_impl(ctx) {
   }
 
+  stream(stream&& other) = default;
+
   /** Get the executor associated with the object.
    *
    * This function may be used to obtain the executor object that the
@@ -453,7 +455,7 @@ public:
   }
 
 private:
-  next_layer_type m_next_layer;
+  NextLayer m_next_layer;
   context& m_context;
   detail::sspi_impl m_sspi_impl;
 };

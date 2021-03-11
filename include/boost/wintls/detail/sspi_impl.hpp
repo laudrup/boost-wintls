@@ -225,7 +225,7 @@ public:
             return state::error;
           }
 
-          cert_context remote_cert{ctx_ptr, &CertFreeCertificateContext};
+          cert_context_ptr remote_cert{ctx_ptr, &CertFreeCertificateContext};
 
           m_last_error = m_context.verify_certificate(remote_cert.get());
           if (m_last_error != SEC_E_OK) {

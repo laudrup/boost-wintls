@@ -39,29 +39,34 @@ public:
     , m_verify_server_certificate(false) {
   }
 
-  void add_certificate_authority(const net::const_buffer& ca, boost::system::error_code& ec) {
+  /** Add certification authority for performing verification.
+   *
+   * This function is used to add one trusted certification authority
+   * to the contexts certificate store used for certificate validation
+   *
+   * @param cert The certficate to add to the certificate store
+   *
+   * @throws boost::system::system_error Thrown on failure.
+   */
+  void add_certificate_authority(const CERT_CONTEXT* cert) {
+    m_impl->add_certificate_authority(cert);
+  }
+
+  /** Add certification authority for performing verification.
+   *
+   * This function is used to add one trusted certification authority
+   * to the contexts certificate store used for certificate validation
+   *
+   * @param cert The certficate to add to the certificate store
+   *
+   * @param ec Set to indicate what error occurred, if any.
+   */
+  void add_certificate_authority(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
     try {
-      m_impl->add_certificate_authority(ca);
+      m_impl->add_certificate_authority(cert);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
-  }
-
-  void add_certificate_authority(const net::const_buffer& ca) {
-    m_impl->add_certificate_authority(ca);
-  }
-
-  void load_verify_file(const std::string& filename, boost::system::error_code& ec) {
-    ec = {};
-    try {
-      m_impl->load_verify_file(filename);
-    } catch (const boost::system::system_error& e) {
-      ec = e.code();
-    }
-  }
-
-  void load_verify_file(const std::string& filename) {
-    m_impl->load_verify_file(filename);
   }
 
   /** Enables/disables remote server certificate verification

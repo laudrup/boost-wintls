@@ -40,6 +40,7 @@ if (WIN32)
   list(APPEND test_sources
     error_test.cpp
     handshake_test.cpp
+    certificate_test.cpp
     )
 endif()
 

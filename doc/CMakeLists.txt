@@ -40,7 +40,12 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
 		${SPHINX_SOURCE} ${SPHINX_BUILD}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	DEPENDS
-		${CMAKE_CURRENT_SOURCE_DIR}/index.rst
+	  ${CMAKE_CURRENT_SOURCE_DIR}/index.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/classes.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/enumerations.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/functions.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/type_aliases.rst
     ${CMAKE_CURRENT_SOURCE_DIR}/templates/localtoc.html
     ${CMAKE_CURRENT_SOURCE_DIR}/static/boost-wintls.css
 		${DOXYGEN_INDEX_FILE}

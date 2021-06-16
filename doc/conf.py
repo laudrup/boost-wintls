@@ -4,7 +4,13 @@ author = 'Kasper Laudrup'
 
 master_doc = 'index'
 
-extensions = ['breathe']
+rst_prolog = """
+.. figure:: logo.jpg
+   :alt: Boost.Wintls logo
+
+"""
+
+extensions = ['breathe', 'sphinxcontrib.fulltoc']
 
 highlight_language = 'c++'
 

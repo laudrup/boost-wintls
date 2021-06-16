@@ -1,11 +1,14 @@
 Include(FetchContent)
 
-if (NOT OPENSSL_FOUND)
+find_package(OpenSSL COMPONENTS SSL Crypto)
+find_package(Threads)
+
+if(NOT OPENSSL_FOUND)
   message(SEND_ERROR "OpenSSL not found. Cannot build tests.")
   return()
 endif()
 
-if (NOT Threads_FOUND)
+if(NOT Threads_FOUND)
   message(SEND_ERROR "Threads library not found. Cannot build tests.")
   return()
 endif()
@@ -34,33 +37,26 @@ set(test_sources
   main.cpp
   echo_test.cpp
   tls_record.cpp
+  error_test.cpp
+  handshake_test.cpp
+  certificate_test.cpp
   )
-
-if (WIN32)
-  list(APPEND test_sources
-    error_test.cpp
-    handshake_test.cpp
-    certificate_test.cpp
-    )
-endif()
 
 add_executable(unittest
   ${test_sources}
   )
 
-if (WIN32)
-  add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
-    COMMAND openssl rand -out "$ENV{userprofile}/.rnd"
-    VERBATIM
-    )
+add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
+  COMMAND openssl rand -out "$ENV{userprofile}/.rnd"
+  VERBATIM
+)
 
-  add_custom_target(
-    generate-random
-    DEPENDS "$ENV{userprofile}/.rnd"
-    )
+add_custom_target(
+  generate-random
+  DEPENDS "$ENV{userprofile}/.rnd"
+  )
 
-  add_dependencies(generate-certificate generate-random)
-endif()
+add_dependencies(generate-certificate generate-random)
 
 add_dependencies(unittest generate-certificate)
 
@@ -74,13 +70,8 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::Crypto
   Threads::Threads
   Catch2::Catch2
+  boost-wintls
   )
-
-if (WIN32)
-  target_link_libraries(unittest PRIVATE
-    boost-wintls
-    )
-endif()
 
 include(CTest)
 include(Catch)

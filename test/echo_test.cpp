@@ -8,9 +8,7 @@
 #include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
 
-#ifdef _WIN32
 #include <boost/wintls.hpp>
-#endif
 
 #include <catch2/catch.hpp>
 
@@ -89,7 +87,6 @@ struct asio_ssl_server_stream {
   asio_ssl::stream<test_stream&> stream;
 };
 
-#ifdef _WIN32
 struct wintls_client_context : public boost::wintls::context {
   wintls_client_context()
     : boost::wintls::context(boost::wintls::method::system_default) {
@@ -134,17 +131,11 @@ struct wintls_server_stream {
   test_stream tst;
   boost::wintls::stream<test_stream&> stream;
 };
-#endif
 
-#ifdef _WIN32
 using TestTypes = std::tuple<std::tuple<asio_ssl_client_stream, asio_ssl_server_stream>,
                              std::tuple<wintls_client_stream, asio_ssl_server_stream>,
                              std::tuple<asio_ssl_client_stream, wintls_server_stream>,
                              std::tuple<wintls_client_stream, wintls_server_stream>>;
-#else
-using TestTypes = std::tuple<std::tuple<asio_ssl_client_stream, asio_ssl_server_stream>>;
-#endif
-
 
 TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
   using Client = typename std::tuple_element<0, TestType>::type;

@@ -6,25 +6,16 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_EXAMPLES "Enable Examples Builds" ON)
-option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ON)
+option(ENABLE_DOCUMENTATION "Enable Documentation Builds" OFF)
 
-if (WIN32)
+if(WIN32)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
+  find_package(Boost REQUIRED)
 
-  # Generate .pdb files with debug info for release builds
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
-endif()
-
-# TODO: We don't need these if we're only generating documentation
-find_package(Boost REQUIRED)
-find_package(OpenSSL COMPONENTS SSL Crypto)
-find_package(Threads)
-
-if (WIN32)
   add_library(boost-wintls INTERFACE)
+
   target_link_libraries(boost-wintls INTERFACE
     Boost::headers
     )
@@ -32,7 +23,7 @@ if (WIN32)
   target_link_libraries(boost-wintls INTERFACE
     Crypt32
     Secur32
-    Rpcrt4
+    Rpcrt4 # TODO: Remove when we no longer use uuid
     )
 
   # Target Windows 7
@@ -73,6 +64,14 @@ if (WIN32)
   target_include_directories(boost-wintls INTERFACE include)
   target_compile_options(boost-wintls INTERFACE ${MSVC_WARNINGS})
   target_compile_definitions(boost-wintls INTERFACE _CRT_SECURE_NO_WARNINGS)
+
+  # Generate .pdb files with debug info for release builds
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+else()
+  set(ENABLE_TESTING OFF)
+  set(ENABLE_EXAMPLES OFF)
+  set(ENABLE_DOCUMENTATION ON)
 endif()
 
 if(ENABLE_TESTING)

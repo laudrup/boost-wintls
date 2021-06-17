@@ -16,6 +16,7 @@
 #include <boost/winapi/basic_types.hpp>
 
 #include <array>
+#include <numeric>
 #include <vector>
 
 namespace boost {
@@ -306,11 +307,17 @@ public:
     return size_encrypted;
   }
 
+  std::size_t size() const {
+    return m_message.size();
+  }
+
   std::vector<char> data() const {
     return m_message.data();
   }
 
 private:
+  // TODO: Generalize this class and move it outsize of the encrypt
+  // class possibly meeting asio::buffer_sequence requirements
   class message {
   public:
     message(CtxtHandle* context)
@@ -360,6 +367,12 @@ private:
 
     std::vector<char> data() const {
       return m_data;
+    }
+
+    std::size_t size() const {
+      return std::accumulate(m_buffers.begin(), m_buffers.end(), 0, [](auto size, const auto& buffer) {
+        return size += buffer.cbBuffer;
+      });
     }
 
   private:

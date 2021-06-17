@@ -37,7 +37,7 @@ struct async_write_impl : boost::asio::coroutine {
       BOOST_ASIO_CORO_YIELD {
         // TODO: Avoid this copy by consuming from the buffer in sspi_encrypt instead
         m_message = m_sspi_impl.encrypt.data();
-        auto buf = net::buffer(m_message);
+        auto buf = net::buffer(m_message, m_sspi_impl.encrypt.size());
         net::async_write(m_next_layer, buf, std::move(self));
       }
       self.complete(ec, m_bytes_consumed);

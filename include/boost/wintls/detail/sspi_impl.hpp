@@ -216,6 +216,7 @@ public:
 
     switch (m_last_error) {
       case SEC_E_INCOMPLETE_MESSAGE:
+      case SEC_I_CONTINUE_NEEDED:
         return state::data_needed;
 
       case SEC_E_OK: {

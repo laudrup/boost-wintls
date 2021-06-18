@@ -9,39 +9,22 @@ jobs:
       matrix:
         config: [Debug, Release]
         toolset: [ClangCl, v141, v142]
-    env:
-      BOOST_ROOT: ${{github.workspace}}/3rdparty/boost
-      BOOST_URL: https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.bz2/download
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Restore Boost cache
-      uses: actions/cache@v2
-      id: cache-boost
-      with:
-        path: ${{env.BOOST_ROOT}}
-        key: boost
     - name: Install Boost
-      if: steps.cache-boost.outputs.cache-hit != 'true'
-      run: |
-        if [ "$OS" == "Windows_NT" ]; then
-          # fix up paths to be forward slashes consistently
-          BOOST_ROOT=$(echo $BOOST_ROOT | sed 's/\\/\//g')
-        fi
-        mkdir -p $BOOST_ROOT
-        curl --progress-bar --location --output $BOOST_ROOT/download.tar.bz2 $BOOST_URL
-        7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar.bz2 -y -bd
-        7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar -y -bd
-        cd $BOOST_ROOT && cp -r boost_*/* .
-        rm -rf boost_*/* download.tar.bz2 download.tar
-      shell: bash
+      uses: MarkusJx/install-boost@v1.0.1
+      id: install-boost
+      with:
+        boost_version: 1.72.0
     - name: Install packages
       run: cinst openssl
     - name: Configure
       env:
         TOOLSET: ${{ matrix.toolset }}
+        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       shell: bash
-      run: cmake -B build -DBOOST_ROOT="${BOOST_ROOT_1_72_0}" -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
+      run: cmake -B build -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
     - name: Build
       env:
         CONFIG: ${{ matrix.config }}
@@ -57,37 +40,21 @@ jobs:
   codecoverage:
     runs-on: windows-latest
     name: Generate and upload code coverage
-    env:
-      BOOST_ROOT: ${{github.workspace}}/3rdparty/boost
-      BOOST_URL: https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.bz2/download
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Restore Boost cache
-      uses: actions/cache@v2
-      id: cache-boost
-      with:
-        path: ${{env.BOOST_ROOT}}
-        key: boost
     - name: Install Boost
-      if: steps.cache-boost.outputs.cache-hit != 'true'
-      run: |
-        if [ "$OS" == "Windows_NT" ]; then
-          # fix up paths to be forward slashes consistently
-          BOOST_ROOT=$(echo $BOOST_ROOT | sed 's/\\/\//g')
-        fi
-        mkdir -p $BOOST_ROOT
-        curl --progress-bar --location --output $BOOST_ROOT/download.tar.bz2 $BOOST_URL
-        7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar.bz2 -y -bd
-        7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar -y -bd
-        cd $BOOST_ROOT && cp -r boost_*/* .
-        rm -rf boost_*/* download.tar.bz2 download.tar
-      shell: bash
+      uses: MarkusJx/install-boost@v1.0.1
+      id: install-boost
+      with:
+        boost_version: 1.72.0
     - name: Install packages
       run: cinst openssl opencppcoverage codecov
     - name: Configure
+      env:
+        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       shell: bash
-      run: cmake -B build -DBOOST_ROOT="${BOOST_ROOT_1_72_0}" -DENABLE_DOCUMENTATION=OFF
+      run: cmake -B build -DENABLE_DOCUMENTATION=OFF
     - name: Build
       run: cmake --build build/ --target unittest
     - name: Generate code coverage

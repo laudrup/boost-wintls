@@ -8,9 +8,9 @@
 #ifndef BOOST_WINTLS_METHOD_HPP
 #define BOOST_WINTLS_METHOD_HPP
 
-#include <boost/wintls/detail/sspi_types.hpp>
+#include WINTLS_INCLUDE(detail/sspi_types)
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 
 /// Different methods supported by a context.
@@ -56,6 +56,6 @@ enum class method {
 };
 
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_METHOD_HPP

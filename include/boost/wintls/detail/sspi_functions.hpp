@@ -8,9 +8,9 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 
-#include <boost/wintls/detail/sspi_types.hpp>
+#include WINTLS_INCLUDE(detail/sspi_types)
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 namespace sspi_functions {
@@ -18,7 +18,7 @@ namespace sspi_functions {
 inline SecurityFunctionTableW* sspi_function_table() {
   static SecurityFunctionTableW* impl = InitSecurityInterfaceW();
   // TODO: Figure out some way to signal this to the user instead of aborting
-  BOOST_ASSERT_MSG(impl != nullptr, "Unable to initialize SecurityFunctionTable");
+  WINTLS_ASSERT_MSG(impl != nullptr, "Unable to initialize SecurityFunctionTable");
   return impl;
 }
 
@@ -118,6 +118,6 @@ inline SECURITY_STATUS AcceptSecurityContext(PCredHandle phCredential,
 } // namespace sspi_functions
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP

@@ -8,14 +8,15 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
 
-#include <boost/asio/coroutine.hpp>
+#include ASIO_INLCUDE(coroutine)
+#include ASIO_INLCUDE(error)
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
-struct async_shutdown_impl : boost::asio::coroutine {
+struct async_shutdown_impl : net::coroutine {
   async_shutdown_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
     : m_next_layer(next_layer)
     , m_sspi_impl(sspi_impl)
@@ -23,7 +24,7 @@ struct async_shutdown_impl : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  void operator()(Self& self, wintls::error::error_code ec = {}, std::size_t length = 0) {
     if (ec) {
       self.complete(ec);
       return;
@@ -34,9 +35,9 @@ struct async_shutdown_impl : boost::asio::coroutine {
       return m_entry_count > 1;
     };
 
-    BOOST_ASIO_CORO_REENTER(*this) {
+    WINTLS_ASIO_CORO_REENTER(*this) {
       if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::data_available) {
-        BOOST_ASIO_CORO_YIELD {
+        WINTLS_ASIO_CORO_YIELD {
           net::async_write(m_next_layer, m_sspi_impl.shutdown.output(), std::move(self));
         }
         m_sspi_impl.shutdown.consume(length);
@@ -46,7 +47,7 @@ struct async_shutdown_impl : boost::asio::coroutine {
 
       if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::error) {
         if (!is_continuation()) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             auto e = self.get_executor();
             net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
           }
@@ -65,6 +66,6 @@ private:
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP

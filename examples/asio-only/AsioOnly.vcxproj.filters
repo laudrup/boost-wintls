@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\winapi">
+      <UniqueIdentifier>{3d35cec5-3907-47fc-82c3-a9bfd9bd1df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\wintls">
+      <UniqueIdentifier>{96ed03f5-fc05-4bcc-a0f9-e24616cf7582}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\wintls\detail">
+      <UniqueIdentifier>{e1bd586f-fee5-4239-b684-d3eae6097b6d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="template.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="https_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\boost\wintls\detail\async_handshake_impl.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\async_read_impl.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\async_shutdown_impl.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\async_write_impl.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\config.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\context_impl.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\cryptographic_provider.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\sspi_functions.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\sspi_impl.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\sspi_types.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\uuid.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\win32_crypto.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\detail\win32_file.hpp">
+      <Filter>Header Files\wintls\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\winapi\handles.hpp">
+      <Filter>Header Files\winapi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\winapi\error_codes.hpp">
+      <Filter>Header Files\winapi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\winapi\file_management.hpp">
+      <Filter>Header Files\winapi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\winapi\access_rights.hpp">
+      <Filter>Header Files\winapi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\winapi\basic_types.hpp">
+      <Filter>Header Files\winapi</Filter>
+    </ClInclude>
+    <ClInclude Include="template.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\certificate.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\context.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\error.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\file_format.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\handshake_type.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\method.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\net.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls\stream.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\boost\wintls.hpp">
+      <Filter>Header Files\wintls</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="README.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

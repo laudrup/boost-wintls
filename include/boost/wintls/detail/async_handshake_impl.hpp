@@ -8,16 +8,16 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
 
-#include <boost/wintls/handshake_type.hpp>
+#include WINTLS_INCLUDE(handshake_type)
 
-#include <boost/asio/coroutine.hpp>
+#include ASIO_INLCUDE(coroutine)
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
-struct async_handshake_impl : boost::asio::coroutine {
+struct async_handshake_impl : net::coroutine {
   async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, handshake_type type)
     : m_next_layer(next_layer)
     , m_sspi_impl(sspi_impl)
@@ -26,7 +26,7 @@ struct async_handshake_impl : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  void operator()(Self& self, wintls::error::error_code ec = {}, std::size_t length = 0) {
     if (ec) {
       self.complete(ec);
       return;
@@ -38,12 +38,12 @@ struct async_handshake_impl : boost::asio::coroutine {
     };
 
     detail::sspi_handshake::state state;
-    BOOST_ASIO_CORO_REENTER(*this) {
+    WINTLS_ASIO_CORO_REENTER(*this) {
       while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
         if (state == detail::sspi_handshake::state::data_needed) {
           // TODO: Use a fixed size buffer instead
           m_input.resize(0x10000);
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD{
             auto buf = net::buffer(m_input);
             m_next_layer.async_read_some(buf, std::move(self));
           }
@@ -54,7 +54,7 @@ struct async_handshake_impl : boost::asio::coroutine {
 
         if (state == detail::sspi_handshake::state::data_available) {
           m_output = m_sspi_impl.handshake.get();
-          BOOST_ASIO_CORO_YIELD
+          WINTLS_ASIO_CORO_YIELD
           {
             auto buf = net::buffer(m_output);
             net::async_write(m_next_layer, buf, std::move(self));
@@ -64,7 +64,7 @@ struct async_handshake_impl : boost::asio::coroutine {
 
         if (state == detail::sspi_handshake::state::error) {
           if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
+              WINTLS_ASIO_CORO_YIELD{
               auto e = self.get_executor();
               net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
             }
@@ -75,12 +75,12 @@ struct async_handshake_impl : boost::asio::coroutine {
       }
 
       if (!is_continuation()) {
-        BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD{
           auto e = self.get_executor();
           net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
         }
       }
-      BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
+      WINTLS_ASSERT_MSG(!m_sspi_impl.handshake.last_error(), "");
       self.complete(m_sspi_impl.handshake.last_error());
     }
   }
@@ -95,6 +95,6 @@ private:
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif //BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP

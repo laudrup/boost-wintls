@@ -8,17 +8,17 @@
 #ifndef BOOST_WINTLS_CONTEXT_HPP
 #define BOOST_WINTLS_CONTEXT_HPP
 
-#include <boost/wintls/method.hpp>
+#include WINTLS_INCLUDE(method)
 
-#include <boost/wintls/detail/context_impl.hpp>
-#include <boost/wintls/detail/config.hpp>
+#include WINTLS_INCLUDE(detail/context_impl)
+#include WINTLS_INCLUDE(detail/config)
 
-#include <boost/winapi/handles.hpp>
+#include WINAPI_INCLUDE(handles)
 
 #include <memory>
 #include <string>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 
 /// @cond
@@ -46,7 +46,7 @@ public:
    *
    * @param cert The certficate to add to the certificate store
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws BOOST_NAMESPACE_USE system::system_error Thrown on failure.
    */
   void add_certificate_authority(const CERT_CONTEXT* cert) {
     m_impl->add_certificate_authority(cert);
@@ -61,10 +61,10 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  void add_certificate_authority(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
+  void add_certificate_authority(const CERT_CONTEXT* cert, wintls::error::error_code& ec) {
     try {
       m_impl->add_certificate_authority(cert);
-    } catch (const boost::system::system_error& e) {
+    } catch (const BOOST_NAMESPACE_USE wintls::error::named_error& e) {
       ec = e.code();
     }
   }
@@ -86,15 +86,15 @@ public:
     m_impl->use_default_cert_store = true;
   }
 
-  void set_default_verify_paths(boost::system::error_code& ec) {
+  void set_default_verify_paths(BOOST_NAMESPACE_USE wintls::error::error_code& ec) {
     m_impl->use_default_cert_store = true;
     ec = {};
   }
 
-  void use_certificate(const net::const_buffer& certificate, file_format format, boost::system::error_code& ec) {
+  void use_certificate(const net::const_buffer& certificate, file_format format, wintls::system_error& ec) {
     try {
       m_impl->use_certificate(certificate, format);
-    } catch (const boost::system::system_error& e) {
+    } catch (const BOOST_NAMESPACE_USE wintls::error::named_error& e) {
       ec = e.code();
     }
   }
@@ -103,22 +103,22 @@ public:
     m_impl->use_certificate(certificate, format);
   }
 
-  void use_certificate_file(const std::string& filename, file_format format, boost::system::error_code& ec) {
+  void use_certificate_file(const winapi::WindowsString& filename, file_format format, wintls::error::error_code& ec) {
     try {
       m_impl->use_certificate_file(filename, format);
-    } catch (const boost::system::system_error& e) {
+    } catch (const wintls::error::named_error& e) {
       ec = e.code();
     }
   }
 
-  void use_certificate_file(const std::string& filename, file_format format) {
+  void use_certificate_file(const winapi::WindowsString& filename, file_format format) {
     m_impl->use_certificate_file(filename, format);
   }
 
-  void use_private_key(const net::const_buffer& private_key, file_format format, boost::system::error_code& ec) {
+  void use_private_key(const net::const_buffer& private_key, file_format format, wintls::error::error_code& ec) {
     try {
       m_impl->use_private_key(private_key, format);
-    } catch (const boost::system::system_error& e) {
+    } catch (const wintls::error::named_error& e) {
       ec = e.code();
     }
   }
@@ -127,22 +127,22 @@ public:
     m_impl->use_private_key(private_key, format);
   }
 
-  void use_private_key_file(const std::string& filename, file_format format, boost::system::error_code& ec) {
+  void use_private_key_file(const winapi::WindowsString& filename, file_format format, wintls::error::error_code& ec) {
     try {
       m_impl->use_private_key_file(filename, format);
-    } catch (const boost::system::system_error& e) {
+    } catch (const BOOST_NAMESPACE_USE wintls::error::named_error& e) {
       ec = e.code();
     }
   }
 
-  void use_private_key_file(const std::string& filename, file_format format) {
+  void use_private_key_file(const winapi::WindowsString& filename, file_format format) {
     m_impl->use_private_key_file(filename, format);
   }
 
 private:
-  boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
+  BOOST_NAMESPACE_USE winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
     if (!m_verify_server_certificate) {
-      return boost::winapi::ERROR_SUCCESS_;
+      return BOOST_NAMESPACE_USE winapi::ERROR_SUCCESS_;
     }
     return m_impl->verify_certificate(cert);
   }
@@ -158,6 +158,6 @@ private:
 };
 
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_CONTEXT_HPP

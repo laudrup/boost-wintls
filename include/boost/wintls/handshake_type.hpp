@@ -8,7 +8,7 @@
 #ifndef BOOST_WINTLS_HANDSHAKE_TYPE_HPP
 #define BOOST_WINTLS_HANDSHAKE_TYPE_HPP
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 
 /// Different handshake types.
@@ -21,6 +21,6 @@ enum class handshake_type {
 };
 
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif

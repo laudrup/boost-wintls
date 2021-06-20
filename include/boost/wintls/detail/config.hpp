@@ -8,14 +8,14 @@
 #ifndef BOOST_WINTLS_DETAIL_CONFIG_HPP
 #define BOOST_WINTLS_DETAIL_CONFIG_HPP
 
-#include <boost/asio.hpp>
+#include ASIO_MAIN_INLCUDE()
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 
-namespace net = boost::asio;
+namespace net = BOOST_NAMESPACE_USE asio;
 
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_CONFIG_HPP

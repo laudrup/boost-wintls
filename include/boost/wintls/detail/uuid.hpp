@@ -8,15 +8,15 @@
 #ifndef BOOST_WINTLS_DETAIL_UUID_HPP
 #define BOOST_WINTLS_DETAIL_UUID_HPP
 
-#include <boost/wintls/error.hpp>
+#include WINTLS_INCLUDE(error)
 
-#include <boost/winapi/error_codes.hpp>
+#include WINAPI_INCLUDE(error_codes)
 
 #include <string>
 
 #include <rpc.h>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
@@ -35,18 +35,18 @@ inline std::wstring create_uuid() {
   UUID uuid;
   auto ret = UuidCreate(&uuid);
   if (ret != RPC_S_OK) {
-    throw_error(boost::wintls::error::make_error_code(ret), "UuidCreate");
+    throw_error(BOOST_NAMESPACE_USE wintls::error::make_error_code(ret), "UuidCreate");
   }
   rpc_wstring rpc_wstr;
   ret = UuidToStringW(&uuid, &rpc_wstr.ptr);
   if (ret != RPC_S_OK) {
-    throw_error(boost::wintls::error::make_error_code(ret), "UuidToStringW");
+    throw_error(BOOST_NAMESPACE_USE wintls::error::make_error_code(ret), "UuidToStringW");
   }
   return std::wstring(reinterpret_cast<wchar_t*>(rpc_wstr.ptr));
 }
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_UUID_HPP

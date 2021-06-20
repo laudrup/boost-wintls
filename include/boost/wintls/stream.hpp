@@ -8,28 +8,31 @@
 #ifndef BOOST_WINTLS_STREAM_HPP
 #define BOOST_WINTLS_STREAM_HPP
 
-#include <boost/wintls/error.hpp>
-#include <boost/wintls/handshake_type.hpp>
+#include WINTLS_INCLUDE(error)
+#include WINTLS_INCLUDE(handshake_type)
 
-#include <boost/wintls/detail/sspi_impl.hpp>
-#include <boost/wintls/detail/async_handshake_impl.hpp>
-#include <boost/wintls/detail/async_read_impl.hpp>
-#include <boost/wintls/detail/async_shutdown_impl.hpp>
-#include <boost/wintls/detail/async_write_impl.hpp>
+#include WINTLS_INCLUDE(detail/sspi_impl)
+#include WINTLS_INCLUDE(detail/async_handshake_impl)
+#include WINTLS_INCLUDE(detail/async_read_impl)
+#include WINTLS_INCLUDE(detail/async_shutdown_impl)
+#include WINTLS_INCLUDE(detail/async_write_impl)
 
-#include <boost/asio/compose.hpp>
-#include <boost/asio/io_context.hpp>
+#include ASIO_INLCUDE(compose)
+#include ASIO_INLCUDE(io_context)
 
-#include <boost/system/error_code.hpp>
+#include WINTLS_INCLUDE(error)
+#include WINTLS_INCLUDE(net)
+
+#include WINAPI_INCLUDE(basic_types)
 
 #include <array>
 #include <iterator>
 #include <stdexcept>
 #include <type_traits>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
-
+    using NativeString = ::winapi::WindowsString;
 /** Provides stream-oriented functionality using Windows SSPI/Schannel.
  *
  * The stream class template provides asynchronous and blocking
@@ -114,7 +117,7 @@ public:
    *
    * @param hostname The hostname to use in certificate validation
    */
-  void set_server_hostname(const std::string& hostname) {
+  void set_server_hostname(const NativeString& hostname) {
     m_sspi_impl.set_server_hostname(hostname);
   }
 
@@ -128,7 +131,7 @@ public:
    * or server.
    * @param ec Set to indicate what error occurred, if any.
    */
-  void handshake(handshake_type type, boost::system::error_code& ec) {
+  void handshake(handshake_type type, wintls::error::error_code& ec) {
     m_sspi_impl.handshake(type);
 
     detail::sspi_handshake::state state;
@@ -157,7 +160,7 @@ public:
           ec = m_sspi_impl.handshake.last_error();
           return;
         case detail::sspi_handshake::state::done:
-          BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
+          WINTLS_ASSERT_MSG(!m_sspi_impl.handshake.last_error(), "");
           ec = m_sspi_impl.handshake.last_error();
           return;
       }
@@ -173,10 +176,10 @@ public:
    * @param type The @ref handshake_type to be performed, i.e. client
    * or server.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws BOOST_NAMESPACE_USE system::system_error Thrown on failure.
    */
   void handshake(handshake_type type) {
-    boost::system::error_code ec{};
+    wintls::error::error_code ec{};
     handshake(type, ec);
     if (ec) {
       detail::throw_error(ec);
@@ -197,7 +200,7 @@ public:
    * signature:
    * @code
    * void handler(
-   *     boost::system::error_code // Result of operation.
+   *     wintls::error::error_code // Result of operation.
    * );
    * @endcode
    *
@@ -208,7 +211,7 @@ public:
    */
   template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
+    return net::async_compose<CompletionToken, void(wintls::error::error_code)>(
         detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, handler);
   }
 
@@ -229,7 +232,7 @@ public:
    * the blocking operation completes.
    */
   template <class MutableBufferSequence>
-  size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
+  size_t read_some(const MutableBufferSequence& buffers, wintls::error::error_code& ec) {
     detail::sspi_decrypt::state state;
     while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
       std::array<char, 0x10000> input_buffer;
@@ -248,7 +251,7 @@ public:
 
     const auto data = m_sspi_impl.decrypt.get(net::buffer_size(buffers));
     std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(data));
-    BOOST_ASSERT(bytes_copied == data.size());
+    WINTLS_ASSERT_MSG(bytes_copied == data.size(), "read_some");
     return bytes_copied;
   }
 
@@ -262,7 +265,7 @@ public:
    *
    * @returns The number of bytes read.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws BOOST_NAMESPACE_USE system::system_error Thrown on failure.
    *
    * @note The `read_some` operation may not read all of the requested
    * number of bytes. Consider using the `net::read` function if you
@@ -271,11 +274,12 @@ public:
    */
   template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers) {
-    boost::system::error_code ec{};
-    read_some(buffers, ec);
+    wintls::error::error_code ec{};
+    const auto sz = read_some(buffers, ec);
     if (ec) {
       detail::throw_error(ec);
     }
+    return sz;
   }
 
   /** Start an asynchronous read.
@@ -294,7 +298,7 @@ public:
    * equivalent function signature of the handler must be:
    * @code
    * void handler(
-   *     const boost::system::error_code& error, // Result of operation.
+   *     const wintls::error::error_code& error, // Result of operation.
    *     std::size_t bytes_transferred           // Number of bytes read.
    * ); @endcode
    *
@@ -305,7 +309,7 @@ public:
    */
   template <class MutableBufferSequence, class CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+    return net::async_compose<CompletionToken, void(wintls::error::error_code, std::size_t)>(
         detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
   }
 
@@ -326,7 +330,7 @@ public:
    * completes.
    */
   template <class ConstBufferSequence>
-  std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+  std::size_t write_some(const ConstBufferSequence& buffers, wintls::error::error_code& ec) {
     std::size_t bytes_consumed = m_sspi_impl.encrypt(buffers, ec);
     if (ec) {
       return 0;
@@ -350,7 +354,7 @@ public:
    *
    * @returns The number of bytes written.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws BOOST_NAMESPACE_USE system::system_error Thrown on failure.
    *
    * @note The `write_some` operation may not transmit all of the data
    * to the peer. Consider using the `net::write` function if you need
@@ -359,7 +363,7 @@ public:
    */
   template <class ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers) {
-    boost::system::error_code ec{};
+    wintls::error::error_code ec{};
     write_some(buffers, ec);
     if (ec) {
       detail::throw_error(ec);
@@ -382,7 +386,7 @@ public:
    * equivalent function signature of the handler must be:
    * @code
    * void handler(
-   *     const boost::system::error_code& error, // Result of operation.
+   *     const wintls::error::error_code& error, // Result of operation.
    *     std::size_t bytes_transferred           // Number of bytes written.
    * );
    * @endcode
@@ -394,7 +398,7 @@ public:
    */
   template <class ConstBufferSequence, class CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+    return net::async_compose<CompletionToken, void(wintls::error::error_code, std::size_t)>(
         detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
   }
 
@@ -406,7 +410,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  void shutdown(boost::system::error_code& ec) {
+  void shutdown(wintls::error::error_code& ec) {
     switch(m_sspi_impl.shutdown()) {
       case detail::sspi_shutdown::state::data_available: {
         auto size = net::write(m_next_layer, m_sspi_impl.shutdown.output(), ec);
@@ -424,10 +428,10 @@ public:
    * function call will block until TLS has been shut down or an error
    * occurs.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws BOOST_NAMESPACE_USE system::system_error Thrown on failure.
    */
   void shutdown() {
-    boost::system::error_code ec{};
+    wintls::error::error_code ec{};
     shutdown(ec);
     if (ec) {
       detail::throw_error(ec);
@@ -444,13 +448,13 @@ public:
    * required. The equivalent function signature of the handler must
    * be:
    * @code void handler(
-   *     const boost::system::error_code& error // Result of operation.
+   *     const wintls::error::error_code& error // Result of operation.
    *);
    * @endcode
    */
   template <class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
+    return net::async_compose<CompletionToken, void(wintls::error::error_code)>(
         detail::async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, handler);
   }
 
@@ -460,7 +464,37 @@ private:
   detail::sspi_impl m_sspi_impl;
 };
 
+template<class NextLayer>
+stream<NextLayer>& operator<<(stream<NextLayer>& os, const char* rqst)
+{
+    net::write(os, net::buffer(rqst, strlen(rqst)));
+    return os;
+}
+
+template<class NextLayer>
+stream<NextLayer>& operator<<(stream<NextLayer>& os, const std::string& rqst)
+{
+    net::write(os, net::buffer(rqst.data(), rqst.size()));
+    return os;
+}
+
+// warning: tcp is a stream based protocal, so impartial messages, or messages that overlap are possbile
+// this function simply returns the "next bit", whether that is a complete message is beyond the scope of this function
+template<class NextLayer>
+stream<NextLayer>& operator>>(stream<NextLayer>& is, std::string& reply)
+{
+    std::array<char, 1024> buffer;
+    reply.clear();
+    while (reply.empty())
+    {
+        const auto rcd_bytes = is.read_some(net::buffer(buffer.data(), buffer.size()));
+        if (rcd_bytes)
+            reply = std::string(buffer.data(), rcd_bytes);
+    }
+    return is;
+}
+
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_STREAM_HPP

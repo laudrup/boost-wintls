@@ -8,10 +8,10 @@
 #ifndef BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
 #define BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP
 
-#include <boost/wintls/detail/sspi_types.hpp>
-#include <boost/wintls/detail/uuid.hpp>
+#include WINTLS_INCLUDE(detail/sspi_types)
+#include WINTLS_INCLUDE(detail/uuid)
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
@@ -29,13 +29,13 @@ class cryptographic_provider {
 public:
   cryptographic_provider() {
     if (!CryptAcquireContextW(&ptr, container_name.c_str(), MS_ENHANCED_PROV, PROV_RSA_FULL, CRYPT_NEWKEYSET | CRYPT_SILENT)) {
-      auto last_error = boost::winapi::GetLastError();
-      if (last_error == static_cast<boost::winapi::DWORD_>(NTE_EXISTS)) {
+      auto last_error = BOOST_NAMESPACE_USE winapi::GetLastError();
+      if (last_error == static_cast<BOOST_NAMESPACE_USE winapi::DWORD_>(NTE_EXISTS)) {
           if(!CryptAcquireContextW(&ptr, container_name.c_str(), MS_ENHANCED_PROV_W, PROV_RSA_FULL, CRYPT_SILENT)) {
-            throw boost::system::system_error(boost::winapi::GetLastError(), boost::system::system_category());
+            BOOST_NAMESPACE_USE wintls::throw_system_error();
           }
       } else {
-        throw boost::system::system_error(last_error, boost::system::system_category());
+          BOOST_NAMESPACE_USE wintls::throw_system_error(last_error);
       }
     }
   }
@@ -56,6 +56,6 @@ public:
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_CRYPTOGRAPHIC_PROVIDER_HPP

@@ -8,14 +8,15 @@
 #ifndef BOOST_WINTLS_CERTIFICATE_HPP
 #define BOOST_WINTLS_CERTIFICATE_HPP
 
-#include <boost/wintls/error.hpp>
-#include <boost/wintls/file_format.hpp>
+#include WINTLS_INCLUDE(error)
+#include WINTLS_INCLUDE(file_format)
 
-#include <boost/wintls/detail/win32_crypto.hpp>
+#include WINTLS_INCLUDE(detail/win32_crypto)
+#include WINTLS_INCLUDE(net)
 
 #include <memory>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 
 /**
@@ -36,15 +37,15 @@ using cert_context_ptr = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeC
  *
  * @return A managed cert_context
  *
- * @throws boost::system::system_error Thrown on failure.
+ * @throws BOOST_NAMESPACE_USE system::system_error Thrown on failure.
  *
  */
 inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file_format format) {
   // TODO: Support DER format
-  BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
+  WINTLS_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
 
   auto data = detail::crypt_string_to_binary(x509);
-  auto cert = CertCreateCertificateContext(X509_ASN_ENCODING, data.data(), static_cast<boost::winapi::DWORD_>(data.size()));
+  auto cert = CertCreateCertificateContext(X509_ASN_ENCODING, data.data(), static_cast<BOOST_NAMESPACE_USE winapi::DWORD_>(data.size()));
   if (!cert) {
     detail::throw_last_error("CertCreateCertificateContext");
   }
@@ -66,16 +67,16 @@ inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file
  * @return A managed cert_context
  *
  */
-inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file_format format, boost::system::error_code& ec) {
+inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file_format format, error::error_code& ec) {
   try {
     return x509_to_cert_context(x509, format);
-  } catch (const boost::system::system_error& e) {
+  } catch (const error::named_error& e) {
     ec = e.code();
     return cert_context_ptr{nullptr, &CertFreeCertificateContext};
   }
 }
 
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif

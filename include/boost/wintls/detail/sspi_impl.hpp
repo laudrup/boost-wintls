@@ -8,18 +8,26 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_IMPL_HPP
 
-#include <boost/wintls/handshake_type.hpp>
+#include WINTLS_INCLUDE(handshake_type)
+#include WINTLS_INCLUDE(error)
 
-#include <boost/wintls/detail/sspi_functions.hpp>
-#include <boost/wintls/detail/config.hpp>
+#include WINTLS_INCLUDE(detail/sspi_functions)
+#include WINTLS_INCLUDE(detail/config)
 
-#include <boost/winapi/basic_types.hpp>
+#include WINAPI_INCLUDE(basic_types)
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
 
 #include <array>
 #include <numeric>
 #include <vector>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
@@ -70,7 +78,7 @@ public:
         case handshake_type::server:
           return SECPKG_CRED_INBOUND;
       }
-      BOOST_UNREACHABLE_RETURN(0);
+      UNREACHABLE_RETURN(0);
     }();
 
     auto server_cert = m_context.server_cert();
@@ -81,7 +89,7 @@ public:
 
     TimeStamp expiry;
     m_last_error = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                    const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
+                                                                    const_cast<BOOST_NAMESPACE_USE winapi::LPWSTR_>(UNISP_NAME),
                                                                     usage,
                                                                     nullptr,
                                                                     &creds,
@@ -235,12 +243,12 @@ public:
           }
         }
 
-        BOOST_ASSERT_MSG(InBuffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
+        WINTLS_ASSERT_MSG(InBuffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
         return state::done;
       }
 
       case SEC_I_INCOMPLETE_CREDENTIALS:
-        BOOST_ASSERT_MSG(false, "client authentication not implemented");
+        WINTLS_ASSERT_MSG(false, "client authentication not implemented");
 
       default:
         return state::error;
@@ -260,15 +268,16 @@ public:
     return ret;
   }
 
-  boost::system::error_code last_error() const {
+  wintls::error::error_code last_error() const {
     return error::make_error_code(m_last_error);
   }
 
-  void set_server_hostname(const std::string& hostname) {
+  void set_server_hostname(const winapi::WindowsString& hostname) {
+    using CharType = BOOST_NAMESPACE_USE winapi::WCHAR_;
     const auto size = hostname.size() + 1;
-    m_server_hostname = std::make_unique<boost::winapi::WCHAR_[]>(size);
-    const auto size_converted = mbstowcs(m_server_hostname.get(), hostname.c_str(), size);
-    BOOST_VERIFY_MSG(size_converted == hostname.size(), "mbstowcs");
+    m_server_hostname = std::make_unique<CharType[]>(size);
+    std::transform(hostname.begin(), hostname.end(), m_server_hostname.get(), [](auto c) {return static_cast<CharType>(c); });
+    m_server_hostname[size-1] = 0;
   }
 
 private:
@@ -279,7 +288,7 @@ private:
   handshake_type m_handshake_type;
   std::vector<char> m_input_data;
   std::vector<char> m_output_data;
-  std::unique_ptr<boost::winapi::WCHAR_[]> m_server_hostname;
+  std::unique_ptr<BOOST_NAMESPACE_USE winapi::WCHAR_[]> m_server_hostname;
 };
 
 class sspi_encrypt {
@@ -290,7 +299,7 @@ public:
   }
 
   template <typename ConstBufferSequence>
-  std::size_t operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+  std::size_t operator()(const ConstBufferSequence& buffers, wintls::error::error_code& ec) {
     SECURITY_STATUS sc;
 
     std::size_t size_encrypted = m_message(buffers, sc);
@@ -450,7 +459,7 @@ public:
         encrypted_data = std::vector<char>(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), reinterpret_cast<const char*>(pExtraBuffer->pvBuffer) + pExtraBuffer->cbBuffer);
       }
     }
-    BOOST_ASSERT(!decrypted_data.empty());
+    WINTLS_ASSERT_MSG(!decrypted_data.empty(), "");
 
     return state::data_available;
   }
@@ -476,7 +485,7 @@ public:
   std::vector<char> encrypted_data;
   std::vector<char> decrypted_data;
 
-  boost::system::error_code last_error() const {
+  wintls::error::error_code last_error() const {
     return error::make_error_code(m_last_error);
   }
 
@@ -553,13 +562,13 @@ public:
 
   void consume(std::size_t size) {
     // TODO: Handle this instead of asserting
-    BOOST_VERIFY(size == m_buf.size());
+      WINTLS_VERIFY_MSG(size == m_buf.size(), "");
     // TODO: RAII this buffer to ensure it's freed even if the consume function is never called
     detail::sspi_functions::FreeContextBuffer(const_cast<void*>(m_buf.data()));
     m_buf = net::const_buffer{};
   }
 
-  boost::system::error_code last_error() const {
+  wintls::error::error_code last_error() const {
     return error::make_error_code(m_last_error);
   }
 
@@ -583,11 +592,13 @@ public:
   sspi_impl& operator=(const sspi_impl&) = delete;
 
   ~sspi_impl() {
+    WINTLS_ASSERT_MSG(winapi::CrtCheckMemory(), "Memory corrupt before shutdown, please check your usage code");
     detail::sspi_functions::DeleteSecurityContext(&m_context);
     detail::sspi_functions::FreeCredentialsHandle(&m_credentials);
+    WINTLS_ASSERT_MSG(winapi::CrtCheckMemory(), "Internal error: memory corrupted during shutdown");
   }
 
-  void set_server_hostname(const std::string& hostname) {
+  void set_server_hostname(const winapi::WindowsString& hostname) {
     handshake.set_server_hostname(hostname);
   }
 
@@ -605,6 +616,6 @@ public:
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_SSPI_IMPL_HPP

@@ -8,7 +8,7 @@
 #ifndef BOOST_WINTLS_FILE_FORMAT_HPP
 #define BOOST_WINTLS_FILE_FORMAT_HPP
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 
 /// File format types.
@@ -21,6 +21,6 @@ enum class file_format {
 };
 
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_FILE_FORMAT_HPP

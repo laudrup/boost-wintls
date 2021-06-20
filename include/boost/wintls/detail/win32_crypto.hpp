@@ -8,22 +8,22 @@
 #ifndef BOOST_WINTLS_DETAIL_WIN32_CRYPTO_HPP
 #define BOOST_WINTLS_DETAIL_WIN32_CRYPTO_HPP
 
-#include <boost/wintls/detail/config.hpp>
-#include <boost/wintls/detail/sspi_types.hpp>
-#include <boost/wintls/error.hpp>
+#include WINTLS_INCLUDE(detail/config)
+#include WINTLS_INCLUDE(detail/sspi_types)
+#include WINTLS_INCLUDE(error)
 
-#include <boost/winapi/handles.hpp>
+#include WINAPI_INCLUDE(handles)
 
 #include <memory>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
-inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const_buffer& crypt_string) {
-  boost::winapi::DWORD_ size;
-  if (!CryptStringToBinaryA(reinterpret_cast<boost::winapi::LPCSTR_>(crypt_string.data()),
-                            static_cast<boost::winapi::DWORD_>(crypt_string.size()),
+inline std::vector<BOOST_NAMESPACE_USE winapi::BYTE_> crypt_string_to_binary(const net::const_buffer& crypt_string) {
+  BOOST_NAMESPACE_USE winapi::DWORD_ size;
+  if (!CryptStringToBinaryA(reinterpret_cast<BOOST_NAMESPACE_USE winapi::LPCSTR_>(crypt_string.data()),
+                            static_cast<BOOST_NAMESPACE_USE winapi::DWORD_>(crypt_string.size()),
                             0,
                             nullptr,
                             &size,
@@ -32,9 +32,9 @@ inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const
     throw_last_error("CryptStringToBinaryA");
   }
 
-  std::vector<boost::winapi::BYTE_> data(size);
-  if (!CryptStringToBinaryA(reinterpret_cast<boost::winapi::LPCSTR_>(crypt_string.data()),
-                            static_cast<boost::winapi::DWORD_>(crypt_string.size()),
+  std::vector<BOOST_NAMESPACE_USE winapi::BYTE_> data(size);
+  if (!CryptStringToBinaryA(reinterpret_cast<BOOST_NAMESPACE_USE winapi::LPCSTR_>(crypt_string.data()),
+                            static_cast<BOOST_NAMESPACE_USE winapi::DWORD_>(crypt_string.size()),
                             0,
                             data.data(),
                             &size,
@@ -45,23 +45,23 @@ inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const
   return data;
 }
 
-inline std::vector<boost::winapi::BYTE_> crypt_decode_object_ex(const net::const_buffer& crypt_object, winapi::LPCSTR_ type) {
-  boost::winapi::DWORD_ size;
+inline std::vector<BOOST_NAMESPACE_USE winapi::BYTE_> crypt_decode_object_ex(const net::const_buffer& crypt_object, winapi::LPCSTR_ type) {
+  BOOST_NAMESPACE_USE winapi::DWORD_ size;
   if (!CryptDecodeObjectEx(X509_ASN_ENCODING,
                            type,
-                           reinterpret_cast<const boost::winapi::BYTE_*>(crypt_object.data()),
-                           static_cast<boost::winapi::DWORD_>(crypt_object.size()),
+                           reinterpret_cast<const BOOST_NAMESPACE_USE winapi::BYTE_*>(crypt_object.data()),
+                           static_cast<BOOST_NAMESPACE_USE winapi::DWORD_>(crypt_object.size()),
                            0,
                            nullptr,
                            nullptr,
                            &size)) {
     throw_last_error("CryptDecodeObjectEx");
   }
-  std::vector<boost::winapi::BYTE_> data(size);
+  std::vector<BOOST_NAMESPACE_USE winapi::BYTE_> data(size);
   if (!CryptDecodeObjectEx(X509_ASN_ENCODING,
                            type,
-                           reinterpret_cast<const boost::winapi::BYTE_*>(crypt_object.data()),
-                           static_cast<boost::winapi::DWORD_>(crypt_object.size()),
+                           reinterpret_cast<const BOOST_NAMESPACE_USE winapi::BYTE_*>(crypt_object.data()),
+                           static_cast<BOOST_NAMESPACE_USE winapi::DWORD_>(crypt_object.size()),
                            0,
                            nullptr,
                            data.data(),
@@ -73,6 +73,6 @@ inline std::vector<boost::winapi::BYTE_> crypt_decode_object_ex(const net::const
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_WIN32_CRYPTO_HPP

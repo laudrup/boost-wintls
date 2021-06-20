@@ -8,26 +8,26 @@
 #ifndef BOOST_WINTLS_DETAIL_WIN32_FILE_HPP
 #define BOOST_WINTLS_DETAIL_WIN32_FILE_HPP
 
-#include <boost/wintls/error.hpp>
+#include WINTLS_INCLUDE(error)
 
-#include <boost/winapi/file_management.hpp>
-#include <boost/winapi/access_rights.hpp>
-#include <boost/winapi/handles.hpp>
+#include WINAPI_INCLUDE(file_management)
+#include WINAPI_INCLUDE(access_rights)
+#include WINAPI_INCLUDE(handles)
 
 #include <string>
 #include <vector>
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
-inline std::vector<char> read_file(const std::string& filename) {
-  using namespace boost::winapi;
+inline std::vector<char> read_file(const winapi::WindowsString& filename) {
+  using namespace BOOST_NAMESPACE_USE winapi;
   using file_handle_type = std::unique_ptr<std::remove_pointer<HANDLE_>::type, decltype(&CloseHandle)>;
 
   // TODO: Support unicode filenames. The proper way to do this is to
-  // use boost::filesystem or std::filesystem paths instead of
-  // strings, but that would break boost::asio compatibility
+  // use BOOST_NAMESPACE_USE filesystem or std::filesystem paths instead of
+  // strings, but that would break net compatibility
   file_handle_type handle{CreateFile(filename.c_str(),
                                      GENERIC_READ_,
                                      FILE_SHARE_READ_,
@@ -54,6 +54,6 @@ inline std::vector<char> read_file(const std::string& filename) {
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif // BOOST_WINTLS_DETAIL_WIN32_FILE_HPP

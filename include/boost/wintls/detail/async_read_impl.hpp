@@ -8,14 +8,14 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_READ_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_READ_IMPL_HPP
 
-#include <boost/asio/coroutine.hpp>
+#include ASIO_INLCUDE(coroutine)
 
-namespace boost {
+BOOST_NAMESPACE_DECLARE
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer, typename MutableBufferSequence>
-struct async_read_impl : boost::asio::coroutine {
+struct async_read_impl : net::coroutine {
   async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_impl& sspi_impl)
     : m_next_layer(next_layer)
     , m_buffers(buffers)
@@ -24,7 +24,7 @@ struct async_read_impl : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  void operator()(Self& self, wintls::error::error_code ec = {}, std::size_t length = 0) {
     if (ec) {
       self.complete(ec, length);
       return;
@@ -36,9 +36,9 @@ struct async_read_impl : boost::asio::coroutine {
     };
 
     detail::sspi_decrypt::state state;
-    BOOST_ASIO_CORO_REENTER(*this) {
+    WINTLS_ASIO_CORO_REENTER(*this) {
       while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
-        BOOST_ASIO_CORO_YIELD {
+        WINTLS_ASIO_CORO_YIELD {
           // TODO: Use a fixed size buffer instead
           m_input.resize(0x10000);
           auto buf = net::buffer(m_input);
@@ -51,7 +51,7 @@ struct async_read_impl : boost::asio::coroutine {
 
       if (state == detail::sspi_decrypt::state::error) {
         if (!is_continuation()) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             auto e = self.get_executor();
             net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
           }
@@ -65,7 +65,7 @@ struct async_read_impl : boost::asio::coroutine {
       const auto data = m_sspi_impl.decrypt.get(net::buffer_size(m_buffers));
       std::size_t bytes_copied = net::buffer_copy(m_buffers, net::buffer(data));
       BOOST_ASSERT(bytes_copied == data.size());
-      self.complete(boost::system::error_code{}, bytes_copied);
+      self.complete(wintls::error::error_code{}, bytes_copied);
     }
   }
 
@@ -79,6 +79,6 @@ private:
 
 } // namespace detail
 } // namespace wintls
-} // namespace boost
+BOOST_NAMESPACE_END
 
 #endif

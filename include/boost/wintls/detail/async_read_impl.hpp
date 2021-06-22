@@ -17,10 +17,10 @@ namespace detail {
 template <typename NextLayer, typename MutableBufferSequence>
 struct async_read_impl : boost::asio::coroutine {
   async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_impl& sspi_impl)
-    : m_next_layer(next_layer)
-    , m_buffers(buffers)
-    , m_sspi_impl(sspi_impl)
-    , m_entry_count(0) {
+    : next_layer_(next_layer)
+    , buffers_(buffers)
+    , sspi_impl_(sspi_impl)
+    , entry_count_(0) {
   }
 
   template <typename Self>
@@ -30,22 +30,22 @@ struct async_read_impl : boost::asio::coroutine {
       return;
     }
 
-    ++m_entry_count;
+    ++entry_count_;
     auto is_continuation = [this] {
-      return m_entry_count > 1;
+      return entry_count_ > 1;
     };
 
     detail::sspi_decrypt::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
+      while((state = sspi_impl_.decrypt()) == detail::sspi_decrypt::state::data_needed) {
         BOOST_ASIO_CORO_YIELD {
           // TODO: Use a fixed size buffer instead
-          m_input.resize(0x10000);
-          auto buf = net::buffer(m_input);
-          m_next_layer.async_read_some(buf, std::move(self));
+          input_.resize(0x10000);
+          auto buf = net::buffer(input_);
+          next_layer_.async_read_some(buf, std::move(self));
         }
-        m_sspi_impl.decrypt.put({m_input.begin(), m_input.begin() + length});
-        m_input.clear();
+        sspi_impl_.decrypt.put({input_.begin(), input_.begin() + length});
+        input_.clear();
         continue;
       }
 
@@ -56,25 +56,25 @@ struct async_read_impl : boost::asio::coroutine {
             net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
           }
         }
-        ec = m_sspi_impl.decrypt.last_error();
+        ec = sspi_impl_.decrypt.last_error();
         self.complete(ec, 0);
         return;
       }
 
       // TODO: Avoid this copy if possible
-      const auto data = m_sspi_impl.decrypt.get(net::buffer_size(m_buffers));
-      std::size_t bytes_copied = net::buffer_copy(m_buffers, net::buffer(data));
+      const auto data = sspi_impl_.decrypt.get(net::buffer_size(buffers_));
+      std::size_t bytes_copied = net::buffer_copy(buffers_, net::buffer(data));
       BOOST_ASSERT(bytes_copied == data.size());
       self.complete(boost::system::error_code{}, bytes_copied);
     }
   }
 
 private:
-  NextLayer& m_next_layer;
-  MutableBufferSequence m_buffers;
-  detail::sspi_impl& m_sspi_impl;
-  int m_entry_count;
-  std::vector<char> m_input;
+  NextLayer& next_layer_;
+  MutableBufferSequence buffers_;
+  detail::sspi_impl& sspi_impl_;
+  int entry_count_;
+  std::vector<char> input_;
 };
 
 } // namespace detail

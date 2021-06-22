@@ -17,9 +17,9 @@ namespace detail {
 template <typename NextLayer>
 struct async_shutdown_impl : boost::asio::coroutine {
   async_shutdown_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
-    : m_next_layer(next_layer)
-    , m_sspi_impl(sspi_impl)
-    , m_entry_count(0) {
+    : next_layer_(next_layer)
+    , sspi_impl_(sspi_impl)
+    , entry_count_(0) {
   }
 
   template <typename Self>
@@ -29,38 +29,38 @@ struct async_shutdown_impl : boost::asio::coroutine {
       return;
     }
 
-    ++m_entry_count;
+    ++entry_count_;
     auto is_continuation = [this] {
-      return m_entry_count > 1;
+      return entry_count_ > 1;
     };
 
     BOOST_ASIO_CORO_REENTER(*this) {
-      if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::data_available) {
+      if (sspi_impl_.shutdown() == detail::sspi_shutdown::state::data_available) {
         BOOST_ASIO_CORO_YIELD {
-          net::async_write(m_next_layer, m_sspi_impl.shutdown.output(), std::move(self));
+          net::async_write(next_layer_, sspi_impl_.shutdown.output(), std::move(self));
         }
-        m_sspi_impl.shutdown.consume(length);
+        sspi_impl_.shutdown.consume(length);
         self.complete({});
         return;
       }
 
-      if (m_sspi_impl.shutdown() == detail::sspi_shutdown::state::error) {
+      if (sspi_impl_.shutdown() == detail::sspi_shutdown::state::error) {
         if (!is_continuation()) {
           BOOST_ASIO_CORO_YIELD {
             auto e = self.get_executor();
             net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
           }
         }
-        self.complete(m_sspi_impl.shutdown.last_error());
+        self.complete(sspi_impl_.shutdown.last_error());
         return;
       }
     }
   }
 
 private:
-  NextLayer& m_next_layer;
-  detail::sspi_impl& m_sspi_impl;
-  int m_entry_count;
+  NextLayer& next_layer_;
+  detail::sspi_impl& sspi_impl_;
+  int entry_count_;
 };
 
 } // namespace detail

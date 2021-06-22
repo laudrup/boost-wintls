@@ -49,22 +49,22 @@ public:
   };
 
   sspi_handshake(context& context, CtxtHandle* ctx_handle, CredHandle* cred_handle)
-    : m_context(context)
-    , m_ctx_handle(ctx_handle)
-    , m_cred_handle(cred_handle)
-    , m_last_error(SEC_E_OK) {
+    : context_(context)
+    , ctx_handle_(ctx_handle)
+    , cred_handle_(cred_handle)
+    , last_error_(SEC_E_OK) {
   }
 
   void operator()(handshake_type type) {
-    m_handshake_type = type;
+    handshake_type_ = type;
 
     SCHANNEL_CRED creds{};
     creds.dwVersion = SCHANNEL_CRED_VERSION;
-    creds.grbitEnabledProtocols = static_cast<int>(m_context.m_method);
+    creds.grbitEnabledProtocols = static_cast<int>(context_.method_);
     creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION;
 
     auto usage = [this]() {
-      switch (m_handshake_type) {
+      switch (handshake_type_) {
         case handshake_type::client:
           return SECPKG_CRED_OUTBOUND;
         case handshake_type::server:
@@ -73,27 +73,27 @@ public:
       BOOST_UNREACHABLE_RETURN(0);
     }();
 
-    auto server_cert = m_context.server_cert();
-    if (m_handshake_type == handshake_type::server && server_cert != nullptr) {
+    auto server_cert = context_.server_cert();
+    if (handshake_type_ == handshake_type::server && server_cert != nullptr) {
       creds.cCreds = 1;
       creds.paCred = &server_cert;
     }
 
     TimeStamp expiry;
-    m_last_error = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
+    last_error_ = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
                                                                     const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
                                                                     usage,
                                                                     nullptr,
                                                                     &creds,
                                                                     nullptr,
                                                                     nullptr,
-                                                                    m_cred_handle,
+                                                                    cred_handle_,
                                                                     &expiry);
-    if (m_last_error != SEC_E_OK) {
+    if (last_error_ != SEC_E_OK) {
       return;
     }
 
-    if (m_handshake_type == handshake_type::client) {
+    if (handshake_type_ == handshake_type::client) {
       SecBufferDesc OutBuffer;
       SecBuffer OutBuffers[1];
 
@@ -107,26 +107,26 @@ public:
 
       DWORD out_flags = 0;
 
-      m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
+      last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
                                                                        nullptr,
-                                                                       m_server_hostname.get(),
+                                                                       server_hostname_.get(),
                                                                        client_context_flags,
                                                                        0,
                                                                        SECURITY_NATIVE_DREP,
                                                                        nullptr,
                                                                        0,
-                                                                       m_ctx_handle,
+                                                                       ctx_handle_,
                                                                        &OutBuffer,
                                                                        &out_flags,
                                                                        nullptr);
-      if (m_last_error == SEC_I_CONTINUE_NEEDED) {
+      if (last_error_ == SEC_I_CONTINUE_NEEDED) {
         // TODO: Avoid this copy
-        m_output_data = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
+        output_data_ = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
           , reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
         detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
       }
     } else {
-      m_last_error = SEC_I_CONTINUE_NEEDED;
+      last_error_ = SEC_I_CONTINUE_NEEDED;
     }
   }
 
@@ -136,18 +136,18 @@ public:
     SecBufferDesc InBuffer;
     SecBuffer InBuffers[2];
 
-    if (m_last_error != SEC_I_CONTINUE_NEEDED) {
+    if (last_error_ != SEC_I_CONTINUE_NEEDED) {
       return state::error;
     }
-    if (!m_output_data.empty()) {
+    if (!output_data_.empty()) {
       return state::data_available;
     }
-    if (m_input_data.empty()) {
+    if (input_data_.empty()) {
       return state::data_needed;
     }
 
-    InBuffers[0].pvBuffer = reinterpret_cast<void*>(m_input_data.data());
-    InBuffers[0].cbBuffer = static_cast<ULONG>(m_input_data.size());
+    InBuffers[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
+    InBuffers[0].cbBuffer = static_cast<ULONG>(input_data_.size());
     InBuffers[0].BufferType = SECBUFFER_TOKEN;
 
     InBuffers[1].pvBuffer = nullptr;
@@ -168,69 +168,69 @@ public:
 
     DWORD out_flags = 0;
 
-    switch(m_handshake_type) {
+    switch(handshake_type_) {
       case handshake_type::client:
-        m_last_error = detail::sspi_functions::InitializeSecurityContext(m_cred_handle,
-                                                                         m_ctx_handle,
-                                                                         nullptr,
-                                                                         client_context_flags,
-                                                                         0,
-                                                                         SECURITY_NATIVE_DREP,
-                                                                         &InBuffer,
-                                                                         0,
-                                                                         nullptr,
-                                                                         &OutBuffer,
-                                                                         &out_flags,
-                                                                         nullptr);
+        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
+                                                                        ctx_handle_,
+                                                                        nullptr,
+                                                                        client_context_flags,
+                                                                        0,
+                                                                        SECURITY_NATIVE_DREP,
+                                                                        &InBuffer,
+                                                                        0,
+                                                                        nullptr,
+                                                                        &OutBuffer,
+                                                                        &out_flags,
+                                                                        nullptr);
         break;
       case handshake_type::server: {
-        const bool first_call = m_ctx_handle->dwLower == 0 && m_ctx_handle->dwUpper == 0;
+        const bool first_call = ctx_handle_->dwLower == 0 && ctx_handle_->dwUpper == 0;
         TimeStamp expiry;
-        m_last_error = detail::sspi_functions::AcceptSecurityContext(m_cred_handle,
-                                                                     first_call ? nullptr : m_ctx_handle,
-                                                                     &InBuffer,
-                                                                     server_context_flags,
-                                                                     SECURITY_NATIVE_DREP,
-                                                                     first_call ? m_ctx_handle : nullptr,
-                                                                     &OutBuffer,
-                                                                     &out_flags,
-                                                                     &expiry);
+        last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_,
+                                                                    first_call ? nullptr : ctx_handle_,
+                                                                    &InBuffer,
+                                                                    server_context_flags,
+                                                                    SECURITY_NATIVE_DREP,
+                                                                    first_call ? ctx_handle_ : nullptr,
+                                                                    &OutBuffer,
+                                                                    &out_flags,
+                                                                    &expiry);
       }
     }
     if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
       // Some data needs to be reused for the next call, move that to the front for reuse
       // TODO: Test that this works.
-      std::move(m_input_data.end() - InBuffers[1].cbBuffer, m_input_data.end(), m_input_data.begin());
-      m_input_data.resize(InBuffers[1].cbBuffer);
+      std::move(input_data_.end() - InBuffers[1].cbBuffer, input_data_.end(), input_data_.begin());
+      input_data_.resize(InBuffers[1].cbBuffer);
     } else {
-      m_input_data.clear();
+      input_data_.clear();
     }
 
     if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != nullptr) {
       // TODO: Avoid this copy
-      m_output_data = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
+      output_data_ = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
         , reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
       detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
       return state::data_available;
     }
 
-    switch (m_last_error) {
+    switch (last_error_) {
       case SEC_E_INCOMPLETE_MESSAGE:
       case SEC_I_CONTINUE_NEEDED:
         return state::data_needed;
 
       case SEC_E_OK: {
-        if (m_context.m_verify_server_certificate) {
+        if (context_.verify_server_certificate_) {
           const CERT_CONTEXT* ctx_ptr = nullptr;
-          m_last_error = detail::sspi_functions::QueryContextAttributes(m_ctx_handle, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
-          if (m_last_error != SEC_E_OK) {
+          last_error_ = detail::sspi_functions::QueryContextAttributes(ctx_handle_, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
+          if (last_error_ != SEC_E_OK) {
             return state::error;
           }
 
           cert_context_ptr remote_cert{ctx_ptr, &CertFreeCertificateContext};
 
-          m_last_error = m_context.verify_certificate(remote_cert.get());
-          if (m_last_error != SEC_E_OK) {
+          last_error_ = context_.verify_certificate(remote_cert.get());
+          if (last_error_ != SEC_E_OK) {
             return state::error;
           }
         }
@@ -250,56 +250,56 @@ public:
   // TODO: Consider making this more flexible by not requering a
   // vector of chars, but any view of a range of bytes
   void put(const std::vector<char>& data) {
-    m_input_data.insert(m_input_data.end(), data.begin(), data.end());
+    input_data_.insert(input_data_.end(), data.begin(), data.end());
   }
 
   std::vector<char> get() {
     // TODO: Avoid this copy if possible
-    auto ret = m_output_data;
-    m_output_data.clear();
+    auto ret = output_data_;
+    output_data_.clear();
     return ret;
   }
 
   boost::system::error_code last_error() const {
-    return error::make_error_code(m_last_error);
+    return error::make_error_code(last_error_);
   }
 
   void set_server_hostname(const std::string& hostname) {
     const auto size = hostname.size() + 1;
-    m_server_hostname = std::make_unique<boost::winapi::WCHAR_[]>(size);
-    const auto size_converted = mbstowcs(m_server_hostname.get(), hostname.c_str(), size);
+    server_hostname_ = std::make_unique<boost::winapi::WCHAR_[]>(size);
+    const auto size_converted = mbstowcs(server_hostname_.get(), hostname.c_str(), size);
     BOOST_VERIFY_MSG(size_converted == hostname.size(), "mbstowcs");
   }
 
 private:
-  context& m_context;
-  CtxtHandle* m_ctx_handle;
-  CredHandle* m_cred_handle;
-  SECURITY_STATUS m_last_error;
-  handshake_type m_handshake_type;
-  std::vector<char> m_input_data;
-  std::vector<char> m_output_data;
-  std::unique_ptr<boost::winapi::WCHAR_[]> m_server_hostname;
+  context& context_;
+  CtxtHandle* ctx_handle_;
+  CredHandle* cred_handle_;
+  SECURITY_STATUS last_error_;
+  handshake_type handshake_type_;
+  std::vector<char> input_data_;
+  std::vector<char> output_data_;
+  std::unique_ptr<boost::winapi::WCHAR_[]> server_hostname_;
 };
 
 class sspi_encrypt {
 public:
   sspi_encrypt(CtxtHandle* context)
-    : m_context(context)
-    , m_message(context) {
+    : context_(context)
+    , message_(context) {
   }
 
   template <typename ConstBufferSequence>
   std::size_t operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
     SECURITY_STATUS sc;
 
-    std::size_t size_encrypted = m_message(buffers, sc);
+    std::size_t size_encrypted = message_(buffers, sc);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
     }
 
-    sc = detail::sspi_functions::EncryptMessage(m_context, 0, m_message, 0);
+    sc = detail::sspi_functions::EncryptMessage(context_, 0, message_, 0);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
@@ -309,11 +309,11 @@ public:
   }
 
   std::size_t size() const {
-    return m_message.size();
+    return message_.size();
   }
 
   std::vector<char> data() const {
-    return m_message.data();
+    return message_.data();
   }
 
 private:
@@ -322,11 +322,11 @@ private:
   class message {
   public:
     message(CtxtHandle* context)
-      : m_context(context) {
+      : context_(context) {
     }
 
     operator PSecBufferDesc() {
-      return &m_message;
+      return &message_;
     }
 
     template <typename ConstBufferSequence>
@@ -340,38 +340,38 @@ private:
       // TODO: No need to resize this. Since we know the max size, we
       // can allocate a static buffer. Just reserving the max size
       // would probably be good enough in practice, or at least better.
-      m_data.resize(sizes.cbHeader + size_encrypted + sizes.cbTrailer);
+      data_.resize(sizes.cbHeader + size_encrypted + sizes.cbTrailer);
 
-      m_buffers[0].pvBuffer = m_data.data();
-      m_buffers[0].cbBuffer = sizes.cbHeader;
-      m_buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
+      buffers_[0].pvBuffer = data_.data();
+      buffers_[0].cbBuffer = sizes.cbHeader;
+      buffers_[0].BufferType = SECBUFFER_STREAM_HEADER;
 
-      net::buffer_copy(net::buffer(m_data.data() + sizes.cbHeader, size_encrypted), buffers);
-      m_buffers[1].pvBuffer = m_data.data() + sizes.cbHeader;
-      m_buffers[1].cbBuffer = static_cast<ULONG>(size_encrypted);
-      m_buffers[1].BufferType = SECBUFFER_DATA;
+      net::buffer_copy(net::buffer(data_.data() + sizes.cbHeader, size_encrypted), buffers);
+      buffers_[1].pvBuffer = data_.data() + sizes.cbHeader;
+      buffers_[1].cbBuffer = static_cast<ULONG>(size_encrypted);
+      buffers_[1].BufferType = SECBUFFER_DATA;
 
-      m_buffers[2].pvBuffer = m_data.data() + sizes.cbHeader + size_encrypted;
-      m_buffers[2].cbBuffer = sizes.cbTrailer;
-      m_buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
+      buffers_[2].pvBuffer = data_.data() + sizes.cbHeader + size_encrypted;
+      buffers_[2].cbBuffer = sizes.cbTrailer;
+      buffers_[2].BufferType = SECBUFFER_STREAM_TRAILER;
 
-      m_buffers[3].pvBuffer = SECBUFFER_EMPTY;
-      m_buffers[3].cbBuffer = SECBUFFER_EMPTY;
-      m_buffers[3].BufferType = SECBUFFER_EMPTY;
+      buffers_[3].pvBuffer = SECBUFFER_EMPTY;
+      buffers_[3].cbBuffer = SECBUFFER_EMPTY;
+      buffers_[3].BufferType = SECBUFFER_EMPTY;
 
-      m_message.ulVersion = SECBUFFER_VERSION;
-      m_message.cBuffers = 4;
-      m_message.pBuffers = m_buffers.data();
+      message_.ulVersion = SECBUFFER_VERSION;
+      message_.cBuffers = 4;
+      message_.pBuffers = buffers_.data();
 
       return size_encrypted;
     }
 
     std::vector<char> data() const {
-      return m_data;
+      return data_;
     }
 
     std::size_t size() const {
-      return std::accumulate(m_buffers.begin(), m_buffers.end(), 0, [](auto size, const auto& buffer) {
+      return std::accumulate(buffers_.begin(), buffers_.end(), 0, [](auto size, const auto& buffer) {
         return size += buffer.cbBuffer;
       });
     }
@@ -382,18 +382,18 @@ private:
     // defer the message construction till its needed.
     SecPkgContext_StreamSizes stream_sizes(SECURITY_STATUS& sc) const {
       SecPkgContext_StreamSizes stream_sizes;
-      sc = detail::sspi_functions::QueryContextAttributes(m_context, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
+      sc = detail::sspi_functions::QueryContextAttributes(context_, SECPKG_ATTR_STREAM_SIZES, &stream_sizes);
       return stream_sizes;
     }
 
-    CtxtHandle* m_context;
-    std::vector<char> m_data;
-    SecBufferDesc m_message;
-    std::array<SecBuffer, 4> m_buffers;
+    CtxtHandle* context_;
+    std::vector<char> data_;
+    SecBufferDesc message_;
+    std::array<SecBuffer, 4> buffers_;
   };
 
-  CtxtHandle* m_context;
-  message m_message;
+  CtxtHandle* context_;
+  message message_;
 };
 
 class sspi_decrypt {
@@ -405,8 +405,8 @@ public:
   };
 
   sspi_decrypt(CtxtHandle* context)
-    : m_context(context)
-    , m_last_error(SEC_E_OK) {
+    : context_(context)
+    , last_error_(SEC_E_OK) {
   }
 
   state operator()() {
@@ -431,11 +431,11 @@ public:
     Message.cBuffers = 4;
     Message.pBuffers = Buffers;
 
-    m_last_error = detail::sspi_functions::DecryptMessage(m_context, &Message, 0, nullptr);
-    if (m_last_error == SEC_E_INCOMPLETE_MESSAGE) {
+    last_error_ = detail::sspi_functions::DecryptMessage(context_, &Message, 0, nullptr);
+    if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       return state::data_needed;
     }
-    if (m_last_error != SEC_E_OK) {
+    if (last_error_ != SEC_E_OK) {
       return state::error;
     }
 
@@ -477,12 +477,12 @@ public:
   std::vector<char> decrypted_data;
 
   boost::system::error_code last_error() const {
-    return error::make_error_code(m_last_error);
+    return error::make_error_code(last_error_);
   }
 
 private:
-  CtxtHandle* m_context;
-  SECURITY_STATUS m_last_error;
+  CtxtHandle* context_;
+  SECURITY_STATUS last_error_;
 };
 
 class sspi_shutdown {
@@ -493,9 +493,9 @@ public:
   };
 
   sspi_shutdown(CtxtHandle* context, CredHandle* credentials)
-    : m_context(context)
-    , m_credentials(credentials)
-    , m_last_error(SEC_E_OK) {
+    : context_(context)
+    , credentials_(credentials)
+    , last_error_(SEC_E_OK) {
   }
 
   state operator()() {
@@ -512,8 +512,8 @@ public:
     OutBuffer.pBuffers  = OutBuffers;
     OutBuffer.ulVersion = SECBUFFER_VERSION;
 
-    m_last_error = detail::sspi_functions::ApplyControlToken(m_context, &OutBuffer);
-    if (m_last_error != SEC_E_OK) {
+    last_error_ = detail::sspi_functions::ApplyControlToken(context_, &OutBuffer);
+    if (last_error_ != SEC_E_OK) {
       return state::error;
     }
 
@@ -527,64 +527,64 @@ public:
 
     DWORD out_flags = 0;
 
-    m_last_error = detail::sspi_functions::InitializeSecurityContext(m_credentials,
-                                                                     m_context,
+    last_error_ = detail::sspi_functions::InitializeSecurityContext(credentials_,
+                                                                     context_,
                                                                      NULL,
                                                                      client_context_flags,
                                                                      0,
                                                                      SECURITY_NATIVE_DREP,
                                                                      NULL,
                                                                      0,
-                                                                     m_context,
+                                                                     context_,
                                                                      &OutBuffer,
                                                                      &out_flags,
                                                                      nullptr);
-    if (m_last_error != SEC_E_OK) {
+    if (last_error_ != SEC_E_OK) {
       return state::error;
     }
 
-    m_buf = net::buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer);
+    buf_ = net::buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer);
     return state::data_available;
   }
 
   net::const_buffer output() const {
-    return m_buf;
+    return buf_;
   }
 
   void consume(std::size_t size) {
     // TODO: Handle this instead of asserting
-    BOOST_VERIFY(size == m_buf.size());
+    BOOST_VERIFY(size == buf_.size());
     // TODO: RAII this buffer to ensure it's freed even if the consume function is never called
-    detail::sspi_functions::FreeContextBuffer(const_cast<void*>(m_buf.data()));
-    m_buf = net::const_buffer{};
+    detail::sspi_functions::FreeContextBuffer(const_cast<void*>(buf_.data()));
+    buf_ = net::const_buffer{};
   }
 
   boost::system::error_code last_error() const {
-    return error::make_error_code(m_last_error);
+    return error::make_error_code(last_error_);
   }
 
 private:
-  CtxtHandle* m_context;
-  CredHandle* m_credentials;
-  SECURITY_STATUS m_last_error;
-  net::const_buffer m_buf;
+  CtxtHandle* context_;
+  CredHandle* credentials_;
+  SECURITY_STATUS last_error_;
+  net::const_buffer buf_;
 };
 
 class sspi_impl {
 public:
   sspi_impl(context& ctx)
-    : handshake(ctx, &m_context, &m_credentials)
-    , encrypt(&m_context)
-    , decrypt(&m_context)
-    , shutdown(&m_context, &m_credentials) {
+    : handshake(ctx, &context_, &credentials_)
+    , encrypt(&context_)
+    , decrypt(&context_)
+    , shutdown(&context_, &credentials_) {
   }
 
   sspi_impl(const sspi_impl&) = delete;
   sspi_impl& operator=(const sspi_impl&) = delete;
 
   ~sspi_impl() {
-    detail::sspi_functions::DeleteSecurityContext(&m_context);
-    detail::sspi_functions::FreeCredentialsHandle(&m_credentials);
+    detail::sspi_functions::DeleteSecurityContext(&context_);
+    detail::sspi_functions::FreeCredentialsHandle(&credentials_);
   }
 
   void set_server_hostname(const std::string& hostname) {
@@ -592,8 +592,8 @@ public:
   }
 
 private:
-  CredHandle m_credentials{0, 0};
-  CtxtHandle m_context{0, 0};
+  CredHandle credentials_{0, 0};
+  CtxtHandle context_{0, 0};
 
 public:
   // TODO: Find some better names

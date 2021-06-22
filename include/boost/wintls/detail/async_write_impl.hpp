@@ -19,16 +19,16 @@ namespace detail {
 template <typename NextLayer, typename ConstBufferSequence>
 struct async_write_impl : boost::asio::coroutine {
   async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_impl& sspi_impl)
-    : m_next_layer(next_layer)
-    , m_buffer(buffer)
-    , m_sspi_impl(sspi_impl) {
+    : next_layer_(next_layer)
+    , buffer_(buffer)
+    , sspi_impl_(sspi_impl) {
   }
 
   template <typename Self>
   void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     boost::ignore_unused(length);
     BOOST_ASIO_CORO_REENTER(*this) {
-      m_bytes_consumed = m_sspi_impl.encrypt(m_buffer, ec);
+      bytes_consumed_ = sspi_impl_.encrypt(buffer_, ec);
       if (ec) {
         self.complete(ec, 0);
         return;
@@ -36,20 +36,20 @@ struct async_write_impl : boost::asio::coroutine {
 
       BOOST_ASIO_CORO_YIELD {
         // TODO: Avoid this copy by consuming from the buffer in sspi_encrypt instead
-        m_message = m_sspi_impl.encrypt.data();
-        auto buf = net::buffer(m_message, m_sspi_impl.encrypt.size());
-        net::async_write(m_next_layer, buf, std::move(self));
+        message_ = sspi_impl_.encrypt.data();
+        auto buf = net::buffer(message_, sspi_impl_.encrypt.size());
+        net::async_write(next_layer_, buf, std::move(self));
       }
-      self.complete(ec, m_bytes_consumed);
+      self.complete(ec, bytes_consumed_);
     }
   }
 
 private:
-  NextLayer& m_next_layer;
-  ConstBufferSequence m_buffer;
-  detail::sspi_impl& m_sspi_impl;
-  std::vector<char> m_message;
-  size_t m_bytes_consumed{0};
+  NextLayer& next_layer_;
+  ConstBufferSequence buffer_;
+  detail::sspi_impl& sspi_impl_;
+  std::vector<char> message_;
+  size_t bytes_consumed_{0};
 };
 
 } // detail

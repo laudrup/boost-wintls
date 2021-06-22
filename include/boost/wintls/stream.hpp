@@ -61,9 +61,9 @@ public:
    */
   template <class Arg>
   stream(Arg&& arg, context& ctx)
-    : m_next_layer(std::forward<Arg>(arg))
-    , m_context(ctx)
-    , m_sspi_impl(ctx) {
+    : next_layer_(std::forward<Arg>(arg))
+    , context_(ctx)
+    , sspi_impl_(ctx) {
   }
 
   stream(stream&& other) = default;
@@ -89,7 +89,7 @@ public:
    * layers.  Ownership is not transferred to the caller.
    */
   const next_layer_type& next_layer() const {
-    return m_next_layer;
+    return next_layer_;
   }
 
   /** Get a reference to the next layer.
@@ -101,7 +101,7 @@ public:
    * layers.  Ownership is not transferred to the caller.
    */
   next_layer_type& next_layer() {
-    return m_next_layer;
+    return next_layer_;
   }
 
   /** Set SNI hostname
@@ -115,7 +115,7 @@ public:
    * @param hostname The hostname to use in certificate validation
    */
   void set_server_hostname(const std::string& hostname) {
-    m_sspi_impl.set_server_hostname(hostname);
+    sspi_impl_.set_server_hostname(hostname);
   }
 
   /** Perform TLS handshaking.
@@ -129,36 +129,36 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   void handshake(handshake_type type, boost::system::error_code& ec) {
-    m_sspi_impl.handshake(type);
+    sspi_impl_.handshake(type);
 
     detail::sspi_handshake::state state;
-    while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
+    while((state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
       switch (state) {
         case detail::sspi_handshake::state::data_needed:
           {
             std::array<char, 0x10000> input_buffer;
-            std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+            std::size_t size_read = next_layer_.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
             if (ec) {
               return;
             }
-            m_sspi_impl.handshake.put({input_buffer.begin(), input_buffer.begin() + size_read});
+            sspi_impl_.handshake.put({input_buffer.begin(), input_buffer.begin() + size_read});
             continue;
           }
         case detail::sspi_handshake::state::data_available:
           {
-            auto data = m_sspi_impl.handshake.get();
-            net::write(m_next_layer, net::buffer(data), ec);
+            auto data = sspi_impl_.handshake.get();
+            net::write(next_layer_, net::buffer(data), ec);
             if (ec) {
               return;
             }
             continue;
           }
         case detail::sspi_handshake::state::error:
-          ec = m_sspi_impl.handshake.last_error();
+          ec = sspi_impl_.handshake.last_error();
           return;
         case detail::sspi_handshake::state::done:
-          BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
-          ec = m_sspi_impl.handshake.last_error();
+          BOOST_ASSERT(!sspi_impl_.handshake.last_error());
+          ec = sspi_impl_.handshake.last_error();
           return;
       }
     }
@@ -209,7 +209,7 @@ public:
   template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_handshake_impl<next_layer_type>{m_next_layer, m_sspi_impl, type}, handler);
+        detail::async_handshake_impl<next_layer_type>{next_layer_, sspi_impl_, type}, handler);
   }
 
   /** Read some data from the stream.
@@ -231,22 +231,22 @@ public:
   template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     detail::sspi_decrypt::state state;
-    while((state = m_sspi_impl.decrypt()) == detail::sspi_decrypt::state::data_needed) {
+    while((state = sspi_impl_.decrypt()) == detail::sspi_decrypt::state::data_needed) {
       std::array<char, 0x10000> input_buffer;
-      std::size_t size_read = m_next_layer.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+      std::size_t size_read = next_layer_.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
       if (ec) {
         return 0;
       }
-      m_sspi_impl.decrypt.put({input_buffer.begin(), input_buffer.begin() + size_read});
+      sspi_impl_.decrypt.put({input_buffer.begin(), input_buffer.begin() + size_read});
       continue;
     }
 
     if (state == detail::sspi_decrypt::state::error) {
-      ec = m_sspi_impl.decrypt.last_error();
+      ec = sspi_impl_.decrypt.last_error();
       return 0;
     }
 
-    const auto data = m_sspi_impl.decrypt.get(net::buffer_size(buffers));
+    const auto data = sspi_impl_.decrypt.get(net::buffer_size(buffers));
     std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(data));
     BOOST_ASSERT(bytes_copied == data.size());
     return bytes_copied;
@@ -306,7 +306,7 @@ public:
   template <class MutableBufferSequence, class CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_read_impl<next_layer_type, MutableBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
+        detail::async_read_impl<next_layer_type, MutableBufferSequence>{next_layer_, buffers, sspi_impl_}, handler);
   }
 
   /** Write some data to the stream.
@@ -327,12 +327,12 @@ public:
    */
   template <class ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
-    std::size_t bytes_consumed = m_sspi_impl.encrypt(buffers, ec);
+    std::size_t bytes_consumed = sspi_impl_.encrypt(buffers, ec);
     if (ec) {
       return 0;
     }
 
-    net::write(m_next_layer, net::buffer(m_sspi_impl.encrypt.data()), net::transfer_exactly(m_sspi_impl.encrypt.size()), ec);
+    net::write(next_layer_, net::buffer(sspi_impl_.encrypt.data()), net::transfer_exactly(sspi_impl_.encrypt.size()), ec);
     if (ec) {
       return 0;
     }
@@ -395,7 +395,7 @@ public:
   template <class ConstBufferSequence, class CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_write_impl<next_layer_type, ConstBufferSequence>{m_next_layer, buffers, m_sspi_impl}, handler);
+        detail::async_write_impl<next_layer_type, ConstBufferSequence>{next_layer_, buffers, sspi_impl_}, handler);
   }
 
   /** Shut down TLS on the stream.
@@ -407,14 +407,14 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   void shutdown(boost::system::error_code& ec) {
-    switch(m_sspi_impl.shutdown()) {
+    switch(sspi_impl_.shutdown()) {
       case detail::sspi_shutdown::state::data_available: {
-        auto size = net::write(m_next_layer, m_sspi_impl.shutdown.output(), ec);
-        m_sspi_impl.shutdown.consume(size);
+        auto size = net::write(next_layer_, sspi_impl_.shutdown.output(), ec);
+        sspi_impl_.shutdown.consume(size);
         return;
       }
       case detail::sspi_shutdown::state::error:
-        ec = m_sspi_impl.shutdown.last_error();
+        ec = sspi_impl_.shutdown.last_error();
     }
   }
 
@@ -451,13 +451,13 @@ public:
   template <class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_shutdown_impl<next_layer_type>{m_next_layer, m_sspi_impl}, handler);
+        detail::async_shutdown_impl<next_layer_type>{next_layer_, sspi_impl_}, handler);
   }
 
 private:
-  NextLayer m_next_layer;
-  context& m_context;
-  detail::sspi_impl m_sspi_impl;
+  NextLayer next_layer_;
+  context& context_;
+  detail::sspi_impl sspi_impl_;
 };
 
 } // namespace wintls

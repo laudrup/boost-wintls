@@ -27,18 +27,18 @@ namespace detail {
 struct context_impl {
 
   context_impl()
-    : m_cert_store(CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr)) {
-    if (m_cert_store == nullptr) {
+    : cert_store_(CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr)) {
+    if (cert_store_ == nullptr) {
       throw_last_error("CertOpenStore");
     }
   }
 
   ~context_impl() {
-    CertCloseStore(m_cert_store, 0);
+    CertCloseStore(cert_store_, 0);
   }
 
   void add_certificate_authority(const CERT_CONTEXT* cert) {
-    if(!CertAddCertificateContextToStore(m_cert_store,
+    if(!CertAddCertificateContextToStore(cert_store_,
                                          cert,
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
@@ -51,7 +51,7 @@ struct context_impl {
     // certificates have been added to the in memory store by the user
     CERT_CHAIN_ENGINE_CONFIG chain_engine_config{};
     chain_engine_config.cbSize = sizeof(chain_engine_config);
-    chain_engine_config.hExclusiveRoot = m_cert_store;
+    chain_engine_config.hExclusiveRoot = cert_store_;
 
     struct cert_chain_engine {
       ~cert_chain_engine() {
@@ -176,7 +176,7 @@ private:
     return policy_status.dwError;
   }
 
-  HCERTSTORE m_cert_store;
+  HCERTSTORE cert_store_;
 };
 
 } // namespace detail

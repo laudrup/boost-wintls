@@ -19,10 +19,10 @@ namespace detail {
 template <typename NextLayer>
 struct async_handshake_impl : boost::asio::coroutine {
   async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, handshake_type type)
-    : m_next_layer(next_layer)
-    , m_sspi_impl(sspi_impl)
-    , m_entry_count(0) {
-    m_sspi_impl.handshake(type);
+    : next_layer_(next_layer)
+    , sspi_impl_(sspi_impl)
+    , entry_count_(0) {
+    sspi_impl_.handshake(type);
   }
 
   template <typename Self>
@@ -32,32 +32,32 @@ struct async_handshake_impl : boost::asio::coroutine {
       return;
     }
 
-    ++m_entry_count;
+    ++entry_count_;
     auto is_continuation = [this] {
-      return m_entry_count > 1;
+      return entry_count_ > 1;
     };
 
     detail::sspi_handshake::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = m_sspi_impl.handshake()) != detail::sspi_handshake::state::done) {
+      while((state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
         if (state == detail::sspi_handshake::state::data_needed) {
           // TODO: Use a fixed size buffer instead
-          m_input.resize(0x10000);
+          input_.resize(0x10000);
           BOOST_ASIO_CORO_YIELD {
-            auto buf = net::buffer(m_input);
-            m_next_layer.async_read_some(buf, std::move(self));
+            auto buf = net::buffer(input_);
+            next_layer_.async_read_some(buf, std::move(self));
           }
-          m_sspi_impl.handshake.put({m_input.data(), m_input.data() + length});
-          m_input.clear();
+          sspi_impl_.handshake.put({input_.data(), input_.data() + length});
+          input_.clear();
           continue;
         }
 
         if (state == detail::sspi_handshake::state::data_available) {
-          m_output = m_sspi_impl.handshake.get();
+          output_ = sspi_impl_.handshake.get();
           BOOST_ASIO_CORO_YIELD
           {
-            auto buf = net::buffer(m_output);
-            net::async_write(m_next_layer, buf, std::move(self));
+            auto buf = net::buffer(output_);
+            net::async_write(next_layer_, buf, std::move(self));
           }
           continue;
         }
@@ -69,7 +69,7 @@ struct async_handshake_impl : boost::asio::coroutine {
               net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
             }
           }
-          self.complete(m_sspi_impl.handshake.last_error());
+          self.complete(sspi_impl_.handshake.last_error());
           return;
         }
       }
@@ -80,17 +80,17 @@ struct async_handshake_impl : boost::asio::coroutine {
           net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
         }
       }
-      BOOST_ASSERT(!m_sspi_impl.handshake.last_error());
-      self.complete(m_sspi_impl.handshake.last_error());
+      BOOST_ASSERT(!sspi_impl_.handshake.last_error());
+      self.complete(sspi_impl_.handshake.last_error());
     }
   }
 
 private:
-  NextLayer& m_next_layer;
-  detail::sspi_impl& m_sspi_impl;
-  int m_entry_count;
-  std::vector<char> m_input;
-  std::vector<char> m_output;
+  NextLayer& next_layer_;
+  detail::sspi_impl& sspi_impl_;
+  int entry_count_;
+  std::vector<char> input_;
+  std::vector<char> output_;
 };
 
 } // namespace detail

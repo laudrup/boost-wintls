@@ -34,9 +34,9 @@ public:
    * @param connection_method The @ref method to use for connections.
    */
   explicit context(method connection_method)
-    : m_impl(std::make_unique<detail::context_impl>())
-    , m_method(connection_method)
-    , m_verify_server_certificate(false) {
+    : impl_(std::make_unique<detail::context_impl>())
+    , method_(connection_method)
+    , verify_server_certificate_(false) {
   }
 
   /** Add certification authority for performing verification.
@@ -49,7 +49,7 @@ public:
    * @throws boost::system::system_error Thrown on failure.
    */
   void add_certificate_authority(const CERT_CONTEXT* cert) {
-    m_impl->add_certificate_authority(cert);
+    impl_->add_certificate_authority(cert);
   }
 
   /** Add certification authority for performing verification.
@@ -63,7 +63,7 @@ public:
    */
   void add_certificate_authority(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
     try {
-      m_impl->add_certificate_authority(cert);
+      impl_->add_certificate_authority(cert);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
@@ -79,82 +79,82 @@ public:
    * verified
    */
   void verify_server_certificate(bool verify) {
-    m_verify_server_certificate = verify;
+    verify_server_certificate_ = verify;
   }
 
   void set_default_verify_paths() {
-    m_impl->use_default_cert_store = true;
+    impl_->use_default_cert_store = true;
   }
 
   void set_default_verify_paths(boost::system::error_code& ec) {
-    m_impl->use_default_cert_store = true;
+    impl_->use_default_cert_store = true;
     ec = {};
   }
 
   void use_certificate(const net::const_buffer& certificate, file_format format, boost::system::error_code& ec) {
     try {
-      m_impl->use_certificate(certificate, format);
+      impl_->use_certificate(certificate, format);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
   }
 
   void use_certificate(const net::const_buffer& certificate, file_format format) {
-    m_impl->use_certificate(certificate, format);
+    impl_->use_certificate(certificate, format);
   }
 
   void use_certificate_file(const std::string& filename, file_format format, boost::system::error_code& ec) {
     try {
-      m_impl->use_certificate_file(filename, format);
+      impl_->use_certificate_file(filename, format);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
   }
 
   void use_certificate_file(const std::string& filename, file_format format) {
-    m_impl->use_certificate_file(filename, format);
+    impl_->use_certificate_file(filename, format);
   }
 
   void use_private_key(const net::const_buffer& private_key, file_format format, boost::system::error_code& ec) {
     try {
-      m_impl->use_private_key(private_key, format);
+      impl_->use_private_key(private_key, format);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
   }
 
   void use_private_key(const net::const_buffer& private_key, file_format format) {
-    m_impl->use_private_key(private_key, format);
+    impl_->use_private_key(private_key, format);
   }
 
   void use_private_key_file(const std::string& filename, file_format format, boost::system::error_code& ec) {
     try {
-      m_impl->use_private_key_file(filename, format);
+      impl_->use_private_key_file(filename, format);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
   }
 
   void use_private_key_file(const std::string& filename, file_format format) {
-    m_impl->use_private_key_file(filename, format);
+    impl_->use_private_key_file(filename, format);
   }
 
 private:
   boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
-    if (!m_verify_server_certificate) {
+    if (!verify_server_certificate_) {
       return boost::winapi::ERROR_SUCCESS_;
     }
-    return m_impl->verify_certificate(cert);
+    return impl_->verify_certificate(cert);
   }
 
   const CERT_CONTEXT* server_cert() const {
-    return m_impl->server_cert.get();
+    return impl_->server_cert.get();
   }
 
   friend class detail::sspi_handshake;
-  std::unique_ptr<detail::context_impl> m_impl;
-  method m_method;
-  bool m_verify_server_certificate;
+  std::unique_ptr<detail::context_impl> impl_;
+  method method_;
+  bool verify_server_certificate_;
 };
 
 } // namespace wintls

@@ -5,9 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_DETAIL_ENCRYPT_MESSAGE_HPP
-#define BOOST_WINTLS_DETAIL_ENCRYPT_MESSAGE_HPP
+#ifndef BOOST_WINTLS_DETAIL_ENCRYPT_BUFFERS_HPP
+#define BOOST_WINTLS_DETAIL_ENCRYPT_BUFFERS_HPP
 
+#include <boost/wintls/detail/sspi_buffer_sequence.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/config.hpp>
 
@@ -17,14 +18,16 @@ namespace boost {
 namespace wintls {
 namespace detail {
 
-class encrypt_message {
+class encrypt_buffers : public sspi_buffer_sequence<4> {
 public:
-  encrypt_message(CtxtHandle* context)
-      : context_(context) {
-  }
-
-  operator PSecBufferDesc() {
-    return &message_;
+  encrypt_buffers(CtxtHandle* context)
+    : sspi_buffer_sequence(std::array<sspi_buffer, 4> {
+        SECBUFFER_STREAM_HEADER,
+        SECBUFFER_DATA,
+        SECBUFFER_STREAM_TRAILER,
+        SECBUFFER_EMPTY
+      })
+    , context_(context) {
   }
 
   template <typename ConstBufferSequence> std::size_t operator()(const ConstBufferSequence& buffers, SECURITY_STATUS& sc) {
@@ -41,24 +44,13 @@ public:
 
     buffers_[0].pvBuffer = data_.data();
     buffers_[0].cbBuffer = sizes.cbHeader;
-    buffers_[0].BufferType = SECBUFFER_STREAM_HEADER;
 
     net::buffer_copy(net::buffer(data_.data() + sizes.cbHeader, size_consumed), buffers);
     buffers_[1].pvBuffer = data_.data() + sizes.cbHeader;
     buffers_[1].cbBuffer = static_cast<ULONG>(size_consumed);
-    buffers_[1].BufferType = SECBUFFER_DATA;
 
     buffers_[2].pvBuffer = data_.data() + sizes.cbHeader + size_consumed;
     buffers_[2].cbBuffer = sizes.cbTrailer;
-    buffers_[2].BufferType = SECBUFFER_STREAM_TRAILER;
-
-    buffers_[3].pvBuffer = SECBUFFER_EMPTY;
-    buffers_[3].cbBuffer = SECBUFFER_EMPTY;
-    buffers_[3].BufferType = SECBUFFER_EMPTY;
-
-    message_.ulVersion = SECBUFFER_VERSION;
-    message_.cBuffers = 4;
-    message_.pBuffers = buffers_.data();
 
     return size_consumed;
   }
@@ -68,7 +60,9 @@ public:
   }
 
   std::size_t size() const {
-    return std::accumulate(buffers_.begin(), buffers_.end(), 0, [](auto size, const auto& buffer) { return size += buffer.cbBuffer; });
+    return std::accumulate(buffers_.begin(), buffers_.end(), 0, [](auto size, const auto& buffer) {
+      return size += buffer.cbBuffer;
+    });
   }
 
 private:
@@ -83,12 +77,10 @@ private:
 
   CtxtHandle* context_;
   std::vector<char> data_;
-  SecBufferDesc message_;
-  std::array<SecBuffer, 4> buffers_;
 };
 
 } // namespace detail
 } // namespace wintls
 } // namespace boost
 
-#endif
+#endif // BOOST_WINTLS_DETAIL_ENCRYPT_BUFFERS_HPP

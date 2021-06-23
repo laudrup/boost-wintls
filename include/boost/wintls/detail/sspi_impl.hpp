@@ -10,7 +10,7 @@
 
 #include <boost/wintls/handshake_type.hpp>
 
-#include <boost/wintls/detail/encrypt_message.hpp>
+#include <boost/wintls/detail/encrypt_buffers.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/config.hpp>
 
@@ -286,20 +286,20 @@ class sspi_encrypt {
 public:
   sspi_encrypt(CtxtHandle* context)
     : context_(context)
-    , message_(context) {
+    , buffers_(context) {
   }
 
   template <typename ConstBufferSequence>
   std::size_t operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
     SECURITY_STATUS sc;
 
-    std::size_t size_encrypted = message_(buffers, sc);
+    std::size_t size_encrypted = buffers_(buffers, sc);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
     }
 
-    sc = detail::sspi_functions::EncryptMessage(context_, 0, message_, 0);
+    sc = detail::sspi_functions::EncryptMessage(context_, 0, buffers_, 0);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
@@ -309,16 +309,16 @@ public:
   }
 
   std::size_t size() const {
-    return message_.size();
+    return buffers_.size();
   }
 
   std::vector<char> data() const {
-    return message_.data();
+    return buffers_.data();
   }
 
 private:
   CtxtHandle* context_;
-  encrypt_message message_;
+  encrypt_buffers buffers_;
 };
 
 class sspi_decrypt {

@@ -23,7 +23,7 @@ public:
 
   template <typename ConstBufferSequence>
   std::size_t operator()(const ConstBufferSequence& buf, boost::system::error_code& ec) {
-    SECURITY_STATUS sc;
+    SECURITY_STATUS sc = SEC_E_OK;
 
     std::size_t size_encrypted = buffers(buf, sc);
     if (sc != SEC_E_OK) {

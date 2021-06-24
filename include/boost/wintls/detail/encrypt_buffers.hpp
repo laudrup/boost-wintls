@@ -12,8 +12,6 @@
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/config.hpp>
 
-#include <numeric>
-
 namespace boost {
 namespace wintls {
 namespace detail {
@@ -53,16 +51,6 @@ public:
     buffers_[2].cbBuffer = sizes.cbTrailer;
 
     return size_consumed;
-  }
-
-  std::vector<char> data() const {
-    return data_;
-  }
-
-  std::size_t size() const {
-    return std::accumulate(buffers_.begin(), buffers_.end(), 0, [](auto size, const auto& buffer) {
-      return size += buffer.cbBuffer;
-    });
   }
 
 private:

@@ -7,6 +7,11 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_BUFFER_SEQUENCE_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_BUFFER_SEQUENCE_HPP
 
+#include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/sspi_functions.hpp>
+
+#include <boost/asio/buffer.hpp>
+
 #include <array>
 
 namespace boost {
@@ -19,13 +24,41 @@ public:
     : SecBuffer({0, type, nullptr}) {
     static_assert(sizeof(*this) == sizeof(SecBuffer), "Invalid SecBuffer");
   }
+
+  operator net::const_buffer() const {
+    return net::const_buffer(pvBuffer, cbBuffer);
+  }
+
+  operator net::mutable_buffer() {
+    return net::mutable_buffer(pvBuffer, cbBuffer);
+  }
 };
 
 template <std::size_t N>
 class sspi_buffer_sequence {
 public:
+  using array_type = std::array<sspi_buffer, N>;
+  using iterator = typename array_type::iterator;
+  using const_iterator = typename array_type::const_iterator;
+
   operator PSecBufferDesc() {
     return &sec_buffer_desc_;
+  }
+
+  iterator begin() {
+    return buffers_.begin();
+  }
+
+  const_iterator begin() const {
+    return buffers_.begin();
+  }
+
+  iterator end() {
+    return buffers_.end();
+  }
+
+  const_iterator end() const {
+    return buffers_.end();
   }
 
 protected:

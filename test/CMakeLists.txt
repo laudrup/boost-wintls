@@ -40,6 +40,7 @@ set(test_sources
   error_test.cpp
   handshake_test.cpp
   certificate_test.cpp
+  sspi_buffer_sequence_test.cpp
   )
 
 add_executable(unittest

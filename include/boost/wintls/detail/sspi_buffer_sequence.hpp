@@ -61,6 +61,14 @@ public:
     return buffers_.end();
   }
 
+  sspi_buffer& operator[](size_t i) {
+    return buffers_[i];
+  }
+
+  const sspi_buffer& operator[](size_t i) const {
+    return buffers_[i];
+  }
+
 protected:
   sspi_buffer_sequence(const std::array<sspi_buffer, N>& buffers)
     : buffers_(buffers) {

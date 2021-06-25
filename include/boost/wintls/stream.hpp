@@ -332,7 +332,7 @@ public:
       return 0;
     }
 
-    net::write(next_layer_, net::buffer(sspi_impl_.encrypt.data()), net::transfer_exactly(sspi_impl_.encrypt.size()), ec);
+    net::write(next_layer_, sspi_impl_.encrypt.buffers, ec);
     if (ec) {
       return 0;
     }

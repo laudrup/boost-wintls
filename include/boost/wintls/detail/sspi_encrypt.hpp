@@ -17,21 +17,21 @@ namespace detail {
 class sspi_encrypt {
 public:
   sspi_encrypt(CtxtHandle* context)
-    : context_(context)
-    , buffers_(context) {
+    : buffers(context)
+    , context_(context) {
   }
 
   template <typename ConstBufferSequence>
-  std::size_t operator()(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
-    SECURITY_STATUS sc;
+  std::size_t operator()(const ConstBufferSequence& buf, boost::system::error_code& ec) {
+    SECURITY_STATUS sc = SEC_E_OK;
 
-    std::size_t size_encrypted = buffers_(buffers, sc);
+    std::size_t size_encrypted = buffers(buf, sc);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
     }
 
-    sc = detail::sspi_functions::EncryptMessage(context_, 0, buffers_, 0);
+    sc = detail::sspi_functions::EncryptMessage(context_, 0, buffers, 0);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
@@ -40,17 +40,10 @@ public:
     return size_encrypted;
   }
 
-  std::size_t size() const {
-    return buffers_.size();
-  }
-
-  std::vector<char> data() const {
-    return buffers_.data();
-  }
+  encrypt_buffers buffers;
 
 private:
   CtxtHandle* context_;
-  encrypt_buffers buffers_;
 };
 
 } // namespace detail

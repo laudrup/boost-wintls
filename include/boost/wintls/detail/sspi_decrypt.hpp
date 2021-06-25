@@ -9,6 +9,9 @@
 #define BOOST_WINTLS_DETAIL_SSPI_DECRYPT_HPP
 
 #include <boost/wintls/detail/sspi_functions.hpp>
+#include <boost/wintls/detail/decrypt_buffers.hpp>
+
+#include <boost/assert.hpp>
 
 #include <vector>
 
@@ -37,21 +40,14 @@ public:
       return state::data_needed;
     }
 
-    SecBufferDesc Message;
-    SecBuffer Buffers[4];
+    buffers_[0].pvBuffer = encrypted_data.data();
+    buffers_[0].cbBuffer = static_cast<ULONG>(encrypted_data.size());
+    buffers_[0].BufferType = SECBUFFER_DATA;
+    buffers_[1].BufferType = SECBUFFER_EMPTY;
+    buffers_[2].BufferType = SECBUFFER_EMPTY;
+    buffers_[3].BufferType = SECBUFFER_EMPTY;
 
-    Buffers[0].pvBuffer = encrypted_data.data();
-    Buffers[0].cbBuffer = static_cast<ULONG>(encrypted_data.size());
-    Buffers[0].BufferType = SECBUFFER_DATA;
-    Buffers[1].BufferType = SECBUFFER_EMPTY;
-    Buffers[2].BufferType = SECBUFFER_EMPTY;
-    Buffers[3].BufferType = SECBUFFER_EMPTY;
-
-    Message.ulVersion = SECBUFFER_VERSION;
-    Message.cBuffers = 4;
-    Message.pBuffers = Buffers;
-
-    last_error_ = detail::sspi_functions::DecryptMessage(context_, &Message, 0, nullptr);
+    last_error_ = detail::sspi_functions::DecryptMessage(context_, buffers_, 0, nullptr);
     if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       return state::data_needed;
     }
@@ -61,12 +57,12 @@ public:
 
     encrypted_data.clear();
     for (int i = 1; i < 4; i++) {
-      if (Buffers[i].BufferType == SECBUFFER_DATA) {
-        SecBuffer* pDataBuffer = &Buffers[i];
+      if (buffers_[i].BufferType == SECBUFFER_DATA) {
+        SecBuffer* pDataBuffer = &buffers_[i];
         decrypted_data = std::vector<char>(reinterpret_cast<const char*>(pDataBuffer->pvBuffer), reinterpret_cast<const char*>(pDataBuffer->pvBuffer) + pDataBuffer->cbBuffer);
       }
-      if (Buffers[i].BufferType == SECBUFFER_EXTRA) {
-        SecBuffer* pExtraBuffer = &Buffers[i];
+      if (buffers_[i].BufferType == SECBUFFER_EXTRA) {
+        SecBuffer* pExtraBuffer = &buffers_[i];
         encrypted_data = std::vector<char>(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), reinterpret_cast<const char*>(pExtraBuffer->pvBuffer) + pExtraBuffer->cbBuffer);
       }
     }
@@ -103,6 +99,7 @@ public:
 private:
   CtxtHandle* context_;
   SECURITY_STATUS last_error_;
+  decrypt_buffers buffers_;
 };
 
 } // namespace detail

@@ -1,7 +1,14 @@
-#ifndef BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER
-#define BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER
+//
+// Copyright (c) 2021 Kasper Laudrup (laudrup at stacktrace dot dk)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
 
-#include <catch2/catch.hpp>
+#ifndef BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
+#define BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
+
+#include "unittest.hpp"
 
 #include <boost/asio.hpp>
 
@@ -10,7 +17,7 @@ class async_server : public Stream {
 public:
   using Stream::stream;
 
-  async_server(boost::asio::io_context& context)
+  async_server(net::io_context& context)
     : Stream(context) {
   }
 
@@ -28,19 +35,19 @@ private:
   }
 
   void do_read() {
-    boost::asio::async_read_until(stream, recv_buffer, '\0',
-                                  [this](const boost::system::error_code& ec, std::size_t) {
-                                    REQUIRE_FALSE(ec);
-                                    do_write();
-                                  });
+    net::async_read_until(stream, recv_buffer_, '\0',
+                          [this](const boost::system::error_code& ec, std::size_t) {
+                            REQUIRE_FALSE(ec);
+                            do_write();
+                          });
   }
 
   void do_write() {
-    boost::asio::async_write(stream, recv_buffer,
-                             [this](const boost::system::error_code& ec, std::size_t) {
-                               REQUIRE_FALSE(ec);
-                               do_shutdown();
-                             });
+    net::async_write(stream, recv_buffer_,
+                     [this](const boost::system::error_code& ec, std::size_t) {
+                       REQUIRE_FALSE(ec);
+                       do_shutdown();
+                     });
   }
 
   void do_shutdown() {
@@ -49,7 +56,7 @@ private:
     });
   }
 
-  boost::asio::streambuf recv_buffer;
+  boost::asio::streambuf recv_buffer_;
 };
 
-#endif
+#endif // BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP

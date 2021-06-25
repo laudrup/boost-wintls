@@ -5,10 +5,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/wintls/detail/sspi_buffer_sequence.hpp>
-#include <boost/wintls/detail/config.hpp>
+#include "unittest.hpp"
 
-#include <catch2/catch.hpp>
+#include <boost/wintls/detail/sspi_buffer_sequence.hpp>
 
 #include <iterator>
 

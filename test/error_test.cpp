@@ -5,9 +5,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/wintls/error.hpp>
+#include "unittest.hpp"
 
-#include <catch2/catch.hpp>
+#include <boost/wintls/error.hpp>
 
 extern "C" __declspec(dllimport) void __stdcall SetLastError(unsigned long);
 

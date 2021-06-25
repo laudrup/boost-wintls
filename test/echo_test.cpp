@@ -7,24 +7,17 @@
 
 #include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
+#include "unittest.hpp"
 
 #include <boost/wintls.hpp>
 
-#include <catch2/catch.hpp>
-
-#include <boost/beast/_experimental/test/stream.hpp>
 #include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 
 #include <fstream>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <cstdint>
-
-namespace net = boost::asio;
-namespace asio_ssl = boost::asio::ssl;
-using test_stream = boost::beast::test::stream;
 
 namespace {
 std::string generate_data(std::size_t size) {

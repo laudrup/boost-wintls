@@ -5,20 +5,16 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include "unittest.hpp"
+
 #include <boost/wintls/certificate.hpp>
 
-#include <boost/asio/buffer.hpp>
-
 #include <boost/winapi/handles.hpp>
-
-#include <catch2/catch.hpp>
 
 #include <fstream>
 #include <iterator>
 #include <vector>
 #include <cstdint>
-
-#include <iostream>
 
 namespace {
 std::vector<char> pem_cert_bytes() {
@@ -39,7 +35,7 @@ std::string get_cert_name(const CERT_CONTEXT* cert) {
 TEST_CASE("certificate conversion") {
   SECTION("valid cert bytes") {
     const auto cert_bytes = pem_cert_bytes();
-    const auto cert = boost::wintls::x509_to_cert_context(boost::asio::buffer(cert_bytes), boost::wintls::file_format::pem);
+    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem);
     CHECK(get_cert_name(cert.get()) == "localhost");
   }
 
@@ -47,7 +43,7 @@ TEST_CASE("certificate conversion") {
     const std::vector<char> cert_bytes;
     CHECK_THROWS(boost::wintls::x509_to_cert_context(boost::asio::buffer(cert_bytes), boost::wintls::file_format::pem));
     auto error = boost::system::errc::make_error_code(boost::system::errc::success);
-    const auto cert = boost::wintls::x509_to_cert_context(boost::asio::buffer(cert_bytes), boost::wintls::file_format::pem, error);
+    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem, error);
     CHECK(error);
     CHECK_FALSE(cert);
   }

@@ -1,7 +1,14 @@
-#ifndef BOOST_WINTLS_TEST_ASYNC_ECHO_CLIENT
-#define BOOST_WINTLS_TEST_ASYNC_ECHO_CLIENT
+//
+// Copyright (c) 2021 Kasper Laudrup (laudrup at stacktrace dot dk)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
 
-#include <catch2/catch.hpp>
+#ifndef BOOST_WINTLS_TEST_ASYNC_ECHO_CLIENT_HPP
+#define BOOST_WINTLS_TEST_ASYNC_ECHO_CLIENT_HPP
+
+#include "unittest.hpp"
 
 #include <boost/asio.hpp>
 
@@ -10,9 +17,9 @@ struct async_client : public Stream {
 public:
   using Stream::stream;
 
-  async_client(boost::asio::io_context& context, const std::string& message)
+  async_client(net::io_context& context, const std::string& message)
     : Stream(context)
-    , m_message(message) {
+    , message_(message) {
   }
 
   void run() {
@@ -20,8 +27,8 @@ public:
   }
 
   std::string received_message() const {
-    return std::string(boost::asio::buffers_begin(m_recv_buffer.data()),
-                       boost::asio::buffers_begin(m_recv_buffer.data()) + m_recv_buffer.size());
+    return std::string(net::buffers_begin(recv_buffer_.data()),
+                       net::buffers_begin(recv_buffer_.data()) + recv_buffer_.size());
   }
 
 private:
@@ -34,19 +41,19 @@ private:
   }
 
   void do_write() {
-    boost::asio::async_write(stream, boost::asio::buffer(m_message),
-                             [this](const boost::system::error_code& ec, std::size_t) {
-                               REQUIRE_FALSE(ec);
-                               do_read();
-                             });
+    net::async_write(stream, net::buffer(message_),
+                     [this](const boost::system::error_code& ec, std::size_t) {
+                       REQUIRE_FALSE(ec);
+                       do_read();
+                     });
   }
 
   void do_read() {
-    boost::asio::async_read_until(stream, m_recv_buffer, '\0',
-                                  [this](const boost::system::error_code& ec, std::size_t) {
-                                    REQUIRE_FALSE(ec);
-                                    do_shutdown();
-                                  });
+    net::async_read_until(stream, recv_buffer_, '\0',
+                          [this](const boost::system::error_code& ec, std::size_t) {
+                            REQUIRE_FALSE(ec);
+                            do_shutdown();
+                          });
   }
 
   void do_shutdown() {
@@ -55,8 +62,8 @@ private:
     });
   }
 
-  std::string m_message;
-  boost::asio::streambuf m_recv_buffer;
+  std::string message_;
+  net::streambuf recv_buffer_;
 };
 
-#endif
+#endif // BOOST_WINTLS_TEST_ASYNC_ECHO_CLIENT_HPP

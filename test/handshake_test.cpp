@@ -8,10 +8,9 @@
 #include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
 #include "tls_record.hpp"
+#include "unittest.hpp"
 
 #include <boost/wintls.hpp>
-
-#include <catch2/catch.hpp>
 
 #include <boost/system/error_code.hpp>
 #include <boost/beast/_experimental/test/stream.hpp>
@@ -19,8 +18,6 @@
 #include <boost/asio/ssl.hpp>
 
 #include <fstream>
-
-namespace net = boost::asio;
 
 namespace {
 std::vector<char> pem_cert_bytes() {
@@ -40,8 +37,8 @@ TEST_CASE("certificates") {
   server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
 
   net::io_context io_context;
-  boost::wintls::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
-  boost::asio::ssl::stream<boost::beast::test::stream> server_stream(io_context, server_ctx);
+  boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+  boost::asio::ssl::stream<test_stream> server_stream(io_context, server_ctx);
 
   client_stream.next_layer().connect(server_stream.next_layer());
 
@@ -83,7 +80,7 @@ TEST_CASE("certificates") {
                                   });
 
     auto server_error = errc::make_error_code(errc::not_supported);
-    server_stream.async_handshake(boost::asio::ssl::stream_base::server,
+    server_stream.async_handshake(asio_ssl::stream_base::server,
                                   [&server_error](const boost::system::error_code& ec) {
                                     server_error = ec;
                                   });
@@ -104,7 +101,7 @@ TEST_CASE("certificates") {
                                   });
 
     auto server_error = errc::make_error_code(errc::not_supported);
-    server_stream.async_handshake(boost::asio::ssl::stream_base::server,
+    server_stream.async_handshake(asio_ssl::stream_base::server,
                                   [&server_error](const boost::system::error_code& ec) {
                                     server_error = ec;
                                   });
@@ -132,7 +129,7 @@ TEST_CASE("certificates") {
                                   });
 
     auto server_error = errc::make_error_code(errc::not_supported);
-    server_stream.async_handshake(boost::asio::ssl::stream_base::server,
+    server_stream.async_handshake(asio_ssl::stream_base::server,
                                   [&server_error](const boost::system::error_code& ec) {
                                     server_error = ec;
                                   });
@@ -145,8 +142,8 @@ TEST_CASE("certificates") {
 TEST_CASE("failing handshakes") {
   boost::wintls::context client_ctx(boost::wintls::method::system_default);
   net::io_context io_context;
-  boost::wintls::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
-  boost::beast::test::stream server_stream(io_context);
+  boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+  test_stream server_stream(io_context);
 
   client_stream.next_layer().connect(server_stream);
 
@@ -192,14 +189,14 @@ TEST_CASE("ssl/tls versions") {
 
   boost::wintls::context client_ctx(method);
   net::io_context io_context;
-  boost::wintls::stream<boost::beast::test::stream> client_stream(io_context, client_ctx);
-  boost::beast::test::stream server_stream(io_context);
+  boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+  test_stream server_stream(io_context);
 
   client_stream.next_layer().connect(server_stream);
 
   client_stream.async_handshake(boost::wintls::handshake_type::client,
                                 [](const boost::system::error_code& ec) {
-                                  REQUIRE(ec == boost::asio::error::eof);
+                                  REQUIRE(ec == net::error::eof);
                                 });
 
   std::array<char, 1024> buffer;

@@ -1,12 +1,18 @@
-#ifndef BOOST_WINTLS_TEST_TLS_RECORD
-#define BOOST_WINTLS_TEST_TLS_RECORD
+//
+// Copyright (c) 2021 Kasper Laudrup (laudrup at stacktrace dot dk)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+#ifndef BOOST_WINTLS_TEST_TLS_RECORD_HPP
+#define BOOST_WINTLS_TEST_TLS_RECORD_HPP
+
+#include "unittest.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/variant.hpp>
 
 #include <cstdint>
-
-namespace net = boost::asio;
 
 enum class tls_version : std::uint16_t {
   ssl_3_0 = 0x0300,
@@ -119,4 +125,4 @@ struct tls_record {
   message_type message;
 };
 
-#endif
+#endif // BOOST_WINTLS_TEST_TLS_RECORD_HPP

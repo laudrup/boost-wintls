@@ -10,6 +10,7 @@
 
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/context_flags.hpp>
 
 namespace boost {
 namespace wintls {

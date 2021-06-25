@@ -10,28 +10,13 @@
 
 #include <boost/wintls/handshake_type.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
+#include <boost/wintls/detail/context_flags.hpp>
 
 #include <boost/winapi/basic_types.hpp>
 
 namespace boost {
 namespace wintls {
 namespace detail {
-
-constexpr DWORD client_context_flags =
-  ISC_REQ_SEQUENCE_DETECT | // Detect messages received out of sequence
-  ISC_REQ_REPLAY_DETECT | // Detect replayed messages
-  ISC_REQ_CONFIDENTIALITY | // Encrypt messages
-  ISC_RET_EXTENDED_ERROR | // When errors occur, the remote party will be notified
-  ISC_REQ_ALLOCATE_MEMORY | // Allocate buffers. Free them with FreeContextBuffer
-  ISC_REQ_STREAM; // Support a stream-oriented connection
-
-constexpr DWORD server_context_flags =
-  ASC_REQ_SEQUENCE_DETECT | // Detect messages received out of sequence
-  ASC_REQ_REPLAY_DETECT | // Detect replayed messages
-  ASC_REQ_CONFIDENTIALITY | // Encrypt messages
-  ASC_RET_EXTENDED_ERROR | // When errors occur, the remote party will be notified
-  ASC_REQ_ALLOCATE_MEMORY | // Allocate buffers. Free them with FreeContextBuffer
-  ASC_REQ_STREAM; // Support a stream-oriented connection
 
 class sspi_handshake {
 public:

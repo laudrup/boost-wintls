@@ -28,53 +28,54 @@ public:
   };
 
   sspi_decrypt(CtxtHandle* context)
-    : context_(context)
+    : input_buffer(net::buffer(encrypted_data_))
+    , context_(context)
     , last_error_(SEC_E_OK) {
+    buffers_[0].pvBuffer = encrypted_data_.data();
   }
 
   state operator()() {
     if (!decrypted_data.empty()) {
       return state::data_available;
     }
-    if (encrypted_data.empty()) {
+    if (buffers_[0].cbBuffer == 0) {
+      input_buffer = net::buffer(encrypted_data_);
       return state::data_needed;
     }
 
-    buffers_[0].pvBuffer = encrypted_data.data();
-    buffers_[0].cbBuffer = static_cast<ULONG>(encrypted_data.size());
     buffers_[0].BufferType = SECBUFFER_DATA;
     buffers_[1].BufferType = SECBUFFER_EMPTY;
     buffers_[2].BufferType = SECBUFFER_EMPTY;
     buffers_[3].BufferType = SECBUFFER_EMPTY;
 
+    input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
+    const auto size = buffers_[0].cbBuffer;
     last_error_ = detail::sspi_functions::DecryptMessage(context_, buffers_, 0, nullptr);
+
     if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
+      buffers_[0].cbBuffer = size;
       return state::data_needed;
     }
+
     if (last_error_ != SEC_E_OK) {
       return state::error;
     }
 
-    encrypted_data.clear();
-    for (int i = 1; i < 4; i++) {
-      if (buffers_[i].BufferType == SECBUFFER_DATA) {
-        SecBuffer* pDataBuffer = &buffers_[i];
-        decrypted_data = std::vector<char>(reinterpret_cast<const char*>(pDataBuffer->pvBuffer), reinterpret_cast<const char*>(pDataBuffer->pvBuffer) + pDataBuffer->cbBuffer);
-      }
-      if (buffers_[i].BufferType == SECBUFFER_EXTRA) {
-        SecBuffer* pExtraBuffer = &buffers_[i];
-        encrypted_data = std::vector<char>(reinterpret_cast<const char*>(pExtraBuffer->pvBuffer), reinterpret_cast<const char*>(pExtraBuffer->pvBuffer) + pExtraBuffer->cbBuffer);
-      }
+    if (buffers_[1].BufferType == SECBUFFER_DATA) {
+      decrypted_data = std::vector<char>(reinterpret_cast<const char*>(buffers_[1].pvBuffer),
+                                         reinterpret_cast<const char*>(buffers_[1].pvBuffer) + buffers_[1].cbBuffer);
+    }
+
+    if (buffers_[3].BufferType == SECBUFFER_EXTRA) {
+      const auto extra_size = buffers_[3].cbBuffer;
+      std::memmove(encrypted_data_.data(), buffers_[3].pvBuffer, extra_size);
+      buffers_[0].cbBuffer = extra_size;
+    } else {
+      buffers_[0].cbBuffer = 0;
     }
     BOOST_ASSERT(!decrypted_data.empty());
 
     return state::data_available;
-  }
-
-  // TODO: Consider making this more flexible by not requering a
-  // vector of chars, but any view of a range of bytes
-  void put(const std::vector<char>& data) {
-    encrypted_data.insert(encrypted_data.end(), data.begin(), data.end());
   }
 
   std::vector<char> get(std::size_t max) {
@@ -88,9 +89,13 @@ public:
     return ret;
   }
 
-  // TODO: Make private
-  std::vector<char> encrypted_data;
+  void size_read(std::size_t size) {
+    buffers_[0].cbBuffer += static_cast<unsigned long>(size);
+    input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
+  }
+
   std::vector<char> decrypted_data;
+  net::mutable_buffer input_buffer;
 
   boost::system::error_code last_error() const {
     return error::make_error_code(last_error_);
@@ -100,6 +105,7 @@ private:
   CtxtHandle* context_;
   SECURITY_STATUS last_error_;
   decrypt_buffers buffers_;
+  std::array<char, 0x10000> encrypted_data_;
 };
 
 } // namespace detail

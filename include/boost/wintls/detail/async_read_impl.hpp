@@ -24,9 +24,9 @@ struct async_read_impl : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t size_read = 0) {
     if (ec) {
-      self.complete(ec, length);
+      self.complete(ec, size_read);
       return;
     }
 
@@ -39,13 +39,9 @@ struct async_read_impl : boost::asio::coroutine {
     BOOST_ASIO_CORO_REENTER(*this) {
       while((state = sspi_impl_.decrypt()) == detail::sspi_decrypt::state::data_needed) {
         BOOST_ASIO_CORO_YIELD {
-          // TODO: Use a fixed size buffer instead
-          input_.resize(0x10000);
-          auto buf = net::buffer(input_);
-          next_layer_.async_read_some(buf, std::move(self));
+          next_layer_.async_read_some(sspi_impl_.decrypt.input_buffer, std::move(self));
         }
-        sspi_impl_.decrypt.put({input_.begin(), input_.begin() + length});
-        input_.clear();
+        sspi_impl_.decrypt.size_read(size_read);
         continue;
       }
 
@@ -53,7 +49,7 @@ struct async_read_impl : boost::asio::coroutine {
         if (!is_continuation()) {
           BOOST_ASIO_CORO_YIELD {
             auto e = self.get_executor();
-            net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+            net::post(e, [self = std::move(self), ec, size_read]() mutable { self(ec, size_read); });
           }
         }
         ec = sspi_impl_.decrypt.last_error();
@@ -74,7 +70,6 @@ private:
   MutableBufferSequence buffers_;
   detail::sspi_impl& sspi_impl_;
   int entry_count_;
-  std::vector<char> input_;
 };
 
 } // namespace detail

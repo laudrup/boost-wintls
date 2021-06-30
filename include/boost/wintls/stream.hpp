@@ -232,12 +232,11 @@ public:
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     detail::sspi_decrypt::state state;
     while((state = sspi_impl_.decrypt()) == detail::sspi_decrypt::state::data_needed) {
-      std::array<char, 0x10000> input_buffer;
-      std::size_t size_read = next_layer_.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+      std::size_t size_read = next_layer_.read_some(sspi_impl_.decrypt.input_buffer, ec);
       if (ec) {
         return 0;
       }
-      sspi_impl_.decrypt.put({input_buffer.begin(), input_buffer.begin() + size_read});
+      sspi_impl_.decrypt.size_read(size_read);
       continue;
     }
 

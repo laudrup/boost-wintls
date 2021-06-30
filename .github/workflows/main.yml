@@ -49,7 +49,7 @@ jobs:
       with:
         boost_version: 1.72.0
     - name: Install packages
-      run: cinst openssl opencppcoverage codecov
+      run: cinst openssl opencppcoverage
     - name: Configure
       env:
         BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
@@ -62,7 +62,10 @@ jobs:
       run: exec "${PROGRAMFILES}"/opencppcoverage/opencppcoverage --cover_children --sources="${GITHUB_WORKSPACE}"\\include --modules=unittest.exe --export_type=cobertura:cobertura.xml -- ctest
       working-directory: build/
     - name: Upload code coverage
-      run: codecov --no-color -f build/cobertura.xml
+      uses: codecov/codecov-action@v1
+      with:
+        files: build/cobertura.xml
+        fail_ci_if_error: true
 
   generate_documentation:
     runs-on: ubuntu-latest

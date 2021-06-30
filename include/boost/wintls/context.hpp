@@ -21,11 +21,9 @@
 namespace boost {
 namespace wintls {
 
-/// @cond
 namespace detail {
 class sspi_handshake;
 }
-/// @endcond
 
 class context {
 public:
@@ -82,13 +80,21 @@ public:
     verify_server_certificate_ = verify;
   }
 
-  void set_default_verify_paths() {
-    impl_->use_default_cert_store = true;
-  }
-
-  void set_default_verify_paths(boost::system::error_code& ec) {
-    impl_->use_default_cert_store = true;
-    ec = {};
+  /** Use the default operating system certificates
+   *
+   * This function may be used to verify the server certficates
+   * against the certficates installed in the operating system when
+   * performing handshakes as a client.
+   *
+   * It is still possible to add additional certificates for
+   * verification in addition to the ones installed by the operating
+   * system.
+   *
+   * @param use_system_certs True if the default operating system
+   * certificates should be used for verification.
+   */
+  void use_default_certificates(bool use_system_certs) {
+    impl_->use_default_cert_store = use_system_certs;
   }
 
   void use_certificate(const net::const_buffer& certificate, file_format format, boost::system::error_code& ec) {

@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     ssl::context ctx{boost::wintls::method::system_default};
 
     // Use the operating systems default certficates for verification
-    ctx.set_default_verify_paths();
+    ctx.use_default_certificates(true);
 
     // Verify the remote server's certificate
     ctx.verify_server_certificate(true);

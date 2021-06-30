@@ -37,7 +37,7 @@ struct async_read_impl : boost::asio::coroutine {
 
     detail::sspi_decrypt::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = sspi_impl_.decrypt()) == detail::sspi_decrypt::state::data_needed) {
+      while((state = sspi_impl_.decrypt(buffers_)) == detail::sspi_decrypt::state::data_needed) {
         BOOST_ASIO_CORO_YIELD {
           next_layer_.async_read_some(sspi_impl_.decrypt.input_buffer, std::move(self));
         }
@@ -57,11 +57,7 @@ struct async_read_impl : boost::asio::coroutine {
         return;
       }
 
-      // TODO: Avoid this copy if possible
-      const auto data = sspi_impl_.decrypt.get(net::buffer_size(buffers_));
-      std::size_t bytes_copied = net::buffer_copy(buffers_, net::buffer(data));
-      BOOST_ASSERT(bytes_copied == data.size());
-      self.complete(boost::system::error_code{}, bytes_copied);
+      self.complete(boost::system::error_code{}, sspi_impl_.decrypt.size_decrypted);
     }
   }
 

@@ -231,7 +231,7 @@ public:
   template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
     detail::sspi_decrypt::state state;
-    while((state = sspi_impl_.decrypt()) == detail::sspi_decrypt::state::data_needed) {
+    while((state = sspi_impl_.decrypt(buffers)) == detail::sspi_decrypt::state::data_needed) {
       std::size_t size_read = next_layer_.read_some(sspi_impl_.decrypt.input_buffer, ec);
       if (ec) {
         return 0;
@@ -245,10 +245,7 @@ public:
       return 0;
     }
 
-    const auto data = sspi_impl_.decrypt.get(net::buffer_size(buffers));
-    std::size_t bytes_copied = net::buffer_copy(buffers, net::buffer(data));
-    BOOST_ASSERT(bytes_copied == data.size());
-    return bytes_copied;
+    return sspi_impl_.decrypt.size_decrypted;
   }
 
   /** Read some data from the stream.

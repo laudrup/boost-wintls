@@ -28,16 +28,21 @@ public:
   };
 
   sspi_decrypt(CtxtHandle* context)
-    : input_buffer(net::buffer(encrypted_data_))
+    : size_decrypted(0)
+    , input_buffer(net::buffer(encrypted_data_))
     , context_(context)
     , last_error_(SEC_E_OK) {
     buffers_[0].pvBuffer = encrypted_data_.data();
   }
 
-  state operator()() {
-    if (!decrypted_data.empty()) {
+  template <class MutableBufferSequence>
+  state operator()(const MutableBufferSequence& output_buffers) {
+    if (!decrypted_data_.empty()) {
+      size_decrypted = net::buffer_copy(output_buffers, net::buffer(decrypted_data_));
+      decrypted_data_.erase(decrypted_data_.begin(), decrypted_data_.begin() + size_decrypted);
       return state::data_available;
     }
+
     if (buffers_[0].cbBuffer == 0) {
       input_buffer = net::buffer(encrypted_data_);
       return state::data_needed;
@@ -62,8 +67,12 @@ public:
     }
 
     if (buffers_[1].BufferType == SECBUFFER_DATA) {
-      decrypted_data = std::vector<char>(reinterpret_cast<const char*>(buffers_[1].pvBuffer),
-                                         reinterpret_cast<const char*>(buffers_[1].pvBuffer) + buffers_[1].cbBuffer);
+      const auto data_ptr = reinterpret_cast<const char*>(buffers_[1].pvBuffer);
+      const auto data_size = buffers_[1].cbBuffer;
+      size_decrypted = net::buffer_copy(output_buffers, net::buffer(data_ptr, data_size));
+      if (size_decrypted < data_size) {
+        std::copy(data_ptr + size_decrypted, data_ptr + data_size, std::back_inserter(decrypted_data_));
+      }
     }
 
     if (buffers_[3].BufferType == SECBUFFER_EXTRA) {
@@ -73,20 +82,8 @@ public:
     } else {
       buffers_[0].cbBuffer = 0;
     }
-    BOOST_ASSERT(!decrypted_data.empty());
 
     return state::data_available;
-  }
-
-  std::vector<char> get(std::size_t max) {
-    // TODO: Figure out a way to avoid removing from the front of the
-    // vector. Since the caller will ask for decrypted data as long as
-    // it's there, this buffer should just give out chunks from the
-    // beginning until it's empty.
-    std::size_t size = std::min(max, decrypted_data.size());
-    std::vector<char> ret{decrypted_data.begin(), decrypted_data.begin() + size};
-    decrypted_data.erase(decrypted_data.begin(), decrypted_data.begin() + size);
-    return ret;
   }
 
   void size_read(std::size_t size) {
@@ -94,7 +91,7 @@ public:
     input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
   }
 
-  std::vector<char> decrypted_data;
+  std::size_t size_decrypted;
   net::mutable_buffer input_buffer;
 
   boost::system::error_code last_error() const {
@@ -106,6 +103,7 @@ private:
   SECURITY_STATUS last_error_;
   decrypt_buffers buffers_;
   std::array<char, 0x10000> encrypted_data_;
+  std::vector<char> decrypted_data_;
 };
 
 } // namespace detail

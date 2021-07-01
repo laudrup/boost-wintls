@@ -405,8 +405,7 @@ public:
   void shutdown(boost::system::error_code& ec) {
     switch(sspi_impl_.shutdown()) {
       case detail::sspi_shutdown::state::data_available: {
-        auto size = net::write(next_layer_, sspi_impl_.shutdown.output(), ec);
-        sspi_impl_.shutdown.consume(size);
+        net::write(next_layer_, sspi_impl_.shutdown.output(), ec);
         return;
       }
       case detail::sspi_shutdown::state::error:

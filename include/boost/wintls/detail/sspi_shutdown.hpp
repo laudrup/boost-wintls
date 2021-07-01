@@ -12,6 +12,7 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/context_flags.hpp>
 #include <boost/wintls/detail/shutdown_buffers.hpp>
+#include <boost/wintls/detail/sspi_context_buffer.hpp>
 
 namespace boost {
 namespace wintls {
@@ -39,7 +40,6 @@ public:
     }
 
     DWORD out_flags = 0;
-
     last_error_ = detail::sspi_functions::InitializeSecurityContext(credentials_,
                                                                     context_,
                                                                     nullptr,
@@ -56,20 +56,12 @@ public:
       return state::error;
     }
 
-    buf_ = net::buffer(buffers[0].pvBuffer, buffers[0].cbBuffer);
+    buffer_ = std::move(sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer});
     return state::data_available;
   }
 
   net::const_buffer output() const {
-    return buf_;
-  }
-
-  void consume(std::size_t size) {
-    // TODO: Handle this instead of asserting
-    BOOST_VERIFY(size == buf_.size());
-    // TODO: RAII this buffer to ensure it's freed even if the consume function is never called
-    detail::sspi_functions::FreeContextBuffer(const_cast<void*>(buf_.data()));
-    buf_ = net::const_buffer{};
+    return buffer_;
   }
 
   boost::system::error_code last_error() const {
@@ -80,7 +72,7 @@ private:
   CtxtHandle* context_;
   CredHandle* credentials_;
   SECURITY_STATUS last_error_;
-  net::const_buffer buf_;
+  sspi_context_buffer buffer_;
 };
 
 } // namespace detail

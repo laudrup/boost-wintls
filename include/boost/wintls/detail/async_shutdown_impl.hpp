@@ -39,7 +39,6 @@ struct async_shutdown_impl : boost::asio::coroutine {
         BOOST_ASIO_CORO_YIELD {
           net::async_write(next_layer_, sspi_impl_.shutdown.output(), std::move(self));
         }
-        sspi_impl_.shutdown.consume(length);
         self.complete({});
         return;
       }

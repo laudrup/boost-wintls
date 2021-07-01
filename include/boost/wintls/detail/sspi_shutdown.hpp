@@ -11,6 +11,7 @@
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/context_flags.hpp>
+#include <boost/wintls/detail/shutdown_buffers.hpp>
 
 namespace boost {
 namespace wintls {
@@ -30,51 +31,32 @@ public:
   }
 
   state operator()() {
-    SecBufferDesc OutBuffer;
-    SecBuffer OutBuffers[1];
+    shutdown_buffers buffers;
 
-    DWORD shutdown_type = SCHANNEL_SHUTDOWN;
-
-    OutBuffers[0].pvBuffer = &shutdown_type;
-    OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-    OutBuffers[0].cbBuffer = sizeof(shutdown_type);
-
-    OutBuffer.cBuffers  = 1;
-    OutBuffer.pBuffers  = OutBuffers;
-    OutBuffer.ulVersion = SECBUFFER_VERSION;
-
-    last_error_ = detail::sspi_functions::ApplyControlToken(context_, &OutBuffer);
+    last_error_ = detail::sspi_functions::ApplyControlToken(context_, buffers);
     if (last_error_ != SEC_E_OK) {
       return state::error;
     }
-
-    OutBuffers[0].pvBuffer   = NULL;
-    OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-    OutBuffers[0].cbBuffer   = 0;
-
-    OutBuffer.cBuffers  = 1;
-    OutBuffer.pBuffers  = OutBuffers;
-    OutBuffer.ulVersion = SECBUFFER_VERSION;
 
     DWORD out_flags = 0;
 
     last_error_ = detail::sspi_functions::InitializeSecurityContext(credentials_,
-                                                                     context_,
-                                                                     NULL,
-                                                                     client_context_flags,
-                                                                     0,
-                                                                     SECURITY_NATIVE_DREP,
-                                                                     NULL,
-                                                                     0,
-                                                                     context_,
-                                                                     &OutBuffer,
-                                                                     &out_flags,
-                                                                     nullptr);
+                                                                    context_,
+                                                                    nullptr,
+                                                                    client_context_flags,
+                                                                    0,
+                                                                    SECURITY_NATIVE_DREP,
+                                                                    nullptr,
+                                                                    0,
+                                                                    context_,
+                                                                    buffers,
+                                                                    &out_flags,
+                                                                    nullptr);
     if (last_error_ != SEC_E_OK) {
       return state::error;
     }
 
-    buf_ = net::buffer(OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer);
+    buf_ = net::buffer(buffers[0].pvBuffer, buffers[0].cbBuffer);
     return state::data_available;
   }
 

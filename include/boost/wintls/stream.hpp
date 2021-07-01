@@ -403,13 +403,9 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   void shutdown(boost::system::error_code& ec) {
-    switch(sspi_impl_.shutdown()) {
-      case detail::sspi_shutdown::state::data_available: {
-        net::write(next_layer_, sspi_impl_.shutdown.output(), ec);
-        return;
-      }
-      case detail::sspi_shutdown::state::error:
-        ec = sspi_impl_.shutdown.last_error();
+    ec = sspi_impl_.shutdown();
+    if (!ec) {
+      net::write(next_layer_, sspi_impl_.shutdown.buffer(), ec);
     }
   }
 

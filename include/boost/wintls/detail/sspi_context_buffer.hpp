@@ -42,7 +42,7 @@ public:
     detail::sspi_functions::FreeContextBuffer(const_cast<void*>(buffer_.data()));
   }
 
-  operator net::const_buffer() const {
+  net::const_buffer asio_buffer() const {
     return buffer_;
   }
 

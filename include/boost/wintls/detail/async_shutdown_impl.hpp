@@ -34,23 +34,23 @@ struct async_shutdown_impl : boost::asio::coroutine {
       return entry_count_ > 1;
     };
 
+    ec = sspi_impl_.shutdown();
+
     BOOST_ASIO_CORO_REENTER(*this) {
-      if (sspi_impl_.shutdown() == detail::sspi_shutdown::state::data_available) {
+      if (!ec) {
         BOOST_ASIO_CORO_YIELD {
-          net::async_write(next_layer_, sspi_impl_.shutdown.output(), std::move(self));
+          net::async_write(next_layer_, sspi_impl_.shutdown.buffer(), std::move(self));
         }
         self.complete({});
         return;
-      }
-
-      if (sspi_impl_.shutdown() == detail::sspi_shutdown::state::error) {
+      } else {
         if (!is_continuation()) {
           BOOST_ASIO_CORO_YIELD {
             auto e = self.get_executor();
             net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
           }
         }
-        self.complete(sspi_impl_.shutdown.last_error());
+        self.complete(ec);
         return;
       }
     }

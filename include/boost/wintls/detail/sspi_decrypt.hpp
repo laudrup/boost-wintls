@@ -10,10 +10,9 @@
 
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/decrypt_buffers.hpp>
+#include <boost/wintls/detail/decrypted_data_buffer.hpp>
 
-#include <boost/assert.hpp>
-
-#include <vector>
+#include <cstddef>
 
 namespace boost {
 namespace wintls {
@@ -38,8 +37,7 @@ public:
   template <class MutableBufferSequence>
   state operator()(const MutableBufferSequence& output_buffers) {
     if (!decrypted_data_.empty()) {
-      size_decrypted = net::buffer_copy(output_buffers, net::buffer(decrypted_data_));
-      decrypted_data_.erase(decrypted_data_.begin(), decrypted_data_.begin() + size_decrypted);
+      size_decrypted = decrypted_data_.get(output_buffers);
       return state::data_available;
     }
 
@@ -71,7 +69,7 @@ public:
       const auto data_size = buffers_[1].cbBuffer;
       size_decrypted = net::buffer_copy(output_buffers, net::buffer(data_ptr, data_size));
       if (size_decrypted < data_size) {
-        std::copy(data_ptr + size_decrypted, data_ptr + data_size, std::back_inserter(decrypted_data_));
+        decrypted_data_.fill(net::buffer(data_ptr + size_decrypted, data_size - size_decrypted));
       }
     }
 
@@ -99,11 +97,13 @@ public:
   }
 
 private:
+  static constexpr std::size_t buffer_size = 0x10000;
+
   CtxtHandle* context_;
   SECURITY_STATUS last_error_;
   decrypt_buffers buffers_;
-  std::array<char, 0x10000> encrypted_data_;
-  std::vector<char> decrypted_data_;
+  std::array<char, buffer_size> encrypted_data_;
+  decrypted_data_buffer<buffer_size> decrypted_data_;
 };
 
 } // namespace detail

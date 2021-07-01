@@ -42,6 +42,7 @@ set(test_sources
   certificate_test.cpp
   sspi_buffer_sequence_test.cpp
   stream_test.cpp
+  decrypted_data_buffer_test.cpp
   )
 
 add_executable(unittest

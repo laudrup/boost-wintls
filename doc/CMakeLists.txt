@@ -41,13 +41,15 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	DEPENDS
 	  ${CMAKE_CURRENT_SOURCE_DIR}/index.rst
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/async_https_client.rst
     ${CMAKE_CURRENT_SOURCE_DIR}/classes.rst
     ${CMAKE_CURRENT_SOURCE_DIR}/enumerations.rst
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples.rst
     ${CMAKE_CURRENT_SOURCE_DIR}/functions.rst
-    ${CMAKE_CURRENT_SOURCE_DIR}/type_aliases.rst
-    ${CMAKE_CURRENT_SOURCE_DIR}/templates/localtoc.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/https_client.rst
     ${CMAKE_CURRENT_SOURCE_DIR}/static/boost-wintls.css
+    ${CMAKE_CURRENT_SOURCE_DIR}/templates/localtoc.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/type_aliases.rst
 		${DOXYGEN_INDEX_FILE}
 	MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
 	COMMENT "Generating documentation with Sphinx")

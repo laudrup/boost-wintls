@@ -1,6 +1,11 @@
 add_executable(https_client https_client.cpp)
+add_executable(async_https_client async_https_client.cpp)
 
 target_link_libraries(https_client PRIVATE
+  boost-wintls
+)
+
+target_link_libraries(async_https_client PRIVATE
   boost-wintls
 )
 

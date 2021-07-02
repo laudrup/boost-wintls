@@ -59,7 +59,6 @@ if(WIN32)
     /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
     /w15038 # data member 'member1' will be initialized after data member 'member2'
     /permissive- # standards conformance mode for MSVC compiler.
-    /WX
     )
 
   target_include_directories(boost-wintls INTERFACE include)

@@ -25,8 +25,9 @@ public:
     do_handshake();
   }
 
-private:
-  void do_handshake() {
+  virtual ~async_server() = default;
+
+  virtual void do_handshake() {
     stream.async_handshake(Stream::handshake_type::server,
                            [this](const boost::system::error_code& ec) {
                              REQUIRE_FALSE(ec);
@@ -34,7 +35,7 @@ private:
                            });
   }
 
-  void do_read() {
+  virtual void do_read() {
     net::async_read_until(stream, recv_buffer_, '\0',
                           [this](const boost::system::error_code& ec, std::size_t) {
                             REQUIRE_FALSE(ec);
@@ -42,7 +43,7 @@ private:
                           });
   }
 
-  void do_write() {
+  virtual void do_write() {
     net::async_write(stream, recv_buffer_,
                      [this](const boost::system::error_code& ec, std::size_t) {
                        REQUIRE_FALSE(ec);
@@ -50,7 +51,7 @@ private:
                      });
   }
 
-  void do_shutdown() {
+  virtual void do_shutdown() {
     stream.async_shutdown([](const boost::system::error_code& ec) {
       REQUIRE_FALSE(ec);
     });

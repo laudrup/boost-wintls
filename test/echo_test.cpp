@@ -7,13 +7,16 @@
 
 #include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
+#include "asio_ssl_client_stream.hpp"
+#include "asio_ssl_server_stream.hpp"
+#include "wintls_client_stream.hpp"
+#include "wintls_server_stream.hpp"
 #include "unittest.hpp"
 
 #include <boost/wintls.hpp>
 
 #include <boost/asio.hpp>
 
-#include <fstream>
 #include <string>
 #include <thread>
 #include <tuple>
@@ -29,101 +32,7 @@ std::string generate_data(std::size_t size) {
   return ret;
 }
 
-std::vector<char> pem_cert_bytes() {
-  std::ifstream ifs{TEST_CERTIFICATE_PATH};
-  REQUIRE(ifs.good());
-  return {std::istreambuf_iterator<char>{ifs}, {}};
 }
-
-}
-
-struct asio_ssl_client_context : public asio_ssl::context {
-  asio_ssl_client_context()
-    : asio_ssl::context(asio_ssl::context_base::tlsv12) {
-    load_verify_file(TEST_CERTIFICATE_PATH);
-  }
-};
-
-struct asio_ssl_server_context : public asio_ssl::context {
-  asio_ssl_server_context()
-    : asio_ssl::context(asio_ssl::context_base::tlsv12) {
-    use_certificate_file(TEST_CERTIFICATE_PATH, asio_ssl::context_base::pem);
-    use_private_key_file(TEST_PRIVATE_KEY_PATH, asio_ssl::context_base::pem);
-  }
-};
-
-struct asio_ssl_client_stream {
-  using handshake_type = asio_ssl::stream_base::handshake_type;
-
-  template <class... Args>
-  asio_ssl_client_stream(Args&&... args)
-    : tst(std::forward<Args>(args)...)
-    , stream(tst, ctx) {
-  }
-
-  asio_ssl_client_context ctx;
-  test_stream tst;
-  asio_ssl::stream<test_stream&> stream;
-};
-
-struct asio_ssl_server_stream {
-  using handshake_type = asio_ssl::stream_base::handshake_type;
-
-  template <class... Args>
-  asio_ssl_server_stream(Args&&... args)
-    : tst(std::forward<Args>(args)...)
-    , stream(tst, ctx) {
-  }
-
-  asio_ssl_server_context ctx;
-  test_stream tst;
-  asio_ssl::stream<test_stream&> stream;
-};
-
-struct wintls_client_context : public boost::wintls::context {
-  wintls_client_context()
-    : boost::wintls::context(boost::wintls::method::system_default) {
-    const auto x509 = pem_cert_bytes();
-    const auto cert_ptr = x509_to_cert_context(net::buffer(x509), boost::wintls::file_format::pem);
-    add_certificate_authority(cert_ptr.get());
-  }
-};
-
-struct wintls_server_context : public boost::wintls::context {
-  wintls_server_context()
-    : boost::wintls::context(boost::wintls::method::system_default) {
-    use_certificate_file(TEST_CERTIFICATE_PATH, boost::wintls::file_format::pem);
-    use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::wintls::file_format::pem);
-  }
-};
-
-struct wintls_client_stream {
-  using handshake_type = boost::wintls::handshake_type;
-
-  template <class... Args>
-  wintls_client_stream(Args&&... args)
-    : tst(std::forward<Args>(args)...)
-    , stream(tst, ctx) {
-  }
-
-  wintls_client_context ctx;
-  test_stream tst;
-  boost::wintls::stream<test_stream&> stream;
-};
-
-struct wintls_server_stream {
-  using handshake_type = boost::wintls::handshake_type;
-
-  template <class... Args>
-  wintls_server_stream(Args&&... args)
-    : tst(std::forward<Args>(args)...)
-    , stream(tst, ctx) {
-  }
-
-  wintls_server_context ctx;
-  test_stream tst;
-  boost::wintls::stream<test_stream&> stream;
-};
 
 using TestTypes = std::tuple<std::tuple<asio_ssl_client_stream, asio_ssl_server_stream>,
                              std::tuple<wintls_client_stream, asio_ssl_server_stream>,

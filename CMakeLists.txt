@@ -38,6 +38,10 @@ if(WIN32)
     BOOST_REGEX_NO_LIB
     )
 
+  target_compile_definitions(boost-wintls INTERFACE
+    NATIVE_SSPI
+    )
+
   # Based on https://github.com/lefticus/cpp_starter_project
   set(MSVC_WARNINGS
     /W4 # Baseline reasonable warnings

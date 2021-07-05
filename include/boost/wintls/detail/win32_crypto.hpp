@@ -11,8 +11,14 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/error.hpp>
 
+extern "C" {
+  typedef struct _CRYPT_DECODE_PARA CRYPT_DECODE_PARA;
+  typedef CRYPT_DECODE_PARA* PCRYPT_DECODE_PARA;
+  const DWORD X509_ASN_ENCODING = 1;
 
-#include <wincrypt.h>
+  BOOST_SYMBOL_IMPORT BOOL CryptStringToBinaryA(LPCSTR, DWORD, DWORD, BYTE*, DWORD*, DWORD*, DWORD*);
+  BOOST_SYMBOL_IMPORT BOOL CryptDecodeObjectEx(DWORD, LPCSTR, const BYTE*, DWORD, DWORD, PCRYPT_DECODE_PARA, void*, DWORD*);
+}
 
 namespace boost {
 namespace wintls {

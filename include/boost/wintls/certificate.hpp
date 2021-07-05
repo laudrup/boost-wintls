@@ -13,6 +13,9 @@
 
 #include <boost/wintls/detail/win32_crypto.hpp>
 
+// TODO: Avoid this header
+#include <wincrypt.h>
+
 #include <memory>
 
 namespace boost {

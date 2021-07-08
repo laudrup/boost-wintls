@@ -11,6 +11,8 @@
 #include <boost/wintls/handshake_type.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/context_flags.hpp>
+#include <boost/wintls/detail/handshake_input_buffers.hpp>
+#include <boost/wintls/detail/handshake_output_buffers.hpp>
 
 #include <boost/winapi/basic_types.hpp>
 
@@ -60,50 +62,40 @@ public:
 
     TimeStamp expiry;
     last_error_ = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                    const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
-                                                                    usage,
-                                                                    nullptr,
-                                                                    &creds,
-                                                                    nullptr,
-                                                                    nullptr,
-                                                                    cred_handle_,
-                                                                    &expiry);
+                                                                   const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
+                                                                   usage,
+                                                                   nullptr,
+                                                                   &creds,
+                                                                   nullptr,
+                                                                   nullptr,
+                                                                   cred_handle_,
+                                                                   &expiry);
     if (last_error_ != SEC_E_OK) {
       return;
     }
 
     if (handshake_type_ == handshake_type::client) {
-      SecBufferDesc OutBuffer;
-      SecBuffer OutBuffers[1];
-
-      OutBuffers[0].pvBuffer = nullptr;
-      OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-      OutBuffers[0].cbBuffer = 0;
-
-      OutBuffer.cBuffers = 1;
-      OutBuffer.pBuffers = OutBuffers;
-      OutBuffer.ulVersion = SECBUFFER_VERSION;
-
       DWORD out_flags = 0;
 
+      handshake_output_buffers buffers;
       last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
-                                                                       nullptr,
-                                                                       server_hostname_.get(),
-                                                                       client_context_flags,
-                                                                       0,
-                                                                       SECURITY_NATIVE_DREP,
-                                                                       nullptr,
-                                                                       0,
-                                                                       ctx_handle_,
-                                                                       &OutBuffer,
-                                                                       &out_flags,
-                                                                       nullptr);
+                                                                      nullptr,
+                                                                      server_hostname_.get(),
+                                                                      client_context_flags,
+                                                                      0,
+                                                                      SECURITY_NATIVE_DREP,
+                                                                      nullptr,
+                                                                      0,
+                                                                      ctx_handle_,
+                                                                      buffers,
+                                                                      &out_flags,
+                                                                      nullptr);
       if (last_error_ == SEC_I_CONTINUE_NEEDED) {
         // TODO: Not SEC_I_CONTINUE_NEEDED is an error. Maybe make that clearer?
         // TODO: Avoid this copy
-        output_data_ = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
-          , reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
-        detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
+        output_data_ = std::vector<char>{reinterpret_cast<const char*>(buffers[0].pvBuffer)
+          , reinterpret_cast<const char*>(buffers[0].pvBuffer) + buffers[0].cbBuffer};
+        detail::sspi_functions::FreeContextBuffer(buffers[0].pvBuffer);
       }
     } else {
       last_error_ = SEC_I_CONTINUE_NEEDED;
@@ -111,11 +103,6 @@ public:
   }
 
   state operator()() {
-    SecBufferDesc OutBuffer;
-    SecBuffer OutBuffers[1];
-    SecBufferDesc InBuffer;
-    SecBuffer InBuffers[2];
-
     if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE) {
       return state::error;
     }
@@ -126,27 +113,12 @@ public:
       return state::data_needed;
     }
 
-    InBuffers[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
-    InBuffers[0].cbBuffer = static_cast<ULONG>(input_data_.size());
-    InBuffers[0].BufferType = SECBUFFER_TOKEN;
-
-    InBuffers[1].pvBuffer = nullptr;
-    InBuffers[1].cbBuffer = 0;
-    InBuffers[1].BufferType = SECBUFFER_EMPTY;
-
-    InBuffer.cBuffers = 2;
-    InBuffer.pBuffers = InBuffers;
-    InBuffer.ulVersion = SECBUFFER_VERSION;
-
-    OutBuffers[0].pvBuffer = nullptr;
-    OutBuffers[0].BufferType = SECBUFFER_TOKEN;
-    OutBuffers[0].cbBuffer = 0;
-
-    OutBuffer.cBuffers = 1;
-    OutBuffer.pBuffers = OutBuffers;
-    OutBuffer.ulVersion = SECBUFFER_VERSION;
-
+    handshake_input_buffers in_buffers;
+    handshake_output_buffers out_buffers;
     DWORD out_flags = 0;
+
+    in_buffers[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
+    in_buffers[0].cbBuffer = static_cast<ULONG>(input_data_.size());
 
     switch(handshake_type_) {
       case handshake_type::client:
@@ -156,10 +128,10 @@ public:
                                                                         client_context_flags,
                                                                         0,
                                                                         SECURITY_NATIVE_DREP,
-                                                                        &InBuffer,
+                                                                        in_buffers,
                                                                         0,
                                                                         nullptr,
-                                                                        &OutBuffer,
+                                                                        out_buffers,
                                                                         &out_flags,
                                                                         nullptr);
         break;
@@ -168,19 +140,19 @@ public:
         TimeStamp expiry;
         last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_,
                                                                     first_call ? nullptr : ctx_handle_,
-                                                                    &InBuffer,
+                                                                    in_buffers,
                                                                     server_context_flags,
                                                                     SECURITY_NATIVE_DREP,
                                                                     first_call ? ctx_handle_ : nullptr,
-                                                                    &OutBuffer,
+                                                                    out_buffers,
                                                                     &out_flags,
                                                                     &expiry);
       }
     }
-    if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
+    if (in_buffers[1].BufferType == SECBUFFER_EXTRA) {
       // Some data needs to be reused for the next call, move that to the front for reuse
-      std::move(input_data_.end() - InBuffers[1].cbBuffer, input_data_.end(), input_data_.begin());
-      input_data_.resize(InBuffers[1].cbBuffer);
+      std::move(input_data_.end() - in_buffers[1].cbBuffer, input_data_.end(), input_data_.begin());
+      input_data_.resize(in_buffers[1].cbBuffer);
       return state::data_needed;
     } else if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       return state::data_needed;
@@ -188,11 +160,11 @@ public:
       input_data_.clear();
     }
 
-    if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != nullptr) {
+    if (out_buffers[0].cbBuffer != 0 && out_buffers[0].pvBuffer != nullptr) {
       // TODO: Avoid this copy
-      output_data_ = std::vector<char>{reinterpret_cast<const char*>(OutBuffers[0].pvBuffer)
-        , reinterpret_cast<const char*>(OutBuffers[0].pvBuffer) + OutBuffers[0].cbBuffer};
-      detail::sspi_functions::FreeContextBuffer(OutBuffers[0].pvBuffer);
+      output_data_ = std::vector<char>{reinterpret_cast<const char*>(out_buffers[0].pvBuffer)
+        , reinterpret_cast<const char*>(out_buffers[0].pvBuffer) + out_buffers[0].cbBuffer};
+      detail::sspi_functions::FreeContextBuffer(out_buffers[0].pvBuffer);
       return state::data_available;
     }
 
@@ -216,7 +188,7 @@ public:
           }
         }
 
-        BOOST_ASSERT_MSG(InBuffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
+        BOOST_ASSERT_MSG(in_buffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
         return state::done;
       }
 

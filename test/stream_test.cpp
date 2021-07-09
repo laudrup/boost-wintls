@@ -8,7 +8,9 @@
 #include "unittest.hpp"
 #include "asio_ssl_server_stream.hpp"
 #include "wintls_client_stream.hpp"
+#include "echo_client.hpp"
 #include "echo_server.hpp"
+#include "async_echo_client.hpp"
 #include "async_echo_server.hpp"
 
 #include <boost/wintls.hpp>
@@ -18,6 +20,7 @@
 
 #include <array>
 #include <thread>
+#include <string>
 
 class test_server : public async_echo_server<asio_ssl_server_stream> {
 public:
@@ -163,3 +166,42 @@ TEST_CASE("underlying stream errors") {
   }
 }
 
+TEST_CASE("small reads") {
+  using namespace std::string_literals;
+
+  net::io_context io_context;
+  const auto test_data = "Der er et yndigt land\0"s;
+
+  SECTION("async test") {
+    async_echo_server<asio_ssl_server_stream> server(io_context);
+    async_echo_client<wintls_client_stream> client(io_context, test_data);
+    client.stream.next_layer().read_size(0x10);
+    client.stream.next_layer().connect(server.stream.next_layer());
+    server.run();
+    client.run();
+    io_context.run();
+    CHECK(client.received_message() == test_data);
+  }
+
+  SECTION("sync test") {
+    echo_server<asio_ssl_server_stream> server(io_context);
+    echo_client<wintls_client_stream> client(io_context);
+    client.stream.next_layer().read_size(0x10);
+    client.stream.next_layer().connect(server.stream.next_layer());
+
+    auto handshake_result = server.handshake();
+    client.handshake();
+    REQUIRE_FALSE(handshake_result.get());
+
+    client.write(test_data);
+    server.read();
+    server.write();
+    client.read();
+
+    auto shutdown_result = server.shutdown();
+    client.shutdown();
+    REQUIRE_FALSE(shutdown_result.get());
+
+    CHECK(client.data<std::string>() == test_data);
+  }
+}

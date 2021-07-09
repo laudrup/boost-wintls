@@ -116,7 +116,7 @@ public:
     SecBufferDesc InBuffer;
     SecBuffer InBuffers[2];
 
-    if (last_error_ != SEC_I_CONTINUE_NEEDED) {
+    if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE) {
       return state::error;
     }
     if (!output_data_.empty()) {
@@ -179,9 +179,11 @@ public:
     }
     if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
       // Some data needs to be reused for the next call, move that to the front for reuse
-      // TODO: Test that this works.
       std::move(input_data_.end() - InBuffers[1].cbBuffer, input_data_.end(), input_data_.begin());
       input_data_.resize(InBuffers[1].cbBuffer);
+      return state::data_needed;
+    } else if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
+      return state::data_needed;
     } else {
       input_data_.clear();
     }
@@ -195,7 +197,6 @@ public:
     }
 
     switch (last_error_) {
-      case SEC_E_INCOMPLETE_MESSAGE:
       case SEC_I_CONTINUE_NEEDED:
         return state::data_needed;
 

@@ -17,6 +17,9 @@
 
 #include <boost/winapi/basic_types.hpp>
 
+#include <array>
+#include <memory>
+
 namespace boost {
 namespace wintls {
 namespace detail {
@@ -34,7 +37,9 @@ public:
     : context_(context)
     , ctx_handle_(ctx_handle)
     , cred_handle_(cred_handle)
-    , last_error_(SEC_E_OK) {
+    , last_error_(SEC_E_OK)
+    , in_buffer_(net::buffer(input_data_)) {
+    input_buffers_[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
   }
 
   void operator()(handshake_type type) {
@@ -93,7 +98,7 @@ public:
                                                                         &out_flags,
                                                                         nullptr);
         if (buffers[0].cbBuffer != 0 && buffers[0].pvBuffer != nullptr) {
-          buffer_ = sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer};
+          out_buffer_ = sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer};
         }
       }
       case handshake_type::server:
@@ -105,18 +110,19 @@ public:
     if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE) {
       return state::error;
     }
-    if (!buffer_.empty()) {
+    if (!out_buffer_.empty()) {
       return state::data_available;
     }
-    if (input_data_.empty()) {
+    if (input_buffers_[0].cbBuffer == 0) {
       return state::data_needed;
     }
-    handshake_input_buffers in_buffers;
+
     handshake_output_buffers out_buffers;
     DWORD out_flags = 0;
 
-    in_buffers[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
-    in_buffers[0].cbBuffer = static_cast<ULONG>(input_data_.size());
+    input_buffers_[1].BufferType = SECBUFFER_EMPTY;
+    input_buffers_[1].pvBuffer = nullptr;
+    input_buffers_[1].cbBuffer = 0;
 
     switch(handshake_type_) {
       case handshake_type::client:
@@ -126,7 +132,7 @@ public:
                                                                         client_context_flags,
                                                                         0,
                                                                         SECURITY_NATIVE_DREP,
-                                                                        in_buffers,
+                                                                        input_buffers_,
                                                                         0,
                                                                         nullptr,
                                                                         out_buffers,
@@ -138,7 +144,7 @@ public:
         TimeStamp expiry;
         last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_,
                                                                     first_call ? nullptr : ctx_handle_,
-                                                                    in_buffers,
+                                                                    input_buffers_,
                                                                     server_context_flags,
                                                                     SECURITY_NATIVE_DREP,
                                                                     first_call ? ctx_handle_ : nullptr,
@@ -147,19 +153,29 @@ public:
                                                                     &expiry);
       }
     }
-    if (in_buffers[1].BufferType == SECBUFFER_EXTRA) {
+    if (input_buffers_[1].BufferType == SECBUFFER_EXTRA) {
       // Some data needs to be reused for the next call, move that to the front for reuse
-      std::move(input_data_.end() - in_buffers[1].cbBuffer, input_data_.end(), input_data_.begin());
-      input_data_.resize(in_buffers[1].cbBuffer);
+      const auto previous_size = input_buffers_[0].cbBuffer;
+      const auto extra_size = input_buffers_[1].cbBuffer;
+      const auto extra_data_begin = input_data_.begin() + previous_size - extra_size;
+      const auto extra_data_end = input_data_.begin() + previous_size;
+
+      std::move(extra_data_begin, extra_data_end, input_data_.begin());
+      input_buffers_[0].cbBuffer = extra_size;
+      in_buffer_ = net::buffer(input_data_) + extra_size;
+
+      BOOST_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
       return state::data_needed;
     } else if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
+      BOOST_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
       return state::data_needed;
     } else {
-      input_data_.clear();
+      input_buffers_[0].cbBuffer = 0;
+      in_buffer_ = net::buffer(input_data_);
     }
 
     if (out_buffers[0].cbBuffer != 0 && out_buffers[0].pvBuffer != nullptr) {
-      buffer_ = sspi_context_buffer{out_buffers[0].pvBuffer, out_buffers[0].cbBuffer};
+      out_buffer_ = sspi_context_buffer{out_buffers[0].pvBuffer, out_buffers[0].cbBuffer};
       return state::data_available;
     }
 
@@ -183,12 +199,14 @@ public:
           }
         }
 
-        BOOST_ASSERT_MSG(in_buffers[1].BufferType != SECBUFFER_EXTRA, "Handle extra data from handshake");
         return state::done;
       }
 
       case SEC_I_INCOMPLETE_CREDENTIALS:
         BOOST_ASSERT_MSG(false, "client authentication not implemented");
+
+      case SEC_I_RENEGOTIATE:
+        BOOST_ASSERT_MSG(false, "renegotiation not implemented");
 
       default:
         return state::error;
@@ -196,18 +214,21 @@ public:
   }
 
   void size_written(std::size_t size) {
-    BOOST_VERIFY(size == buffer_.size());
-    buffer_ = sspi_context_buffer{};
+    BOOST_VERIFY(size == out_buffer_.size());
+    out_buffer_ = sspi_context_buffer{};
   }
 
-  // TODO: Consider making this more flexible by not requering a
-  // vector of chars, but any view of a range of bytes
-  void put(const std::vector<char>& data) {
-    input_data_.insert(input_data_.end(), data.begin(), data.end());
+  void size_read(std::size_t size) {
+    input_buffers_[0].cbBuffer += static_cast<ULONG>(size);
+    in_buffer_ = net::buffer(input_data_) + input_buffers_[0].cbBuffer;
   }
 
-  net::const_buffer buffer() {
-    return buffer_.asio_buffer();
+  net::const_buffer out_buffer() {
+    return out_buffer_.asio_buffer();
+  }
+
+  net::mutable_buffer in_buffer() {
+    return in_buffer_;
   }
 
   boost::system::error_code last_error() const {
@@ -227,8 +248,10 @@ private:
   CredHandle* cred_handle_;
   SECURITY_STATUS last_error_;
   handshake_type handshake_type_;
-  std::vector<char> input_data_;
-  sspi_context_buffer buffer_;
+  std::array<char, 0x10000> input_data_;
+  sspi_context_buffer out_buffer_;
+  net::mutable_buffer in_buffer_;
+  handshake_input_buffers input_buffers_;
   std::unique_ptr<boost::winapi::WCHAR_[]> server_hostname_;
 };
 

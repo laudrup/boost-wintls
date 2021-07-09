@@ -134,25 +134,23 @@ public:
     detail::sspi_handshake::state state;
     while((state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
       switch (state) {
-        case detail::sspi_handshake::state::data_needed:
-          {
-            std::array<char, 0x10000> input_buffer;
-            std::size_t size_read = next_layer_.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
-            if (ec) {
-              return;
-            }
-            sspi_impl_.handshake.put({input_buffer.begin(), input_buffer.begin() + size_read});
-            continue;
+        case detail::sspi_handshake::state::data_needed: {
+          std::array<char, 0x10000> input_buffer;
+          std::size_t size_read = next_layer_.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+          if (ec) {
+            return;
           }
-        case detail::sspi_handshake::state::data_available:
-          {
-            auto data = sspi_impl_.handshake.get();
-            net::write(next_layer_, net::buffer(data), ec);
-            if (ec) {
-              return;
-            }
-            continue;
+          sspi_impl_.handshake.put({input_buffer.begin(), input_buffer.begin() + size_read});
+          continue;
+        }
+        case detail::sspi_handshake::state::data_available: {
+          std::size_t size_written = net::write(next_layer_, sspi_impl_.handshake.buffer(), ec);
+          if (ec) {
+            return;
           }
+          sspi_impl_.handshake.size_written(size_written);
+          continue;
+        }
         case detail::sspi_handshake::state::error:
           ec = sspi_impl_.handshake.last_error();
           return;

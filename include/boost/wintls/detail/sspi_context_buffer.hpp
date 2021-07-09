@@ -46,6 +46,10 @@ public:
     return buffer_;
   }
 
+  std::size_t size() const {
+    return buffer_.size();
+  }
+
 private:
   net::const_buffer buffer_;
 };

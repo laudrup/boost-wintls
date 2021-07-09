@@ -23,7 +23,7 @@ struct async_shutdown_impl : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t size_written = 0) {
     if (ec) {
       self.complete(ec);
       return;
@@ -41,13 +41,14 @@ struct async_shutdown_impl : boost::asio::coroutine {
         BOOST_ASIO_CORO_YIELD {
           net::async_write(next_layer_, sspi_impl_.shutdown.buffer(), std::move(self));
         }
+        sspi_impl_.shutdown.size_written(size_written);
         self.complete({});
         return;
       } else {
         if (!is_continuation()) {
           BOOST_ASIO_CORO_YIELD {
             auto e = self.get_executor();
-            net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+            net::post(e, [self = std::move(self), ec, size_written]() mutable { self(ec, size_written); });
           }
         }
         self.complete(ec);

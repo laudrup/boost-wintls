@@ -404,8 +404,12 @@ public:
    */
   void shutdown(boost::system::error_code& ec) {
     ec = sspi_impl_.shutdown();
+    if (ec) {
+      return;
+    }
+    std::size_t size_written = net::write(next_layer_, sspi_impl_.shutdown.buffer(), ec);
     if (!ec) {
-      net::write(next_layer_, sspi_impl_.shutdown.buffer(), ec);
+      sspi_impl_.shutdown.size_written(size_written);
     }
   }
 

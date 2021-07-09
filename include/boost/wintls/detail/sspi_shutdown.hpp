@@ -14,6 +14,8 @@
 #include <boost/wintls/detail/shutdown_buffers.hpp>
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
 
+#include <boost/assert.hpp>
+
 namespace boost {
 namespace wintls {
 namespace detail {
@@ -56,6 +58,11 @@ public:
 
   net::const_buffer buffer() {
     return buffer_.asio_buffer();
+  }
+
+  void size_written(std::size_t size) {
+    BOOST_VERIFY(size == buffer_.size());
+    buffer_ = sspi_context_buffer{};
   }
 
 private:

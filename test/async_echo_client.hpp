@@ -13,11 +13,11 @@
 #include <boost/asio.hpp>
 
 template<typename Stream>
-struct async_client : public Stream {
+struct async_echo_client : public Stream {
 public:
   using Stream::stream;
 
-  async_client(net::io_context& context, const std::string& message)
+  async_echo_client(net::io_context& context, const std::string& message)
     : Stream(context)
     , message_(message) {
   }

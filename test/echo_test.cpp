@@ -5,6 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include "echo_server.hpp"
+#include "echo_client.hpp"
 #include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
 #include "asio_ssl_client_stream.hpp"
@@ -17,10 +19,9 @@
 
 #include <boost/asio.hpp>
 
-#include <string>
-#include <thread>
-#include <tuple>
 #include <cstdint>
+#include <string>
+#include <tuple>
 
 namespace {
 std::string generate_data(std::size_t size) {
@@ -40,8 +41,8 @@ using TestTypes = std::tuple<std::tuple<asio_ssl_client_stream, asio_ssl_server_
                              std::tuple<wintls_client_stream, wintls_server_stream>>;
 
 TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
-  using Client = typename std::tuple_element<0, TestType>::type;
-  using Server = typename std::tuple_element<1, TestType>::type;
+  using ClientStream = typename std::tuple_element<0, TestType>::type;
+  using ServerStream = typename std::tuple_element<1, TestType>::type;
 
   auto test_data_size = GENERATE(0x100, 0x100 - 1, 0x100 + 1,
                                  0x1000, 0x1000 - 1, 0x1000 + 1,
@@ -49,57 +50,33 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
                                  0x100000, 0x100000 - 1, 0x100000 + 1);
   const std::string test_data = generate_data(test_data_size);
 
-  boost::system::error_code client_ec{};
-  boost::system::error_code server_ec{};
-
   net::io_context io_context;
 
   SECTION("sync test") {
-    Client client(io_context);
-    Server server(io_context);
+    echo_client<ClientStream> client(io_context);
+    echo_server<ServerStream> server(io_context);
 
     client.stream.next_layer().connect(server.stream.next_layer());
 
-    // As the handshake requires multiple read and writes between client
-    // and server, we have to run the synchronous version in a separate
-    // thread. Unfortunately.
-    std::thread server_handshake([&server, &server_ec]() {
-      server.stream.handshake(Server::handshake_type::server, server_ec);
-    });
-    client.stream.handshake(Client::handshake_type::client, client_ec);
-    REQUIRE_FALSE(client_ec);
+    auto handshake_result = server.handshake();
+    client.handshake();
+    REQUIRE_FALSE(handshake_result.get());
 
-    server_handshake.join();
-    REQUIRE_FALSE(server_ec);
+    client.write(test_data);
+    server.read();
+    server.write();
+    client.read();
 
-    net::write(client.stream, net::buffer(test_data));
+    auto shutdown_result = server.shutdown();
+    client.shutdown();
+    REQUIRE_FALSE(shutdown_result.get());
 
-    net::streambuf server_data;
-    net::read_until(server.stream, server_data, '\0');
-    net::write(server.stream, server_data);
-
-    net::streambuf client_data;
-    net::read_until(client.stream, client_data, '\0');
-
-    // As a shutdown potentially requires multiple read and writes
-    // between client and server, we have to run the synchronous version
-    // in a separate thread. Unfortunately.
-    std::thread server_shutdown([&server, &server_ec]() {
-      server.stream.shutdown(server_ec);
-    });
-    client.stream.shutdown(client_ec);
-    REQUIRE_FALSE(client_ec);
-
-    server_shutdown.join();
-    REQUIRE_FALSE(server_ec);
-
-    CHECK(std::string(net::buffers_begin(client_data.data()),
-                      net::buffers_begin(client_data.data()) + client_data.size()) == test_data);
+    CHECK(client.template data<std::string>() == test_data);
   }
 
   SECTION("async test") {
-    async_server<Server> server(io_context);
-    async_client<Client> client(io_context, test_data);
+    async_echo_server<ServerStream> server(io_context);
+    async_echo_client<ClientStream> client(io_context, test_data);
     client.stream.next_layer().connect(server.stream.next_layer());
     server.run();
     client.run();

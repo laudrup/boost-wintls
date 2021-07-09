@@ -8,6 +8,7 @@
 #include "unittest.hpp"
 #include "asio_ssl_server_stream.hpp"
 #include "wintls_client_stream.hpp"
+#include "echo_server.hpp"
 #include "async_echo_server.hpp"
 
 #include <boost/wintls.hpp>
@@ -18,15 +19,14 @@
 #include <array>
 #include <thread>
 
-class test_server : public async_server<asio_ssl_server_stream> {
+class test_server : public async_echo_server<asio_ssl_server_stream> {
 public:
   test_server(net::io_context& context)
-    : async_server<asio_ssl_server_stream>(context) {
+    : async_echo_server<asio_ssl_server_stream>(context) {
   }
 
   void do_read() final {
   }
-
 };
 
 TEST_CASE("handshake not done") {
@@ -69,7 +69,7 @@ TEST_CASE("handshake not done") {
 TEST_CASE("underlying stream errors") {
   SECTION("sync test") {
     net::io_context io_context;
-    asio_ssl_server_stream server(io_context);
+    echo_server<asio_ssl_server_stream> server(io_context);
     boost::system::error_code client_ec{};
     boost::system::error_code server_ec{};
 
@@ -78,13 +78,10 @@ TEST_CASE("underlying stream errors") {
       wintls_client_stream client(io_context, fc);
 
       client.stream.next_layer().connect(server.stream.next_layer());
-      std::thread server_handshake([&server, &server_ec]() {
-        server.stream.handshake(asio_ssl_server_stream::handshake_type::server, server_ec);
-      });
-      client.stream.handshake(wintls_client_stream::handshake_type::client, client_ec);
-      server_handshake.join();
-      REQUIRE_FALSE(server_ec);
 
+      auto handshake_result = server.handshake();
+      client.stream.handshake(wintls_client_stream::handshake_type::client, client_ec);
+      REQUIRE_FALSE(handshake_result.get());
       CHECK(client_ec.value() == 1);
     }
 
@@ -93,13 +90,10 @@ TEST_CASE("underlying stream errors") {
       wintls_client_stream client(io_context, fc);
 
       client.stream.next_layer().connect(server.stream.next_layer());
-      std::thread server_handshake([&server, &server_ec]() {
-        server.stream.handshake(asio_ssl_server_stream::handshake_type::server, server_ec);
-      });
-      client.stream.handshake(wintls_client_stream::handshake_type::client, client_ec);
-      server_handshake.join();
 
-      REQUIRE_FALSE(server_ec);
+      auto handshake_result = server.handshake();
+      client.stream.handshake(wintls_client_stream::handshake_type::client, client_ec);
+      REQUIRE_FALSE(handshake_result.get());
       REQUIRE_FALSE(client_ec);
 
       SECTION("read error") {

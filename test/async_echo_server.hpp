@@ -13,11 +13,11 @@
 #include <boost/asio.hpp>
 
 template<typename Stream>
-class async_server : public Stream {
+class async_echo_server : public Stream {
 public:
   using Stream::stream;
 
-  async_server(net::io_context& context)
+  async_echo_server(net::io_context& context)
     : Stream(context) {
   }
 
@@ -25,7 +25,7 @@ public:
     do_handshake();
   }
 
-  virtual ~async_server() = default;
+  virtual ~async_echo_server() = default;
 
   virtual void do_handshake() {
     stream.async_handshake(Stream::handshake_type::server,

@@ -50,6 +50,10 @@ public:
     return buffer_.size();
   }
 
+  std::size_t empty() const {
+    return buffer_.size() == 0;
+  }
+
 private:
   net::const_buffer buffer_;
 };

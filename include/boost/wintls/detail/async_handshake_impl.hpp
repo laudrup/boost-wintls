@@ -21,7 +21,8 @@ struct async_handshake_impl : boost::asio::coroutine {
   async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, handshake_type type)
     : next_layer_(next_layer)
     , sspi_impl_(sspi_impl)
-    , entry_count_(0) {
+    , entry_count_(0)
+    , is_writing_(false) {
     sspi_impl_.handshake(type);
   }
 
@@ -36,6 +37,11 @@ struct async_handshake_impl : boost::asio::coroutine {
     auto is_continuation = [this] {
       return entry_count_ > 1;
     };
+
+    if (is_writing_) {
+      sspi_impl_.handshake.size_written(length);
+      is_writing_ = false;
+    }
 
     detail::sspi_handshake::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
@@ -53,11 +59,9 @@ struct async_handshake_impl : boost::asio::coroutine {
         }
 
         if (state == detail::sspi_handshake::state::data_available) {
-          output_ = sspi_impl_.handshake.get();
-          BOOST_ASIO_CORO_YIELD
-          {
-            auto buf = net::buffer(output_);
-            net::async_write(next_layer_, buf, std::move(self));
+          BOOST_ASIO_CORO_YIELD {
+            is_writing_ = true;
+            net::async_write(next_layer_, sspi_impl_.handshake.buffer(), std::move(self));
           }
           continue;
         }
@@ -90,7 +94,7 @@ private:
   detail::sspi_impl& sspi_impl_;
   int entry_count_;
   std::vector<char> input_;
-  std::vector<char> output_;
+  bool is_writing_;
 };
 
 } // namespace detail

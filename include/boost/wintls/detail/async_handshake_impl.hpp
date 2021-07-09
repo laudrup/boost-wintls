@@ -22,7 +22,7 @@ struct async_handshake_impl : boost::asio::coroutine {
     : next_layer_(next_layer)
     , sspi_impl_(sspi_impl)
     , entry_count_(0)
-    , is_writing_(false) {
+    , state_(state::idle) {
     sspi_impl_.handshake(type);
   }
 
@@ -38,35 +38,39 @@ struct async_handshake_impl : boost::asio::coroutine {
       return entry_count_ > 1;
     };
 
-    if (is_writing_) {
-      sspi_impl_.handshake.size_written(length);
-      is_writing_ = false;
+    switch(state_) {
+      case state::reading:
+        sspi_impl_.handshake.size_read(length);
+        state_ = state::idle;
+        break;
+      case state::writing:
+        sspi_impl_.handshake.size_written(length);
+        state_ = state::idle;
+        break;
+      case state::idle:
+        break;
     }
 
-    detail::sspi_handshake::state state;
+    detail::sspi_handshake::state handshake_state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
-        if (state == detail::sspi_handshake::state::data_needed) {
-          // TODO: Use a fixed size buffer instead
-          input_.resize(0x10000);
+      while((handshake_state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
+        if (handshake_state == detail::sspi_handshake::state::data_needed) {
           BOOST_ASIO_CORO_YIELD {
-            auto buf = net::buffer(input_);
-            next_layer_.async_read_some(buf, std::move(self));
-          }
-          sspi_impl_.handshake.put({input_.data(), input_.data() + length});
-          input_.clear();
-          continue;
-        }
-
-        if (state == detail::sspi_handshake::state::data_available) {
-          BOOST_ASIO_CORO_YIELD {
-            is_writing_ = true;
-            net::async_write(next_layer_, sspi_impl_.handshake.buffer(), std::move(self));
+            state_ = state::reading;
+            next_layer_.async_read_some(sspi_impl_.handshake.in_buffer(), std::move(self));
           }
           continue;
         }
 
-        if (state == detail::sspi_handshake::state::error) {
+        if (handshake_state == detail::sspi_handshake::state::data_available) {
+          BOOST_ASIO_CORO_YIELD {
+            state_ = state::writing;
+            net::async_write(next_layer_, sspi_impl_.handshake.out_buffer(), std::move(self));
+          }
+          continue;
+        }
+
+        if (handshake_state == detail::sspi_handshake::state::error) {
           if (!is_continuation()) {
             BOOST_ASIO_CORO_YIELD {
               auto e = self.get_executor();
@@ -94,7 +98,11 @@ private:
   detail::sspi_impl& sspi_impl_;
   int entry_count_;
   std::vector<char> input_;
-  bool is_writing_;
+  enum class state {
+    idle,
+    reading,
+    writing
+  } state_;
 };
 
 } // namespace detail

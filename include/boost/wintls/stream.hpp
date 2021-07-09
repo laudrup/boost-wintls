@@ -19,12 +19,9 @@
 
 #include <boost/asio/compose.hpp>
 #include <boost/asio/io_context.hpp>
-
 #include <boost/system/error_code.hpp>
 
-#include <array>
 #include <iterator>
-#include <stdexcept>
 #include <type_traits>
 
 namespace boost {
@@ -135,16 +132,15 @@ public:
     while((state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
       switch (state) {
         case detail::sspi_handshake::state::data_needed: {
-          std::array<char, 0x10000> input_buffer;
-          std::size_t size_read = next_layer_.read_some(net::buffer(input_buffer.data(), input_buffer.size()), ec);
+          std::size_t size_read = next_layer_.read_some(sspi_impl_.handshake.in_buffer(), ec);
           if (ec) {
             return;
           }
-          sspi_impl_.handshake.put({input_buffer.begin(), input_buffer.begin() + size_read});
+          sspi_impl_.handshake.size_read(size_read);
           continue;
         }
         case detail::sspi_handshake::state::data_available: {
-          std::size_t size_written = net::write(next_layer_, sspi_impl_.handshake.buffer(), ec);
+          std::size_t size_written = net::write(next_layer_, sspi_impl_.handshake.out_buffer(), ec);
           if (ec) {
             return;
           }

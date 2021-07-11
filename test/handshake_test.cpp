@@ -17,16 +17,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
-#include <fstream>
-
-namespace {
-std::vector<char> pem_cert_bytes() {
-  std::ifstream ifs{TEST_CERTIFICATE_PATH};
-  REQUIRE(ifs.good());
-  return {std::istreambuf_iterator<char>{ifs}, {}};
-}
-}
-
 TEST_CASE("certificates") {
   using namespace std::string_literals;
 
@@ -117,7 +107,7 @@ TEST_CASE("certificates") {
 
     client_ctx.verify_server_certificate(true);
 
-    const auto x509 = pem_cert_bytes();
+    const auto x509 = test_cert_bytes();
     const auto cert_ptr = x509_to_cert_context(net::buffer(x509), boost::wintls::file_format::pem);
     client_ctx.add_certificate_authority(cert_ptr.get());
 

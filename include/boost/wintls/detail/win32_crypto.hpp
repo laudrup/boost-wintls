@@ -9,12 +9,12 @@
 #define BOOST_WINTLS_DETAIL_WIN32_CRYPTO_HPP
 
 #include <boost/wintls/detail/config.hpp>
-#include <boost/wintls/detail/sspi_types.hpp>
+#include <boost/wintls/detail/win32_crypto.hpp>
 #include <boost/wintls/error.hpp>
 
-#include <boost/winapi/handles.hpp>
+#include <boost/winapi/basic_types.hpp>
 
-#include <memory>
+#include <wincrypt.h>
 
 namespace boost {
 namespace wintls {

@@ -14,16 +14,10 @@
 #include <fstream>
 #include <iterator>
 
-inline std::vector<char> pem_cert_bytes() {
-  std::ifstream ifs{TEST_CERTIFICATE_PATH};
-  REQUIRE(ifs.good());
-  return {std::istreambuf_iterator<char>{ifs}, {}};
-}
-
 struct wintls_client_context : public boost::wintls::context {
   wintls_client_context()
     : boost::wintls::context(boost::wintls::method::system_default) {
-    const auto x509 = pem_cert_bytes();
+    const auto x509 = test_cert_bytes();
     const auto cert_ptr = x509_to_cert_context(net::buffer(x509), boost::wintls::file_format::pem);
     add_certificate_authority(cert_ptr.get());
   }

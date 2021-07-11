@@ -14,8 +14,9 @@
 struct wintls_server_context : public boost::wintls::context {
   wintls_server_context()
     : boost::wintls::context(boost::wintls::method::system_default) {
-    use_certificate_file(TEST_CERTIFICATE_PATH, boost::wintls::file_format::pem);
-    use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::wintls::file_format::pem);
+    auto certificate = boost::wintls::x509_to_cert_context(net::buffer(test_cert_bytes()), boost::wintls::file_format::pem);
+    boost::wintls::assign_private_key(certificate.get(), TEST_PRIVATE_KEY_NAME);
+    use_certificate(certificate.get());
   }
 };
 

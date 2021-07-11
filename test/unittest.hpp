@@ -14,6 +14,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <fstream>
+#include <iterator>
 #include <sstream>
 
 namespace Catch {
@@ -25,6 +27,16 @@ struct StringMaker<boost::system::error_code> {
     return oss.str();
   }
 };
+}
+
+inline std::vector<char> test_cert_bytes() {
+  std::ifstream ifs{TEST_CERTIFICATE_PATH};
+  return {std::istreambuf_iterator<char>{ifs}, {}};
+}
+
+inline std::vector<char> test_key_bytes() {
+  std::ifstream ifs{TEST_PRIVATE_KEY_PATH};
+  return {std::istreambuf_iterator<char>{ifs}, {}};
 }
 
 namespace net = boost::wintls::net;

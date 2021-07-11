@@ -10,13 +10,18 @@
 
 #include <boost/wintls/method.hpp>
 
-#include <boost/wintls/detail/context_impl.hpp>
 #include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/context_certificates.hpp>
 
 #include <boost/winapi/handles.hpp>
 
 #include <memory>
 #include <string>
+
+extern "C" {
+  struct CERT_CONTEXT__;
+  typedef CERT_CONTEXT CERT_CONTEXT_;
+}
 
 namespace boost {
 namespace wintls {
@@ -32,7 +37,7 @@ public:
    * @param connection_method The @ref method to use for connections.
    */
   explicit context(method connection_method)
-    : impl_(std::make_unique<detail::context_impl>())
+    : ctx_certs_(std::make_unique<detail::context_certificates>())
     , method_(connection_method)
     , verify_server_certificate_(false) {
   }
@@ -47,7 +52,7 @@ public:
    * @throws boost::system::system_error Thrown on failure.
    */
   void add_certificate_authority(const CERT_CONTEXT* cert) {
-    impl_->add_certificate_authority(cert);
+    ctx_certs_->add_certificate_authority(cert);
   }
 
   /** Add certification authority for performing verification.
@@ -61,7 +66,7 @@ public:
    */
   void add_certificate_authority(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
     try {
-      impl_->add_certificate_authority(cert);
+      ctx_certs_->add_certificate_authority(cert);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
@@ -94,55 +99,23 @@ public:
    * certificates should be used for verification.
    */
   void use_default_certificates(bool use_system_certs) {
-    impl_->use_default_cert_store = use_system_certs;
+    ctx_certs_->use_default_cert_store = use_system_certs;
   }
 
-  void use_certificate(const net::const_buffer& certificate, file_format format, boost::system::error_code& ec) {
-    try {
-      impl_->use_certificate(certificate, format);
-    } catch (const boost::system::system_error& e) {
-      ec = e.code();
-    }
-  }
-
-  void use_certificate(const net::const_buffer& certificate, file_format format) {
-    impl_->use_certificate(certificate, format);
-  }
-
-  void use_certificate_file(const std::string& filename, file_format format, boost::system::error_code& ec) {
-    try {
-      impl_->use_certificate_file(filename, format);
-    } catch (const boost::system::system_error& e) {
-      ec = e.code();
-    }
-  }
-
-  void use_certificate_file(const std::string& filename, file_format format) {
-    impl_->use_certificate_file(filename, format);
-  }
-
-  void use_private_key(const net::const_buffer& private_key, file_format format, boost::system::error_code& ec) {
-    try {
-      impl_->use_private_key(private_key, format);
-    } catch (const boost::system::system_error& e) {
-      ec = e.code();
-    }
-  }
-
-  void use_private_key(const net::const_buffer& private_key, file_format format) {
-    impl_->use_private_key(private_key, format);
-  }
-
-  void use_private_key_file(const std::string& filename, file_format format, boost::system::error_code& ec) {
-    try {
-      impl_->use_private_key_file(filename, format);
-    } catch (const boost::system::system_error& e) {
-      ec = e.code();
-    }
-  }
-
-  void use_private_key_file(const std::string& filename, file_format format) {
-    impl_->use_private_key_file(filename, format);
+  /** Set the certificate to use when operating as a server
+   *
+   * This function sets the certficate to use when using a @ref stream
+   * as server.
+   *
+   * @param cert The certificate with an associated private the
+   * @ref stream will use for encrypting messages when operating as a
+   * server.
+   *
+   * @note The certificate must be associated with a private key. Not
+   * doing so will result in unexpected behavior.
+   */
+  void use_certificate(const CERT_CONTEXT* cert) {
+    ctx_certs_->server_cert = cert_context_ptr{CertDuplicateCertificateContext(cert), &CertFreeCertificateContext};
   }
 
 private:
@@ -150,15 +123,17 @@ private:
     if (!verify_server_certificate_) {
       return boost::winapi::ERROR_SUCCESS_;
     }
-    return impl_->verify_certificate(cert);
+    return ctx_certs_->verify_certificate(cert);
   }
 
   const CERT_CONTEXT* server_cert() const {
-    return impl_->server_cert.get();
+    return ctx_certs_->server_cert.get();
   }
 
   friend class detail::sspi_handshake;
-  std::unique_ptr<detail::context_impl> impl_;
+  // TODO: No reason this should be a unique_ptr. Instead make it
+  // copyable like a boost::asio::ssl::context is.
+  std::unique_ptr<detail::context_certificates> ctx_certs_;
   method method_;
   bool verify_server_certificate_;
 };

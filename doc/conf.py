@@ -1,5 +1,11 @@
+import sphinx_bootstrap_theme
+import os
+import sys
+
+sys.path.append(os.path.abspath("./extensions"))
+
 project = 'boost-wintls'
-copyright = '2020, Kasper Laudrup'
+copyright = '2021, Kasper Laudrup'
 author = 'Kasper Laudrup'
 
 master_doc = 'index'
@@ -10,7 +16,7 @@ rst_prolog = """
 
 """
 
-extensions = ['breathe', 'sphinxcontrib.fulltoc']
+extensions = ['breathe', 'toctree_elements']
 
 highlight_language = 'c++'
 
@@ -26,14 +32,11 @@ html_css_files = [
   project + '.css',
 ]
 
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+
 html_theme_options = {
-  "fixed_sidebar": True,
-  "page_width": "95em",
-  "font_family": "times-new-roman",
+  'bootswatch_theme': 'flatly'
 }
 
 breathe_default_project = 'boost-wintls'
-
-html_sidebars = {
-  '**': ['localtoc.html'],
-}

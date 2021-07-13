@@ -1,0 +1,33 @@
+<div id="navbar" class="{{ theme_navbar_class }} navbar-default {% if theme_navbar_fixed_top|tobool -%} navbar-fixed-top{%- endif -%}">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{{ pathto(master_doc) }}">
+        {%- block sidebarlogo %}
+          {%- if logo %}<span><img src="{{ pathto('_static/' + logo, 1) }}"></span>{%- endif %}
+          {%- endblock %}
+          {% if theme_navbar_title -%}{{ theme_navbar_title|e }}{%- else -%}{{ project|e }}{%- endif -%}
+      </a>
+      <span class="navbar-text navbar-version pull-left"><b>{{ version|e }}</b></span>
+    </div>
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        {% for title, pages in toctree_elements.items() %}
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ title }}<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              {% for title, link in pages %}
+                <li><a href="{{ link }}">{{ title }}</a></li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>

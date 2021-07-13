@@ -23,4 +23,4 @@ enum class handshake_type {
 } // namespace wintls
 } // namespace boost
 
-#endif
+#endif // BOOST_WINTLS_HANDSHAKE_TYPE_HPP

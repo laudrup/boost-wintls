@@ -16,7 +16,7 @@ rst_prolog = """
 
 """
 
-extensions = ['breathe', 'toctree_elements']
+extensions = ['breathe', 'toctree_elements', 'remove_inline_specifier']
 
 highlight_language = 'c++'
 

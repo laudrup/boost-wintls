@@ -58,7 +58,7 @@ cmake --build .
 ## Quickstart
 
 Similar to Boost.Asio.SSL a
-[boost::wintls::context](https://laudrup.github.io/boost-wintls/#context)
+[boost::wintls::context](https://laudrup.github.io/boost-wintls/classes.html#context)
 is required to hold certificates and options to use for the TLS
 stream:
 
@@ -68,7 +68,7 @@ stream:
 ```
 
 Using that context a
-[boost::wintls::stream](https://laudrup.github.io/boost-wintls/#stream)
+[boost::wintls::stream](https://laudrup.github.io/boost-wintls/classes.html#stream)
 can be constructed using a
 [boost::asio::io_context](https://www.boost.org/doc/libs/develop/doc/html/boost_asio/reference/io_context.html)
 specifying the underlying stream type (most often a TCP stream):

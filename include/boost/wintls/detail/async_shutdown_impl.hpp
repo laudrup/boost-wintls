@@ -8,6 +8,8 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
 
+#include <boost/wintls/detail/sspi_shutdown.hpp>
+
 #include <boost/asio/coroutine.hpp>
 
 namespace boost {
@@ -16,9 +18,9 @@ namespace detail {
 
 template <typename NextLayer>
 struct async_shutdown_impl : boost::asio::coroutine {
-  async_shutdown_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl)
+  async_shutdown_impl(NextLayer& next_layer, detail::sspi_shutdown& shutdown)
     : next_layer_(next_layer)
-    , sspi_impl_(sspi_impl)
+    , shutdown_(shutdown)
     , entry_count_(0) {
   }
 
@@ -34,14 +36,14 @@ struct async_shutdown_impl : boost::asio::coroutine {
       return entry_count_ > 1;
     };
 
-    ec = sspi_impl_.shutdown();
+    ec = shutdown_();
 
     BOOST_ASIO_CORO_REENTER(*this) {
       if (!ec) {
         BOOST_ASIO_CORO_YIELD {
-          net::async_write(next_layer_, sspi_impl_.shutdown.buffer(), std::move(self));
+          net::async_write(next_layer_, shutdown_.buffer(), std::move(self));
         }
-        sspi_impl_.shutdown.size_written(size_written);
+        shutdown_.size_written(size_written);
         self.complete({});
         return;
       } else {
@@ -59,7 +61,7 @@ struct async_shutdown_impl : boost::asio::coroutine {
 
 private:
   NextLayer& next_layer_;
-  detail::sspi_impl& sspi_impl_;
+  detail::sspi_shutdown& shutdown_;
   int entry_count_;
 };
 

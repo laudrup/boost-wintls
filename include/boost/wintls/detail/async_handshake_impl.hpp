@@ -10,6 +10,8 @@
 
 #include <boost/wintls/handshake_type.hpp>
 
+#include <boost/wintls/detail/sspi_handshake.hpp>
+
 #include <boost/asio/coroutine.hpp>
 
 namespace boost {
@@ -18,12 +20,12 @@ namespace detail {
 
 template <typename NextLayer>
 struct async_handshake_impl : boost::asio::coroutine {
-  async_handshake_impl(NextLayer& next_layer, detail::sspi_impl& sspi_impl, handshake_type type)
+  async_handshake_impl(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_type type)
     : next_layer_(next_layer)
-    , sspi_impl_(sspi_impl)
+    , handshake_(handshake)
     , entry_count_(0)
     , state_(state::idle) {
-    sspi_impl_.handshake(type);
+    handshake_(type);
   }
 
   template <typename Self>
@@ -40,11 +42,11 @@ struct async_handshake_impl : boost::asio::coroutine {
 
     switch(state_) {
       case state::reading:
-        sspi_impl_.handshake.size_read(length);
+        handshake_.size_read(length);
         state_ = state::idle;
         break;
       case state::writing:
-        sspi_impl_.handshake.size_written(length);
+        handshake_.size_written(length);
         state_ = state::idle;
         break;
       case state::idle:
@@ -53,11 +55,11 @@ struct async_handshake_impl : boost::asio::coroutine {
 
     detail::sspi_handshake::state handshake_state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((handshake_state = sspi_impl_.handshake()) != detail::sspi_handshake::state::done) {
+      while((handshake_state = handshake_()) != detail::sspi_handshake::state::done) {
         if (handshake_state == detail::sspi_handshake::state::data_needed) {
           BOOST_ASIO_CORO_YIELD {
             state_ = state::reading;
-            next_layer_.async_read_some(sspi_impl_.handshake.in_buffer(), std::move(self));
+            next_layer_.async_read_some(handshake_.in_buffer(), std::move(self));
           }
           continue;
         }
@@ -65,7 +67,7 @@ struct async_handshake_impl : boost::asio::coroutine {
         if (handshake_state == detail::sspi_handshake::state::data_available) {
           BOOST_ASIO_CORO_YIELD {
             state_ = state::writing;
-            net::async_write(next_layer_, sspi_impl_.handshake.out_buffer(), std::move(self));
+            net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
           }
           continue;
         }
@@ -77,7 +79,7 @@ struct async_handshake_impl : boost::asio::coroutine {
               net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
             }
           }
-          self.complete(sspi_impl_.handshake.last_error());
+          self.complete(handshake_.last_error());
           return;
         }
       }
@@ -88,14 +90,14 @@ struct async_handshake_impl : boost::asio::coroutine {
           net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
         }
       }
-      BOOST_ASSERT(!sspi_impl_.handshake.last_error());
-      self.complete(sspi_impl_.handshake.last_error());
+      BOOST_ASSERT(!handshake_.last_error());
+      self.complete(handshake_.last_error());
     }
   }
 
 private:
   NextLayer& next_layer_;
-  detail::sspi_impl& sspi_impl_;
+  detail::sspi_handshake& handshake_;
   int entry_count_;
   std::vector<char> input_;
   enum class state {

@@ -8,6 +8,8 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_READ_IMPL_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_READ_IMPL_HPP
 
+#include <boost/wintls/detail/sspi_decrypt.hpp>
+
 #include <boost/asio/coroutine.hpp>
 
 namespace boost {
@@ -16,10 +18,10 @@ namespace detail {
 
 template <typename NextLayer, typename MutableBufferSequence>
 struct async_read_impl : boost::asio::coroutine {
-  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_impl& sspi_impl)
+  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_decrypt& decrypt)
     : next_layer_(next_layer)
     , buffers_(buffers)
-    , sspi_impl_(sspi_impl)
+    , decrypt_(decrypt)
     , entry_count_(0) {
   }
 
@@ -37,11 +39,11 @@ struct async_read_impl : boost::asio::coroutine {
 
     detail::sspi_decrypt::state state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((state = sspi_impl_.decrypt(buffers_)) == detail::sspi_decrypt::state::data_needed) {
+      while((state = decrypt_(buffers_)) == detail::sspi_decrypt::state::data_needed) {
         BOOST_ASIO_CORO_YIELD {
-          next_layer_.async_read_some(sspi_impl_.decrypt.input_buffer, std::move(self));
+          next_layer_.async_read_some(decrypt_.input_buffer, std::move(self));
         }
-        sspi_impl_.decrypt.size_read(size_read);
+        decrypt_.size_read(size_read);
         continue;
       }
 
@@ -52,19 +54,19 @@ struct async_read_impl : boost::asio::coroutine {
             net::post(e, [self = std::move(self), ec, size_read]() mutable { self(ec, size_read); });
           }
         }
-        ec = sspi_impl_.decrypt.last_error();
+        ec = decrypt_.last_error();
         self.complete(ec, 0);
         return;
       }
 
-      self.complete(boost::system::error_code{}, sspi_impl_.decrypt.size_decrypted);
+      self.complete(boost::system::error_code{}, decrypt_.size_decrypted);
     }
   }
 
 private:
   NextLayer& next_layer_;
   MutableBufferSequence buffers_;
-  detail::sspi_impl& sspi_impl_;
+  detail::sspi_decrypt& decrypt_;
   int entry_count_;
 };
 

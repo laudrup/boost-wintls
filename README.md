@@ -18,9 +18,9 @@ Build | Coverage |
 ## Introduction
 
 Implements a TLS stream wrapper for use with
-[Boost.Asio](https://www.boost.org/doc/libs/develop/doc/html/boost_asio.html)
+[Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)
 similar to
-[Boost.Asio.SSL](https://www.boost.org/doc/libs/develop/doc/html/boost_asio/overview/ssl.html)
+[Boost.Asio.SSL](https://www.boost.org/doc/libs/release/doc/html/boost_asio/overview/ssl.html)
 but using native Windows API
 ([SSPI/Schannel](https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview))
 functionality instead of OpenSSL for providing TLS encrypted stream functionality.
@@ -70,7 +70,7 @@ stream:
 Using that context a
 [boost::wintls::stream](https://laudrup.github.io/boost-wintls/classes.html#stream)
 can be constructed using a
-[boost::asio::io_context](https://www.boost.org/doc/libs/develop/doc/html/boost_asio/reference/io_context.html)
+[boost::asio::io_context](https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/io_context.html)
 specifying the underlying stream type (most often a TCP stream):
 
 ```C++

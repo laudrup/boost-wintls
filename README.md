@@ -2,6 +2,8 @@
 
 # Native Windows TLS stream for Boost.Asio
 
+[wintls.dev](https://wintls.dev/)
+
 Build | Coverage |
 ------|----------|
 [![Build status](https://github.com/laudrup/boost-wintls/workflows/build/badge.svg?branch=master)](https://github.com/laudrup/boost-wintls/actions) | [![codecov](https://codecov.io/gh/laudrup/boost-wintls/branch/master/graph/badge.svg)](https://codecov.io/gh/laudrup/boost-wintls) |
@@ -79,9 +81,18 @@ specifying the underlying stream type (most often a TCP stream):
     boost::wintls::stream<boost::asio::ip::tcp::socket> stream(ioc, ctx);
 ```
 
-See the [documentation](https://laudrup.github.io/boost-wintls) and the
-[examples](https://github.com/laudrup/boost-wintls/tree/master/examples)
-directory for documentation and more detailed examples.
+Although that is all that is required to construct a stream that fully
+supports the standard [boost::asio] stream operations like
+[write](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/write.html)
+or
+[async_read](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/async_read.html)
+the underlying stream probably needs to be connected, a handshake has
+to be performed and most likely, certificates and keys has to be
+handled as well.
+
+For details on how to do that, please see the
+[documentation](https://laudrup.github.io/boost-wintls) and the
+[examples](https://laudrup.github.io/boost-wintls/examples.html)
 
 ## Documentation
 

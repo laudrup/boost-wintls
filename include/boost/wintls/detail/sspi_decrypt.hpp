@@ -26,10 +26,10 @@ public:
     error
   };
 
-  sspi_decrypt(CtxtHandle* context)
+  sspi_decrypt(CtxtHandle* ctxt_handle)
     : size_decrypted(0)
     , input_buffer(net::buffer(encrypted_data_))
-    , context_(context)
+    , ctxt_handle_(ctxt_handle)
     , last_error_(SEC_E_OK) {
     buffers_[0].pvBuffer = encrypted_data_.data();
   }
@@ -53,7 +53,7 @@ public:
 
     input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
     const auto size = buffers_[0].cbBuffer;
-    last_error_ = detail::sspi_functions::DecryptMessage(context_, buffers_, 0, nullptr);
+    last_error_ = detail::sspi_functions::DecryptMessage(ctxt_handle_, buffers_, 0, nullptr);
 
     if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       buffers_[0].cbBuffer = size;
@@ -99,7 +99,7 @@ public:
 private:
   static constexpr std::size_t buffer_size = 0x10000;
 
-  CtxtHandle* context_;
+  CtxtHandle* ctxt_handle_;
   SECURITY_STATUS last_error_;
   decrypt_buffers buffers_;
   std::array<char, buffer_size> encrypted_data_;

@@ -16,9 +16,9 @@ namespace detail {
 
 class sspi_encrypt {
 public:
-  sspi_encrypt(CtxtHandle* context)
-    : buffers(context)
-    , context_(context) {
+  sspi_encrypt(CtxtHandle* ctxt_handle)
+    : buffers(ctxt_handle)
+    , ctxt_handle_(ctxt_handle) {
   }
 
   template <typename ConstBufferSequence>
@@ -31,7 +31,7 @@ public:
       return 0;
     }
 
-    sc = detail::sspi_functions::EncryptMessage(context_, 0, buffers, 0);
+    sc = detail::sspi_functions::EncryptMessage(ctxt_handle_, 0, buffers, 0);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
@@ -43,7 +43,7 @@ public:
   encrypt_buffers buffers;
 
 private:
-  CtxtHandle* context_;
+  CtxtHandle* ctxt_handle_;
 };
 
 } // namespace detail

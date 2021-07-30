@@ -10,13 +10,11 @@ author = 'Kasper Laudrup'
 
 master_doc = 'index'
 
-rst_prolog = """
-.. figure:: logo.jpg
-   :alt: Boost.Wintls logo
-
-"""
-
-extensions = ['breathe', 'toctree_elements', 'remove_inline_specifier']
+extensions = ['sphinx.ext.autosectionlabel',
+              'breathe',
+              'toctree_elements',
+              'remove_inline_specifier'
+              ]
 
 highlight_language = 'c++'
 
@@ -38,5 +36,7 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme_options = {
   'bootswatch_theme': 'flatly'
 }
+
+html_last_updated_fmt = ''
 
 breathe_default_project = 'boost-wintls'

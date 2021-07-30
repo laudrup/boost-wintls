@@ -33,9 +33,9 @@ public:
     error
   };
 
-  sspi_handshake(context& context, CtxtHandle* ctx_handle, CredHandle* cred_handle)
+  sspi_handshake(context& context, CtxtHandle* ctxt_handle, CredHandle* cred_handle)
     : context_(context)
-    , ctx_handle_(ctx_handle)
+    , ctxt_handle_(ctxt_handle)
     , cred_handle_(cred_handle)
     , last_error_(SEC_E_OK)
     , in_buffer_(net::buffer(input_data_)) {
@@ -93,7 +93,7 @@ public:
                                                                         SECURITY_NATIVE_DREP,
                                                                         nullptr,
                                                                         0,
-                                                                        ctx_handle_,
+                                                                        ctxt_handle_,
                                                                         buffers,
                                                                         &out_flags,
                                                                         nullptr);
@@ -127,7 +127,7 @@ public:
     switch(handshake_type_) {
       case handshake_type::client:
         last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
-                                                                        ctx_handle_,
+                                                                        ctxt_handle_,
                                                                         server_hostname_.get(),
                                                                         client_context_flags,
                                                                         0,
@@ -140,14 +140,14 @@ public:
                                                                         nullptr);
         break;
       case handshake_type::server: {
-        const bool first_call = ctx_handle_->dwLower == 0 && ctx_handle_->dwUpper == 0;
+        const bool first_call = ctxt_handle_->dwLower == 0 && ctxt_handle_->dwUpper == 0;
         TimeStamp expiry;
         last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_,
-                                                                    first_call ? nullptr : ctx_handle_,
+                                                                    first_call ? nullptr : ctxt_handle_,
                                                                     input_buffers_,
                                                                     server_context_flags,
                                                                     SECURITY_NATIVE_DREP,
-                                                                    first_call ? ctx_handle_ : nullptr,
+                                                                    first_call ? ctxt_handle_ : nullptr,
                                                                     out_buffers,
                                                                     &out_flags,
                                                                     &expiry);
@@ -186,7 +186,7 @@ public:
       case SEC_E_OK: {
         if (context_.verify_server_certificate_) {
           const CERT_CONTEXT* ctx_ptr = nullptr;
-          last_error_ = detail::sspi_functions::QueryContextAttributes(ctx_handle_, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
+          last_error_ = detail::sspi_functions::QueryContextAttributes(ctxt_handle_, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
           if (last_error_ != SEC_E_OK) {
             return state::error;
           }
@@ -244,10 +244,11 @@ public:
 
 private:
   context& context_;
-  CtxtHandle* ctx_handle_;
+  CtxtHandle* ctxt_handle_;
   CredHandle* cred_handle_;
+
   SECURITY_STATUS last_error_;
-  handshake_type handshake_type_;
+  handshake_type handshake_type_ = handshake_type::client;
   std::array<char, 0x10000> input_data_;
   sspi_context_buffer out_buffer_;
   net::mutable_buffer in_buffer_;

@@ -22,29 +22,29 @@ namespace detail {
 
 class sspi_shutdown {
 public:
-  sspi_shutdown(CtxtHandle* context, CredHandle* credentials)
-    : context_(context)
-    , credentials_(credentials) {
+  sspi_shutdown(CtxtHandle* ctxt_handle, CredHandle* cred_handle)
+    : ctxt_handle_(ctxt_handle)
+    , cred_handle_(cred_handle) {
   }
 
   boost::system::error_code operator()() {
     shutdown_buffers buffers;
 
-    SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(context_, buffers);
+    SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(ctxt_handle_, buffers);
     if (sc != SEC_E_OK) {
       return error::make_error_code(sc);
     }
 
     DWORD out_flags = 0;
-    sc = detail::sspi_functions::InitializeSecurityContext(credentials_,
-                                                           context_,
+    sc = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
+                                                           ctxt_handle_,
                                                            nullptr,
                                                            client_context_flags,
                                                            0,
                                                            SECURITY_NATIVE_DREP,
                                                            nullptr,
                                                            0,
-                                                           context_,
+                                                           ctxt_handle_,
                                                            buffers,
                                                            &out_flags,
                                                            nullptr);
@@ -66,8 +66,8 @@ public:
   }
 
 private:
-  CtxtHandle* context_;
-  CredHandle* credentials_;
+  CtxtHandle* ctxt_handle_;
+  CredHandle* cred_handle_;
   sspi_context_buffer buffer_;
 };
 

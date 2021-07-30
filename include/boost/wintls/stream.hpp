@@ -21,6 +21,8 @@
 #include <boost/wintls/detail/sspi_decrypt.hpp>
 #include <boost/wintls/detail/sspi_shutdown.hpp>
 
+#include <boost/wintls/detail/sspi_sec_handle.hpp>
+
 #include <boost/asio/compose.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/system/error_code.hpp>
@@ -64,19 +66,14 @@ public:
   stream(Arg&& arg, context& ctx)
     : next_layer_(std::forward<Arg>(arg))
     , context_(ctx)
-    , handshake_(ctx, &ctx_handle_, &credentials_)
-    , encrypt_(&ctx_handle_)
-    , decrypt_(&ctx_handle_)
-    , shutdown_(&ctx_handle_, &credentials_) {
+    , handshake_(ctx, ctxt_handle_, cred_handle_)
+    , encrypt_(ctxt_handle_)
+    , decrypt_(ctxt_handle_)
+    , shutdown_(ctxt_handle_, cred_handle_) {
   }
 
   stream(stream&& other) = default;
   stream& operator=(stream&& other) = delete;
-
-  ~stream() {
-    detail::sspi_functions::DeleteSecurityContext(&ctx_handle_);
-    detail::sspi_functions::FreeCredentialsHandle(&credentials_);
-  }
 
   /** Get the executor associated with the object.
    *
@@ -460,8 +457,8 @@ private:
   NextLayer next_layer_;
   context& context_;
 
-  CredHandle credentials_{0, 0};
-  CtxtHandle ctx_handle_{0, 0};
+  detail::ctxt_handle ctxt_handle_;
+  detail::cred_handle cred_handle_;
 
   detail::sspi_handshake handshake_;
   detail::sspi_encrypt encrypt_;

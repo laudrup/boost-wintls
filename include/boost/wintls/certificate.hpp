@@ -209,10 +209,10 @@ inline void delete_private_key(const std::string& name, boost::system::error_cod
  * In order for a `CERT_CONTEXT`_ to be used by a server in needs to
  * have a private key associated with it.
  *
+ * @endverbatim
+ *
  * This function will associate the named key with the given
  * certficate in order for it be used by eg. @ref context::use_certificate.
- *
- * @endverbatim
  *
  * @note No check is done to ensure the key exists. Associating a non
  * existing or non accessible key will result in unexpected behavior
@@ -250,10 +250,10 @@ inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name
  * In order for a `CERT_CONTEXT`_ to be used by a server in needs to
  * have a private key associated with it.
  *
+ * @endverbatim
+ *
  * This function will associate the named key with the given
  * certficate in order for it be used by eg. @ref context::use_certificate.
- *
- * @endverbatim
  *
  * @note No check is done to ensure the key exists. Associating a non
  * existing or non accessible key will result in unexpected behavior

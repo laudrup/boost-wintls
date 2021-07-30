@@ -17,15 +17,19 @@
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
-        {% for title, pages in toctree_elements.items() %}
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ title }}<span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              {% for title, link in pages %}
-                <li><a href="{{ link }}">{{ title }}</a></li>
-              {% endfor %}
-            </ul>
-          </li>
+        {% for title, element in toctree_elements.items() %}
+          {% if not element.children %}
+            <li><a href="{{ element.uri }}">{{ title }}</a></li>
+          {% else %}
+            <li class="dropdown">
+              <a href="{{ element.uri }}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ title }}<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                {% for title, element in element.children.items() %}
+                  <li><a href="{{ element.link }}">{{ title }}</a></li>
+                {% endfor %}
+              </ul>
+            </li>
+          {% endif %}
         {% endfor %}
       </ul>
     </div>

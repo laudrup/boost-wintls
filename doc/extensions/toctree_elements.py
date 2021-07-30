@@ -2,6 +2,11 @@ from sphinx import addnodes
 import docutils.nodes
 
 
+class ToctreeElement:
+    uri = ""
+    children = {}
+
+
 def html_page_context(app, pagename, templatename, context, doctree):
     if 'toctree' not in context:
         return
@@ -20,16 +25,24 @@ def html_page_context(app, pagename, templatename, context, doctree):
     toctree_elements = {}
     for item in toctree.traverse(docutils.nodes.list_item):
         if 'toctree-l1' in item['classes']:
-
-            children = []
+            element = ToctreeElement()
+            for ref in item.traverse(docutils.nodes.reference):
+                if ref['anchorname']:
+                    continue
+                element.uri = ref["refuri"]
+                break
+            children = {}
             for child in item.traverse(docutils.nodes.list_item,
                                        include_self=False):
-                title = child[0].astext()
+                child_element = ToctreeElement()
                 for ref in child.traverse(docutils.nodes.reference):
-                    link = ref["refuri"]
+                    if ref['anchorname']:
+                        continue
+                    child_element.link = ref["refuri"]
+                    children[child[0].astext()] = child_element
                     break
-                children.append((title, link))
-            toctree_elements[item[0].astext()] = children
+            element.children = children
+            toctree_elements[item[0].astext()] = element
 
     context['toctree_elements'] = toctree_elements
 

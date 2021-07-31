@@ -67,6 +67,49 @@ jobs:
         files: build/cobertura.xml
         fail_ci_if_error: true
 
+  coverity-scan:
+    runs-on: windows-latest
+    name: Build with coverity and upload to coverity scan
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Boost
+      uses: MarkusJx/install-boost@v1.0.1
+      id: install-boost
+      with:
+        boost_version: 1.72.0
+    - name: Install packages
+      run: cinst openssl curl
+    - name: Install Coverity Build Tool
+      shell: bash
+      run: |
+        curl -o coverity_tool.zip -d "token=$TOKEN&project=laudrup%2Fboost-wintls" https://scan.coverity.com/download/cxx/win64
+        mkdir cov-analysis
+        7z x coverity_tool.zip
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+    - name: Configure
+      env:
+        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+      shell: bash
+      run: cmake -B build -DENABLE_DOCUMENTATION=OFF
+    - name: Build with cov-build
+      shell: bash
+      run: |
+        cov-analysis-win64-2020.09/bin/cov-build --dir cov-int cmake --build build/
+        7z a boost-wintls.zip cov-int
+    - name: Upload to coverity-scan
+      shell: bash
+      run: |
+        curl --form token=$TOKEN \
+        --form email=laudrup@stacktrace.dk \
+        --form file=@boost-wintls.zip \
+        --form version=$GITHUB_SHA \
+        --form description=$(git log -1 --pretty=format:"%s") \
+        https://scan.coverity.com/builds?project=laudrup%2Fboost-wintls
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+
   generate_documentation:
     runs-on: ubuntu-latest
     name: Generate and publish HTML documentation to Github Pages

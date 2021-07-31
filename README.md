@@ -4,9 +4,9 @@
 
 [wintls.dev](https://wintls.dev/)
 
-Build | Coverage |
-------|----------|
-[![Build status](https://github.com/laudrup/boost-wintls/workflows/build/badge.svg?branch=master)](https://github.com/laudrup/boost-wintls/actions) | [![codecov](https://codecov.io/gh/laudrup/boost-wintls/branch/master/graph/badge.svg)](https://codecov.io/gh/laudrup/boost-wintls) |
+Build | Coverage | Coverity Analysis |
+------|----------|-------------------|
+[![Build status](https://github.com/laudrup/boost-wintls/workflows/build/badge.svg?branch=master)](https://github.com/laudrup/boost-wintls/actions) | [![Codecov](https://codecov.io/gh/laudrup/boost-wintls/branch/master/graph/badge.svg)](https://codecov.io/gh/laudrup/boost-wintls) | [![Coverity Scan Build Status](https://scan.coverity.com/projects/23473/badge.svg)](https://scan.coverity.com/projects/laudrup-boost-wintls) |
 
 ## Contents
 

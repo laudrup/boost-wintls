@@ -49,6 +49,11 @@ add_executable(unittest
   ${test_sources}
   )
 
+if(ENABLE_ADDRESS_SANITIZER)
+  # Workaround for: https://github.com/catchorg/Catch2/issues/898
+  target_compile_definitions(unittest PRIVATE CATCH_CONFIG_NO_WINDOWS_SEH)
+endif()
+
 add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
   COMMAND openssl rand -out "$ENV{userprofile}/.rnd"
   VERBATIM

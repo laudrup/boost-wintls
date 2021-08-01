@@ -12,6 +12,8 @@ To the extend possible it provides the same functionality as the
 helper :ref:`functions<functions>` for converting and managing certificates and keys in
 standard formats used by `OpenSSL`_.
 
+Released under the `Boost Software License`_. Source code available on `GitHub`_.
+
 Motivation
 ----------
 
@@ -49,3 +51,5 @@ Contents
 .. _SSPI/Schannel: https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/
 .. _OpenSSL: https://www.openssl.org/
 .. _boost::asio: https://www.boost.org/doc/libs/release/doc/html/boost_asio.html
+.. _Boost Software License: https://www.boost.org/LICENSE_1_0.txt
+.. _GitHub: https://github.com/laudrup/boost-wintls

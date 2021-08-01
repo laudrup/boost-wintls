@@ -82,10 +82,10 @@ specifying the underlying stream type (most often a TCP stream):
 ```
 
 Although that is all that is required to construct a stream that fully
-supports the standard [boost::asio] stream operations like
-[write](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/write.html)
+supports the standard [boost::asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html) stream operations like
+[write](https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/write.html)
 or
-[async_read](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/async_read.html)
+[async_read](https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/async_read.html)
 the underlying stream probably needs to be connected, a handshake has
 to be performed and most likely, certificates and keys has to be
 handled as well.
@@ -96,8 +96,7 @@ For details on how to do that, please see the
 
 ## Documentation
 
-Documentation is available on GitHb pages
-[here](https://laudrup.github.io/boost-wintls).
+Documentation is available [here](https://laudrup.github.io/boost-wintls).
 
 ## Contributing
 

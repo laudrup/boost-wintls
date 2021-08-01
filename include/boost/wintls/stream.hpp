@@ -161,9 +161,7 @@ public:
           ec = handshake_.last_error();
           return;
         case detail::sspi_handshake::state::done:
-          BOOST_ASSERT(!handshake_.last_error());
-          ec = handshake_.last_error();
-          return;
+          BOOST_UNREACHABLE_RETURN(0);
       }
     }
   }

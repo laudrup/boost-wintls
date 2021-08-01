@@ -100,6 +100,7 @@ public:
         if (buffers[0].cbBuffer != 0 && buffers[0].pvBuffer != nullptr) {
           out_buffer_ = sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer};
         }
+        break;
       }
       case handshake_type::server:
         last_error_ = SEC_I_CONTINUE_NEEDED;

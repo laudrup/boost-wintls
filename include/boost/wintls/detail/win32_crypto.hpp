@@ -21,7 +21,7 @@ namespace wintls {
 namespace detail {
 
 inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const_buffer& crypt_string) {
-  boost::winapi::DWORD_ size;
+  boost::winapi::DWORD_ size = 0;
   if (!CryptStringToBinaryA(reinterpret_cast<boost::winapi::LPCSTR_>(crypt_string.data()),
                             static_cast<boost::winapi::DWORD_>(crypt_string.size()),
                             0,
@@ -46,7 +46,7 @@ inline std::vector<boost::winapi::BYTE_> crypt_string_to_binary(const net::const
 }
 
 inline std::vector<boost::winapi::BYTE_> crypt_decode_object_ex(const net::const_buffer& crypt_object, winapi::LPCSTR_ type) {
-  boost::winapi::DWORD_ size;
+  boost::winapi::DWORD_ size = 0;
   if (!CryptDecodeObjectEx(X509_ASN_ENCODING,
                            type,
                            reinterpret_cast<const boost::winapi::BYTE_*>(crypt_object.data()),

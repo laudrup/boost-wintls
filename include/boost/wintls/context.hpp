@@ -131,8 +131,7 @@ private:
   }
 
   friend class detail::sspi_handshake;
-  // TODO: No reason this should be a unique_ptr. Instead make it
-  // copyable like a boost::asio::ssl::context is.
+
   std::unique_ptr<detail::context_certificates> ctx_certs_;
   method method_;
   bool verify_server_certificate_;

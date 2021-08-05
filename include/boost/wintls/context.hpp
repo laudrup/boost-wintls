@@ -13,9 +13,6 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/context_certificates.hpp>
 
-#include <memory>
-#include <string>
-
 namespace boost {
 namespace wintls {
 
@@ -30,8 +27,7 @@ public:
    * @param connection_method The @ref method to use for connections.
    */
   explicit context(method connection_method)
-    : ctx_certs_(std::make_unique<detail::context_certificates>())
-    , method_(connection_method)
+    : method_(connection_method)
     , verify_server_certificate_(false) {
   }
 
@@ -45,7 +41,7 @@ public:
    * @throws boost::system::system_error Thrown on failure.
    */
   void add_certificate_authority(const CERT_CONTEXT* cert) {
-    ctx_certs_->add_certificate_authority(cert);
+    ctx_certs_.add_certificate_authority(cert);
   }
 
   /** Add certification authority for performing verification.
@@ -59,7 +55,7 @@ public:
    */
   void add_certificate_authority(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
     try {
-      ctx_certs_->add_certificate_authority(cert);
+      ctx_certs_.add_certificate_authority(cert);
     } catch (const boost::system::system_error& e) {
       ec = e.code();
     }
@@ -92,7 +88,7 @@ public:
    * certificates should be used for verification.
    */
   void use_default_certificates(bool use_system_certs) {
-    ctx_certs_->use_default_cert_store = use_system_certs;
+    ctx_certs_.use_default_cert_store = use_system_certs;
   }
 
   /** Set the certificate to use when operating as a server
@@ -108,7 +104,7 @@ public:
    * doing so will result in unexpected behavior.
    */
   void use_certificate(const CERT_CONTEXT* cert) {
-    ctx_certs_->server_cert = cert_context_ptr{CertDuplicateCertificateContext(cert), &CertFreeCertificateContext};
+    ctx_certs_.server_cert = cert_context_ptr{CertDuplicateCertificateContext(cert), &CertFreeCertificateContext};
   }
 
 private:
@@ -116,16 +112,16 @@ private:
     if (!verify_server_certificate_) {
       return ERROR_SUCCESS;
     }
-    return ctx_certs_->verify_certificate(cert);
+    return ctx_certs_.verify_certificate(cert);
   }
 
   const CERT_CONTEXT* server_cert() const {
-    return ctx_certs_->server_cert.get();
+    return ctx_certs_.server_cert.get();
   }
 
   friend class detail::sspi_handshake;
 
-  std::unique_ptr<detail::context_certificates> ctx_certs_;
+  detail::context_certificates ctx_certs_;
   method method_;
   bool verify_server_certificate_;
 };

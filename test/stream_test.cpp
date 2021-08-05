@@ -33,6 +33,42 @@ public:
   }
 };
 
+TEST_CASE("moved stream") {
+  boost::asio::io_context ioc;
+
+  wintls_server_context server_ctx;
+  boost::wintls::stream<test_stream> moved_server_stream(ioc, server_ctx);
+  boost::wintls::stream<test_stream> server_stream(std::move(moved_server_stream));
+
+  wintls_server_context client_ctx;
+  boost::wintls::stream<test_stream> moved_client_stream(ioc, client_ctx);
+  boost::wintls::stream<test_stream> client_stream(std::move(moved_client_stream));
+
+  client_stream.next_layer().connect(server_stream.next_layer());
+
+  boost::system::error_code client_ec{};
+  boost::system::error_code server_ec{};
+
+  server_stream.async_handshake(boost::wintls::handshake_type::server,
+                                [&server_ec, &server_stream](const boost::system::error_code& ec) {
+                                  server_ec = ec;
+                                  if (ec) {
+                                    server_stream.next_layer().close();
+                                  }
+                                });
+
+  client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                [&client_ec, &client_stream](const boost::system::error_code& ec) {
+                                  client_ec = ec;
+                                  if (ec) {
+                                    client_stream.next_layer().close();
+                                  }
+                                });
+  ioc.run();
+  CHECK_FALSE(client_ec);
+  CHECK_FALSE(server_ec);
+}
+
 TEST_CASE("handshake not done") {
   boost::wintls::context ctx{boost::wintls::method::system_default};
   boost::asio::io_context ioc;

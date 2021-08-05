@@ -64,7 +64,6 @@ public:
   }
 };
 
-
 } // namespace detail
 } // namespace wintls
 } // namespace boost

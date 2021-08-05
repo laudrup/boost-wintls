@@ -8,6 +8,9 @@
 #ifndef BOOST_WINTLS_DETAIL_CONFIG_HPP
 #define BOOST_WINTLS_DETAIL_CONFIG_HPP
 
+#include <boost/wintls/detail/wtypes.h>
+
+#include <boost/config.hpp>
 #include <boost/asio.hpp>
 
 namespace boost {

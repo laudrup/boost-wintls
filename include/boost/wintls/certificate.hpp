@@ -68,7 +68,7 @@ inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file
   BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
 
   auto data = detail::crypt_string_to_binary(x509);
-  auto cert = CertCreateCertificateContext(X509_ASN_ENCODING, data.data(), static_cast<boost::winapi::DWORD_>(data.size()));
+  auto cert = CertCreateCertificateContext(X509_ASN_ENCODING, data.data(), static_cast<DWORD>(data.size()));
   if (!cert) {
     detail::throw_last_error("CertCreateCertificateContext");
   }
@@ -134,7 +134,7 @@ inline void import_private_key(const net::const_buffer& private_key, file_format
   detail::crypt_key key;
   if (!CryptImportKey(ctx.ptr,
                       rsa_private_key.data(),
-                      static_cast<boost::winapi::DWORD_>(rsa_private_key.size()),
+                      static_cast<DWORD>(rsa_private_key.size()),
                       0,
                       0,
                       &key.ptr)) {
@@ -181,7 +181,7 @@ inline void delete_private_key(const std::string& name) {
   HCRYPTKEY ptr = 0;
   if (!CryptAcquireContextA(&ptr, name.c_str(), nullptr, PROV_RSA_FULL, CRYPT_DELETEKEYSET)) {
 
-    throw boost::system::system_error(boost::winapi::GetLastError(), boost::system::system_category());
+    throw boost::system::system_error(GetLastError(), boost::system::system_category());
   }
 }
 
@@ -227,7 +227,7 @@ inline void delete_private_key(const std::string& name, boost::system::error_cod
 inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name) {
   // TODO: Move to utility function
   const auto size = name.size() + 1;
-  auto wname = std::make_unique<boost::winapi::WCHAR_[]>(size);
+  auto wname = std::make_unique<WCHAR[]>(size);
   const auto size_converted = mbstowcs(wname.get(), name.c_str(), size);
   BOOST_VERIFY_MSG(size_converted == name.size(), "mbstowcs");
 

@@ -8,12 +8,14 @@
 #ifndef BOOST_WINTLS_ERROR_HPP
 #define BOOST_WINTLS_ERROR_HPP
 
+#include <boost/wintls/detail/wtypes.h>
+
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
 
-#include <boost/winapi/get_last_error.hpp>
-
-typedef long SECURITY_STATUS;
+extern "C" {
+  BOOST_SYMBOL_IMPORT DWORD GetLastError();
+}
 
 namespace boost {
 namespace wintls {

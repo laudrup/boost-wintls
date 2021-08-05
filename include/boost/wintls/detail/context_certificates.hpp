@@ -41,7 +41,7 @@ public:
     }
   }
 
-  boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
+  DWORD verify_certificate(const CERT_CONTEXT* cert) {
     // TODO: No reason to build a certificate chain engine if no
     // certificates have been added to the in memory store by the user
     CERT_CHAIN_ENGINE_CONFIG chain_engine_config{};
@@ -56,12 +56,12 @@ public:
     } chain_engine;
 
     if(!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
-      return boost::winapi::GetLastError();
+      return GetLastError();
     }
 
-    boost::winapi::DWORD_ status = verify_certificate_chain(cert, chain_engine.ptr);
+    DWORD status = verify_certificate_chain(cert, chain_engine.ptr);
 
-    if (status != boost::winapi::ERROR_SUCCESS_ && use_default_cert_store) {
+    if (status != ERROR_SUCCESS && use_default_cert_store) {
       // Calling CertGetCertificateChain with a NULL pointer engine uses
       // the default system certificate store
       status = verify_certificate_chain(cert, nullptr);
@@ -74,7 +74,7 @@ public:
   cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
-  boost::winapi::DWORD_ verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
+  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
@@ -87,7 +87,7 @@ private:
                                 0,
                                 nullptr,
                                 &chain_ctx_ptr)) {
-      return boost::winapi::GetLastError();
+      return GetLastError();
     }
 
     std::unique_ptr<const CERT_CHAIN_CONTEXT, decltype(&CertFreeCertificateChain)>
@@ -108,7 +108,7 @@ private:
                                          scoped_chain_ctx.get(),
                                          &policy_params,
                                          &policy_status)) {
-      return boost::winapi::GetLastError();
+      return GetLastError();
     }
 
     return policy_status.dwError;

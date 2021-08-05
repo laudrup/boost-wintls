@@ -13,15 +13,8 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/context_certificates.hpp>
 
-#include <boost/winapi/handles.hpp>
-
 #include <memory>
 #include <string>
-
-extern "C" {
-  struct CERT_CONTEXT__;
-  typedef CERT_CONTEXT CERT_CONTEXT_;
-}
 
 namespace boost {
 namespace wintls {
@@ -119,9 +112,9 @@ public:
   }
 
 private:
-  boost::winapi::DWORD_ verify_certificate(const CERT_CONTEXT* cert) {
+  DWORD verify_certificate(const CERT_CONTEXT* cert) {
     if (!verify_server_certificate_) {
-      return boost::winapi::ERROR_SUCCESS_;
+      return ERROR_SUCCESS;
     }
     return ctx_certs_->verify_certificate(cert);
   }

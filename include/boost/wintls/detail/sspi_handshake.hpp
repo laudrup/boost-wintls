@@ -8,14 +8,14 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_HANDSHAKE_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_HANDSHAKE_HPP
 
-#include <boost/wintls/handshake_type.hpp>
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/context_flags.hpp>
 #include <boost/wintls/detail/handshake_input_buffers.hpp>
 #include <boost/wintls/detail/handshake_output_buffers.hpp>
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
 
-#include <boost/winapi/basic_types.hpp>
+#include <boost/wintls/handshake_type.hpp>
 
 #include <array>
 #include <memory>
@@ -68,7 +68,7 @@ public:
 
     TimeStamp expiry;
     last_error_ = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                   const_cast<boost::winapi::LPWSTR_>(UNISP_NAME),
+                                                                   const_cast<LPWSTR>(UNISP_NAME),
                                                                    usage,
                                                                    nullptr,
                                                                    &creds,
@@ -238,7 +238,7 @@ public:
 
   void set_server_hostname(const std::string& hostname) {
     const auto size = hostname.size() + 1;
-    server_hostname_ = std::make_unique<boost::winapi::WCHAR_[]>(size);
+    server_hostname_ = std::make_unique<WCHAR[]>(size);
     const auto size_converted = mbstowcs(server_hostname_.get(), hostname.c_str(), size);
     BOOST_VERIFY_MSG(size_converted == hostname.size(), "mbstowcs");
   }
@@ -254,7 +254,7 @@ private:
   sspi_context_buffer out_buffer_;
   net::mutable_buffer in_buffer_;
   handshake_input_buffers input_buffers_;
-  std::unique_ptr<boost::winapi::WCHAR_[]> server_hostname_;
+  std::unique_ptr<WCHAR[]> server_hostname_;
 };
 
 } // namespace detail

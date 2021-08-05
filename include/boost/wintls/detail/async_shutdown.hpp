@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
-#define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
+#define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
 
 #include <boost/wintls/detail/sspi_shutdown.hpp>
 
@@ -17,8 +17,8 @@ namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
-struct async_shutdown_impl : boost::asio::coroutine {
-  async_shutdown_impl(NextLayer& next_layer, detail::sspi_shutdown& shutdown)
+struct async_shutdown : boost::asio::coroutine {
+  async_shutdown(NextLayer& next_layer, detail::sspi_shutdown& shutdown)
     : next_layer_(next_layer)
     , shutdown_(shutdown)
     , entry_count_(0) {
@@ -69,4 +69,4 @@ private:
 } // namespace wintls
 } // namespace boost
 
-#endif // BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_IMPL_HPP
+#endif // BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP

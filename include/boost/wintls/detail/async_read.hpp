@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_DETAIL_ASYNC_READ_IMPL_HPP
-#define BOOST_WINTLS_DETAIL_ASYNC_READ_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
+#define BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
 
 #include <boost/wintls/detail/sspi_decrypt.hpp>
 
@@ -17,8 +17,8 @@ namespace wintls {
 namespace detail {
 
 template <typename NextLayer, typename MutableBufferSequence>
-struct async_read_impl : boost::asio::coroutine {
-  async_read_impl(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_decrypt& decrypt)
+struct async_read : boost::asio::coroutine {
+  async_read(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_decrypt& decrypt)
     : next_layer_(next_layer)
     , buffers_(buffers)
     , decrypt_(decrypt)
@@ -74,4 +74,4 @@ private:
 } // namespace wintls
 } // namespace boost
 
-#endif
+#endif // BOOST_WINTLS_DETAIL_ASYNC_READ_HPP

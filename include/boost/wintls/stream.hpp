@@ -11,10 +11,10 @@
 #include <boost/wintls/error.hpp>
 #include <boost/wintls/handshake_type.hpp>
 
-#include <boost/wintls/detail/async_handshake_impl.hpp>
-#include <boost/wintls/detail/async_read_impl.hpp>
-#include <boost/wintls/detail/async_shutdown_impl.hpp>
-#include <boost/wintls/detail/async_write_impl.hpp>
+#include <boost/wintls/detail/async_handshake.hpp>
+#include <boost/wintls/detail/async_read.hpp>
+#include <boost/wintls/detail/async_shutdown.hpp>
+#include <boost/wintls/detail/async_write.hpp>
 
 #include <boost/wintls/detail/sspi_handshake.hpp>
 #include <boost/wintls/detail/sspi_encrypt.hpp>
@@ -211,7 +211,7 @@ public:
   template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_handshake_impl<next_layer_type>{next_layer_, handshake_, type}, handler);
+        detail::async_handshake<next_layer_type>{next_layer_, handshake_, type}, handler);
   }
 
   /** Read some data from the stream.
@@ -304,7 +304,7 @@ public:
   template <class MutableBufferSequence, class CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_read_impl<next_layer_type, MutableBufferSequence>{next_layer_, buffers, decrypt_}, handler);
+        detail::async_read<next_layer_type, MutableBufferSequence>{next_layer_, buffers, decrypt_}, handler);
   }
 
   /** Write some data to the stream.
@@ -393,7 +393,7 @@ public:
   template <class ConstBufferSequence, class CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_write_impl<next_layer_type, ConstBufferSequence>{next_layer_, buffers, encrypt_}, handler);
+        detail::async_write<next_layer_type, ConstBufferSequence>{next_layer_, buffers, encrypt_}, handler);
   }
 
   /** Shut down TLS on the stream.
@@ -448,7 +448,7 @@ public:
   template <class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_shutdown_impl<next_layer_type>{next_layer_, shutdown_}, handler);
+        detail::async_shutdown<next_layer_type>{next_layer_, shutdown_}, handler);
   }
 
 private:

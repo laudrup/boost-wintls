@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_DETAIL_ASYNC_WRITE_IMPL_HPP
-#define BOOST_WINTLS_DETAIL_ASYNC_WRITE_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_ASYNC_WRITE_HPP
+#define BOOST_WINTLS_DETAIL_ASYNC_WRITE_HPP
 
 #include <boost/wintls/detail/sspi_encrypt.hpp>
 
@@ -19,8 +19,8 @@ namespace wintls {
 namespace detail {
 
 template <typename NextLayer, typename ConstBufferSequence>
-struct async_write_impl : boost::asio::coroutine {
-  async_write_impl(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_encrypt& encrypt)
+struct async_write : boost::asio::coroutine {
+  async_write(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_encrypt& encrypt)
     : next_layer_(next_layer)
     , buffer_(buffer)
     , encrypt_(encrypt) {
@@ -54,5 +54,4 @@ private:
 } // namespace wintls
 } // namespace boost
 
-
-#endif
+#endif // BOOST_WINTLS_DETAIL_ASYNC_WRITE_HPP

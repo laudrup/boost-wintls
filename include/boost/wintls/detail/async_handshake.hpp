@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
-#define BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
+#ifndef BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_HPP
+#define BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_HPP
 
 #include <boost/wintls/handshake_type.hpp>
 
@@ -19,8 +19,8 @@ namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
-struct async_handshake_impl : boost::asio::coroutine {
-  async_handshake_impl(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_type type)
+struct async_handshake : boost::asio::coroutine {
+  async_handshake(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_type type)
     : next_layer_(next_layer)
     , handshake_(handshake)
     , entry_count_(0)
@@ -111,4 +111,4 @@ private:
 } // namespace wintls
 } // namespace boost
 
-#endif //BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_IMPL_HPP
+#endif //BOOST_WINTLS_DETAIL_ASYNC_HANDSHAKE_HPP

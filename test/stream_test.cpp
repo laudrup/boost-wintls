@@ -8,6 +8,7 @@
 #include "unittest.hpp"
 #include "asio_ssl_server_stream.hpp"
 #include "wintls_client_stream.hpp"
+#include "wintls_server_stream.hpp"
 #include "echo_client.hpp"
 #include "echo_server.hpp"
 #include "async_echo_client.hpp"
@@ -172,10 +173,21 @@ TEST_CASE("small reads") {
   net::io_context io_context;
   const auto test_data = "Der er et yndigt land\0"s;
 
-  SECTION("async test") {
+  SECTION("async client test") {
     async_echo_server<asio_ssl_server_stream> server(io_context);
     async_echo_client<wintls_client_stream> client(io_context, test_data);
     client.stream.next_layer().read_size(0x10);
+    client.stream.next_layer().connect(server.stream.next_layer());
+    server.run();
+    client.run();
+    io_context.run();
+    CHECK(client.received_message() == test_data);
+  }
+
+  SECTION("async server test") {
+    async_echo_server<wintls_server_stream> server(io_context);
+    async_echo_client<wintls_client_stream> client(io_context, test_data);
+    server.stream.next_layer().read_size(0x10);
     client.stream.next_layer().connect(server.stream.next_layer());
     server.run();
     client.run();

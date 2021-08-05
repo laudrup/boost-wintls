@@ -33,6 +33,55 @@ public:
   }
 };
 
+TEST_CASE("moved stream") {
+  boost::asio::io_context ioc;
+
+  wintls_server_context server_ctx;
+
+  boost::wintls::stream<test_stream> server_stream(ioc, server_ctx);
+  //
+  // Replacing the above with this causes the test to hang with the
+  // serving waiting for the client to send it data which will never
+  // happen as the client has already sent a complete TLS CLIENT HELLO
+  //
+  // boost::wintls::stream<test_stream> stream(ioc, server_ctx);
+  // boost::wintls::stream<test_stream> server_stream(std::move(stream));
+
+  wintls_server_context client_ctx;
+
+  boost::wintls::stream<test_stream> client_stream(ioc, client_ctx);
+  //
+  // And replacing the above with this causes the client to hang for
+  // the same reason
+  //
+  // boost::wintls::stream<test_stream> stream(ioc, client_ctx);
+  // boost::wintls::stream<test_stream> client_stream(std::move(stream));
+
+  client_stream.next_layer().connect(server_stream.next_layer());
+
+  boost::system::error_code client_ec{};
+  boost::system::error_code server_ec{};
+
+  server_stream.async_handshake(boost::wintls::handshake_type::server,
+                                [&server_ec, &server_stream](const boost::system::error_code& ec) {
+                                  server_ec = ec;
+                                  if (ec) {
+                                    server_stream.next_layer().close();
+                                  }
+                                });
+
+  client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                [&client_ec, &client_stream](const boost::system::error_code& ec) {
+                                  client_ec = ec;
+                                  if (ec) {
+                                    client_stream.next_layer().close();
+                                  }
+                                });
+  ioc.run();
+  CHECK_FALSE(client_ec);
+  CHECK_FALSE(server_ec);
+}
+
 TEST_CASE("handshake not done") {
   boost::wintls::context ctx{boost::wintls::method::system_default};
   boost::asio::io_context ioc;

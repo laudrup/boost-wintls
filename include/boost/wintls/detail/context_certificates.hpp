@@ -8,32 +8,34 @@
 #ifndef BOOST_WINTLS_DETAIL_CONTEXT_CERTIFICATES_HPP
 #define BOOST_WINTLS_DETAIL_CONTEXT_CERTIFICATES_HPP
 
-#include <boost/wintls/certificate.hpp>
-
 #include <boost/wintls/detail/config.hpp>
+
+#include <boost/wintls/certificate.hpp>
 #include <boost/wintls/error.hpp>
 
-#include <boost/assert.hpp>
+#include <functional>
+#include <memory>
+#include <type_traits>
 
 namespace boost {
 namespace wintls {
 namespace detail {
 
+using cert_store_ptr = std::unique_ptr<std::remove_pointer_t<HCERTSTORE>, std::function<void(HCERTSTORE)>>;
+
 class context_certificates {
 public:
-  context_certificates()
-    : cert_store_(CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr)) {
-    if (cert_store_ == nullptr) {
-      throw_last_error("CertOpenStore");
-    }
-  }
-
-  ~context_certificates() {
-    CertCloseStore(cert_store_, 0);
-  }
-
   void add_certificate_authority(const CERT_CONTEXT* cert) {
-    if(!CertAddCertificateContextToStore(cert_store_,
+    if (!cert_store_) {
+      cert_store_ = cert_store_ptr{
+        CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr),
+        [](HCERTSTORE store) { CertCloseStore(store, 0); }
+      };
+      if (!cert_store_) {
+        throw_last_error("CertOpenStore");
+      }
+    }
+    if(!CertAddCertificateContextToStore(cert_store_.get(),
                                          cert,
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
@@ -41,25 +43,27 @@ public:
     }
   }
 
-  DWORD verify_certificate(const CERT_CONTEXT* cert) {
-    // TODO: No reason to build a certificate chain engine if no
-    // certificates have been added to the in memory store by the user
-    CERT_CHAIN_ENGINE_CONFIG chain_engine_config{};
-    chain_engine_config.cbSize = sizeof(chain_engine_config);
-    chain_engine_config.hExclusiveRoot = cert_store_;
+  HRESULT verify_certificate(const CERT_CONTEXT* cert) {
+    HRESULT status = CERT_E_UNTRUSTEDROOT;
 
-    struct cert_chain_engine {
-      ~cert_chain_engine() {
-        CertFreeCertificateChainEngine(ptr);
+    if (cert_store_) {
+      CERT_CHAIN_ENGINE_CONFIG chain_engine_config{};
+      chain_engine_config.cbSize = sizeof(chain_engine_config);
+      chain_engine_config.hExclusiveRoot = cert_store_.get();
+
+      struct cert_chain_engine {
+        ~cert_chain_engine() {
+          CertFreeCertificateChainEngine(ptr);
+        }
+        HCERTCHAINENGINE ptr = nullptr;
+      } chain_engine;
+
+      if (!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
+        return GetLastError();
       }
-      HCERTCHAINENGINE ptr = nullptr;
-    } chain_engine;
 
-    if(!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
-      return GetLastError();
+      status = verify_certificate_chain(cert, chain_engine.ptr);
     }
-
-    DWORD status = verify_certificate_chain(cert, chain_engine.ptr);
 
     if (status != ERROR_SUCCESS && use_default_cert_store) {
       // Calling CertGetCertificateChain with a NULL pointer engine uses
@@ -74,7 +78,7 @@ public:
   cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
-  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
+  HRESULT verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
@@ -114,7 +118,7 @@ private:
     return policy_status.dwError;
   }
 
-  HCERTSTORE cert_store_ = nullptr;
+  cert_store_ptr cert_store_;
 };
 
 } // namespace detail

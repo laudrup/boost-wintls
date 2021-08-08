@@ -16,6 +16,7 @@ if(WIN32)
   find_package(Boost REQUIRED)
 
   add_library(boost-wintls INTERFACE)
+  set_property(TARGET boost-wintls PROPERTY CXX_STANDARD 14)
 
   target_link_libraries(boost-wintls INTERFACE
     Boost::headers

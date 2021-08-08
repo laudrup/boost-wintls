@@ -16,6 +16,7 @@ Build | Coverage | Coverity Analysis |
 - [Quickstart](#quickstart)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
+- [Thanks](#thanks)
 
 ## Introduction
 
@@ -102,3 +103,16 @@ Documentation is available [here](https://laudrup.github.io/boost-wintls).
 ## Contributing
 
 Pull requests, issue reporting etc. are very much welcome.
+
+Also, if you use this library and find it useful, I would love to know.
+
+## Thanks
+
+* [Vinnie Falco](https://github.com/vinniefalco)
+  For encouraging me to write this library in the first place as well as code reviews and other useful input.
+* [Richard Hodges](https://github.com/madmongo1)
+  For code reviews and other useful input.
+* [Damian Jarek](https://github.com/djarek)
+  For code reviews and other useful input.
+* [Marcelo Zimbres](https://github.com/mzimbres)
+  For coming up with the short and descriptive name for this library

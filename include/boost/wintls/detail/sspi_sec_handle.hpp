@@ -22,11 +22,11 @@ public:
   sspi_sec_handle(sspi_sec_handle&&) = delete;
   sspi_sec_handle& operator=(sspi_sec_handle&&) = delete;
 
-  operator bool() const {
-    return handle_.dwLower != 0 && handle_.dwUpper != 0;
+  operator bool() {
+    return handle_.dwLower != 0 || handle_.dwUpper != 0;
   }
 
-  operator T*() {
+  T* get() {
     return &handle_;
   }
 
@@ -38,7 +38,7 @@ class ctxt_handle : public sspi_sec_handle<CtxtHandle> {
 public:
   ~ctxt_handle() {
     if (*this) {
-      detail::sspi_functions::DeleteSecurityContext(*this);
+      detail::sspi_functions::DeleteSecurityContext(get());
     }
   }
 };
@@ -47,7 +47,7 @@ class cred_handle : public sspi_sec_handle<CredHandle> {
 public:
   ~cred_handle() {
     if (*this) {
-      detail::sspi_functions::FreeCredentialsHandle(*this);
+      detail::sspi_functions::FreeCredentialsHandle(get());
     }
   }
 };

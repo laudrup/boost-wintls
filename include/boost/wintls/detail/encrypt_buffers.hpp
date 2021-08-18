@@ -18,19 +18,19 @@ namespace detail {
 
 class encrypt_buffers : public sspi_buffer_sequence<4> {
 public:
-  encrypt_buffers(CtxtHandle* context)
+  encrypt_buffers(ctxt_handle& ctxt_handle)
     : sspi_buffer_sequence(std::array<sspi_buffer, 4> {
         SECBUFFER_STREAM_HEADER,
         SECBUFFER_DATA,
         SECBUFFER_STREAM_TRAILER,
         SECBUFFER_EMPTY
       })
-    , context_(context) {
+    , ctxt_handle_(ctxt_handle) {
   }
 
   template <typename ConstBufferSequence> std::size_t operator()(const ConstBufferSequence& buffers, SECURITY_STATUS& sc) {
     if (data_.empty()) {
-      sc = sspi_functions::QueryContextAttributes(context_, SECPKG_ATTR_STREAM_SIZES, &stream_sizes_);
+      sc = sspi_functions::QueryContextAttributes(ctxt_handle_.get(), SECPKG_ATTR_STREAM_SIZES, &stream_sizes_);
       if (sc != SEC_E_OK) {
         return 0;
       }
@@ -53,7 +53,7 @@ public:
   }
 
 private:
-  CtxtHandle* context_;
+  ctxt_handle& ctxt_handle_;
   std::vector<char> data_;
   SecPkgContext_StreamSizes stream_sizes_{0, 0, 0, 0, 0};
 };

@@ -31,6 +31,9 @@ public:
     , verify_server_certificate_(false) {
   }
 
+  context(context&&) = delete;
+  context& operator=(context&&) = delete;
+
   /** Add certification authority for performing verification.
    *
    * This function is used to add one trusted certification authority

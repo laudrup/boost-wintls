@@ -13,6 +13,7 @@
 #include <boost/wintls/detail/context_flags.hpp>
 #include <boost/wintls/detail/shutdown_buffers.hpp>
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
+#include <boost/wintls/detail/sspi_sec_handle.hpp>
 
 #include <boost/assert.hpp>
 
@@ -22,7 +23,7 @@ namespace detail {
 
 class sspi_shutdown {
 public:
-  sspi_shutdown(CtxtHandle* ctxt_handle, CredHandle* cred_handle)
+  sspi_shutdown(ctxt_handle& ctxt_handle, cred_handle& cred_handle)
     : ctxt_handle_(ctxt_handle)
     , cred_handle_(cred_handle) {
   }
@@ -30,21 +31,21 @@ public:
   boost::system::error_code operator()() {
     shutdown_buffers buffers;
 
-    SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(ctxt_handle_, buffers);
+    SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(ctxt_handle_.get(), buffers);
     if (sc != SEC_E_OK) {
       return error::make_error_code(sc);
     }
 
     DWORD out_flags = 0;
-    sc = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
-                                                           ctxt_handle_,
+    sc = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+                                                           ctxt_handle_.get(),
                                                            nullptr,
                                                            client_context_flags,
                                                            0,
                                                            SECURITY_NATIVE_DREP,
                                                            nullptr,
                                                            0,
-                                                           ctxt_handle_,
+                                                           ctxt_handle_.get(),
                                                            buffers,
                                                            &out_flags,
                                                            nullptr);
@@ -66,8 +67,8 @@ public:
   }
 
 private:
-  CtxtHandle* ctxt_handle_;
-  CredHandle* cred_handle_;
+  ctxt_handle& ctxt_handle_;
+  cred_handle& cred_handle_;
   sspi_context_buffer buffer_;
 };
 

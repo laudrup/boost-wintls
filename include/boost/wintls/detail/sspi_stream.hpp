@@ -12,7 +12,6 @@
 #include <boost/wintls/detail/sspi_encrypt.hpp>
 #include <boost/wintls/detail/sspi_decrypt.hpp>
 #include <boost/wintls/detail/sspi_shutdown.hpp>
-
 #include <boost/wintls/detail/sspi_sec_handle.hpp>
 
 namespace boost {
@@ -27,6 +26,9 @@ public:
     , decrypt(ctxt_handle_)
     , shutdown(ctxt_handle_, cred_handle_) {
   }
+
+  sspi_stream(sspi_stream&&) = delete;
+  sspi_stream& operator=(sspi_stream&&) = delete;
 
 private:
   ctxt_handle ctxt_handle_;

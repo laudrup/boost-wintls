@@ -11,8 +11,10 @@
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/decrypt_buffers.hpp>
 #include <boost/wintls/detail/decrypted_data_buffer.hpp>
+#include <boost/wintls/detail/sspi_sec_handle.hpp>
 
-#include <cstddef>
+#include <array>
+#include <cstdint>
 
 namespace boost {
 namespace wintls {
@@ -26,7 +28,7 @@ public:
     error
   };
 
-  sspi_decrypt(CtxtHandle* ctxt_handle)
+  sspi_decrypt(ctxt_handle& ctxt_handle)
     : size_decrypted(0)
     , input_buffer(net::buffer(encrypted_data_))
     , ctxt_handle_(ctxt_handle)
@@ -53,7 +55,7 @@ public:
 
     input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
     const auto size = buffers_[0].cbBuffer;
-    last_error_ = detail::sspi_functions::DecryptMessage(ctxt_handle_, buffers_, 0, nullptr);
+    last_error_ = detail::sspi_functions::DecryptMessage(ctxt_handle_.get(), buffers_, 0, nullptr);
 
     if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       buffers_[0].cbBuffer = size;
@@ -99,7 +101,7 @@ public:
 private:
   static constexpr std::size_t buffer_size = 0x10000;
 
-  CtxtHandle* ctxt_handle_;
+  ctxt_handle& ctxt_handle_;
   SECURITY_STATUS last_error_;
   decrypt_buffers buffers_;
   std::array<char, buffer_size> encrypted_data_;

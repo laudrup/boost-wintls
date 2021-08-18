@@ -9,6 +9,7 @@
 #define BOOST_WINTLS_DETAIL_SSPI_ENCRYPT_HPP
 
 #include <boost/wintls/detail/encrypt_buffers.hpp>
+#include <boost/wintls/detail/sspi_sec_handle.hpp>
 
 namespace boost {
 namespace wintls {
@@ -16,7 +17,7 @@ namespace detail {
 
 class sspi_encrypt {
 public:
-  sspi_encrypt(CtxtHandle* ctxt_handle)
+  sspi_encrypt(ctxt_handle& ctxt_handle)
     : buffers(ctxt_handle)
     , ctxt_handle_(ctxt_handle) {
   }
@@ -31,7 +32,7 @@ public:
       return 0;
     }
 
-    sc = detail::sspi_functions::EncryptMessage(ctxt_handle_, 0, buffers, 0);
+    sc = detail::sspi_functions::EncryptMessage(ctxt_handle_.get(), 0, buffers, 0);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;
@@ -43,7 +44,7 @@ public:
   encrypt_buffers buffers;
 
 private:
-  CtxtHandle* ctxt_handle_;
+  ctxt_handle& ctxt_handle_;
 };
 
 } // namespace detail

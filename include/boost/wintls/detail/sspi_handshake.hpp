@@ -14,6 +14,7 @@
 #include <boost/wintls/detail/handshake_input_buffers.hpp>
 #include <boost/wintls/detail/handshake_output_buffers.hpp>
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
+#include <boost/wintls/detail/sspi_sec_handle.hpp>
 
 #include <boost/wintls/handshake_type.hpp>
 
@@ -33,7 +34,7 @@ public:
     error
   };
 
-  sspi_handshake(context& context, CtxtHandle* ctxt_handle, CredHandle* cred_handle)
+  sspi_handshake(context& context, ctxt_handle& ctxt_handle, cred_handle& cred_handle)
     : context_(context)
     , ctxt_handle_(ctxt_handle)
     , cred_handle_(cred_handle)
@@ -74,7 +75,7 @@ public:
                                                                    &creds,
                                                                    nullptr,
                                                                    nullptr,
-                                                                   cred_handle_,
+                                                                   cred_handle_.get(),
                                                                    &expiry);
     if (last_error_ != SEC_E_OK) {
       return;
@@ -85,7 +86,7 @@ public:
         DWORD out_flags = 0;
 
         handshake_output_buffers buffers;
-        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
+        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
                                                                         nullptr,
                                                                         server_hostname_.get(),
                                                                         client_context_flags,
@@ -93,7 +94,7 @@ public:
                                                                         SECURITY_NATIVE_DREP,
                                                                         nullptr,
                                                                         0,
-                                                                        ctxt_handle_,
+                                                                        ctxt_handle_.get(),
                                                                         buffers,
                                                                         &out_flags,
                                                                         nullptr);
@@ -127,8 +128,8 @@ public:
 
     switch(handshake_type_) {
       case handshake_type::client:
-        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_,
-                                                                        ctxt_handle_,
+        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+                                                                        ctxt_handle_.get(),
                                                                         server_hostname_.get(),
                                                                         client_context_flags,
                                                                         0,
@@ -141,14 +142,13 @@ public:
                                                                         nullptr);
         break;
       case handshake_type::server: {
-        const bool first_call = ctxt_handle_->dwLower == 0 && ctxt_handle_->dwUpper == 0;
         TimeStamp expiry;
-        last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_,
-                                                                    first_call ? nullptr : ctxt_handle_,
+        last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_.get(),
+                                                                    ctxt_handle_ ? ctxt_handle_.get() : nullptr,
                                                                     input_buffers_,
                                                                     server_context_flags,
                                                                     SECURITY_NATIVE_DREP,
-                                                                    first_call ? ctxt_handle_ : nullptr,
+                                                                    ctxt_handle_.get(),
                                                                     out_buffers,
                                                                     &out_flags,
                                                                     &expiry);
@@ -187,7 +187,7 @@ public:
       case SEC_E_OK: {
         if (context_.verify_server_certificate_) {
           const CERT_CONTEXT* ctx_ptr = nullptr;
-          last_error_ = detail::sspi_functions::QueryContextAttributes(ctxt_handle_, SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
+          last_error_ = detail::sspi_functions::QueryContextAttributes(ctxt_handle_.get(), SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
           if (last_error_ != SEC_E_OK) {
             return state::error;
           }
@@ -245,8 +245,8 @@ public:
 
 private:
   context& context_;
-  CtxtHandle* ctxt_handle_;
-  CredHandle* cred_handle_;
+  ctxt_handle& ctxt_handle_;
+  cred_handle& cred_handle_;
 
   SECURITY_STATUS last_error_;
   handshake_type handshake_type_ = handshake_type::client;

@@ -1,0 +1,36 @@
+---
+name: "documentation"
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  generate-documentation:
+    runs-on: ubuntu-latest
+    name: Generate and publish HTML documentation to Github Pages
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install APT packages
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: sudo apt-get -yq install doxygen libboost-dev libssl-dev python3-pip
+    - name: Install PIP packages
+      # TODO: Consider using requirements.txt to ensure specific versions are used
+      run: sudo pip3 install sphinx breathe sphinx_bootstrap_theme
+    - name: Configure build system
+      run: mkdir build && cmake -Bbuild -H.
+    - name: Build documentation
+      run: cmake --build build/ --target sphinx
+    - name: Disable Jekyll templating
+      run: touch build/doc/sphinx/.nojekyll
+    - name: Deploy
+      if: github.ref == 'refs/heads/master'
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: build/doc/sphinx
+        CLEAN: true

@@ -1,0 +1,39 @@
+---
+name: unittest
+on: [push]
+
+jobs:
+  unittest:
+    runs-on: windows-latest
+    name: Build and run unittests
+    strategy:
+      matrix:
+        config: [Debug, Release]
+        toolset: [ClangCl, v141, v142]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Boost
+      uses: MarkusJx/install-boost@v1.0.1
+      id: install-boost
+      with:
+        boost_version: 1.72.0
+    - name: Install packages
+      run: cinst openssl
+    - name: Configure
+      env:
+        TOOLSET: ${{ matrix.toolset }}
+        BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+      shell: bash
+      run: cmake -B build -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
+    - name: Build
+      env:
+        CONFIG: ${{ matrix.config }}
+      shell: bash
+      run: cmake --build build/ --config $CONFIG
+    - name: Run tests
+      env:
+        CONFIG: ${{ matrix.config }}
+      shell: bash
+      run: ctest -C $CONFIG --output-on-failure
+      working-directory: build/

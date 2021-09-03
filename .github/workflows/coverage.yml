@@ -1,10 +1,10 @@
 ---
-name: "coverage"
+name: coverage
 
 on:
   push:
     branches:
-      - "master"
+      - master
 
 jobs:
   codecoverage:

@@ -1,10 +1,10 @@
 ---
-name: "coverity"
+name: coverity
 
 on:
   push:
     branches:
-      - "master"
+      - master
 
 jobs:
   coverity-scan:

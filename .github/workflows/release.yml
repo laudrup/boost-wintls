@@ -1,0 +1,30 @@
+---
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get latest tag
+        uses: little-core-labs/get-git-tag@v3.0.2
+      - name: Create zip file
+        shell: bash
+        run: |
+          mkdir /tmp/boost-wintls-${GIT_TAG_NAME}
+          cp -r * /tmp/boost-wintls-${GIT_TAG_NAME}
+          cd /tmp/
+          zip -r boost-wintls-${GIT_TAG_NAME}.zip boost-wintls-${GIT_TAG_NAME}
+      - name: Upload release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            /tmp/boost-wintls-${GIT_TAG_NAME}

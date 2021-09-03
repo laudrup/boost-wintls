@@ -13,7 +13,8 @@ master_doc = 'index'
 extensions = ['sphinx.ext.autosectionlabel',
               'breathe',
               'toctree_elements',
-              'remove_inline_specifier'
+              'remove_inline_specifier',
+              'git_revision'
               ]
 
 highlight_language = 'c++'
@@ -24,7 +25,7 @@ templates_path = ['templates']
 
 html_static_path = ['static']
 
-html_title = 'boost::wintls'
+html_title = 'boost.wintls'
 
 html_css_files = [
   project + '.css',
@@ -34,7 +35,8 @@ html_theme = 'bootstrap'
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 html_theme_options = {
-  'bootswatch_theme': 'flatly'
+    'bootswatch_theme': 'flatly',
+    'navbar_title': html_title
 }
 
 html_last_updated_fmt = ''

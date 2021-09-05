@@ -27,4 +27,4 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            /tmp/boost-wintls-${GIT_TAG_NAME}.zip
+            /tmp/boost-wintls-*.zip

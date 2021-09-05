@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>HTTPS Client &#8212; boost.wintls</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Asynchronous HTTPS Client" href="async_https_client.html" />
+    <link rel="prev" title="Examples" href="examples.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+<div id="navbar" class="navbar navbar-default navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">
+          boost.wintls</a>
+      <span class="navbar-text navbar-version pull-left"><b></b></span>
+    </div>
+    <div class="collapse navbar-collapse nav-collapse">
+      <ul class="nav navbar-nav">
+        
+          
+        <li><a href="usage.html">Usage</a></li>
+        
+        
+          
+            <li class="dropdown">
+              <a href="examples.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Examples<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="">HTTPS Client</a></li>
+                
+                  <li><a href="async_https_client.html">Asynchronous HTTPS Client</a></li>
+                
+                  <li><a href="echo_client.html">Echo Client</a></li>
+                
+                  <li><a href="echo_server.html">Echo Server</a></li>
+                
+              </ul>
+            </li>
+          
+        
+          
+            <li class="dropdown">
+              <a href="API.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">API<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="classes.html">Classes</a></li>
+                
+                  <li><a href="enumerations.html">Enumerations</a></li>
+                
+                  <li><a href="functions.html">Functions</a></li>
+                
+                  <li><a href="type_aliases.html">Type aliases</a></li>
+                
+              </ul>
+            </li>
+          
+        
+        <li><a href="https://github.com/laudrup/boost-wintls">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="https-client">
+<h1>HTTPS Client<a class="headerlink" href="#https-client" title="Permalink to this headline">¶</a></h1>
+<p>This example demonstrates a basic synchronous HTTPS client using
+<a class="reference external" href="https://github.com/boostorg/beast">boost::beast</a>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;boost/beast/core.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;boost/beast/http.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;boost/beast/version.hpp&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;boost/wintls.hpp&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;regex&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp"></span>
+
+<span class="k">namespace</span> <span class="n">beast</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">beast</span><span class="p">;</span>      <span class="c1">// from &lt;boost/beast.hpp&gt;</span>
+<span class="k">namespace</span> <span class="n">http</span> <span class="o">=</span> <span class="n">beast</span><span class="o">::</span><span class="n">http</span><span class="p">;</span>        <span class="c1">// from &lt;boost/beast/http.hpp&gt;</span>
+<span class="k">namespace</span> <span class="n">net</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="p">;</span>         <span class="c1">// from &lt;boost/asio.hpp&gt;</span>
+<span class="k">namespace</span> <span class="n">ssl</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="p">;</span>       <span class="c1">// from &lt;boost/wintls/wintls.hpp&gt;</span>
+
+<span class="k">using</span> <span class="n">tcp</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span>    <span class="c1">// from &lt;boost/asio/ip/tcp.hpp&gt;</span>
+
+<span class="c1">//------------------------------------------------------------------------------</span>
+
+<span class="c1">// Performs an HTTP GET and prints the response</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="c1">// Exactly one command line argument required - the HTTPS URL</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Usage: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; [HTTPS_URL]</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">;</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Example: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; https://www.boost.org/LICENSE_1_0.txt</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+      <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">url</span><span class="p">{</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]};</span>
+
+    <span class="c1">// Very basic URL matching. Not a full URL validator.</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">re</span><span class="p">(</span><span class="s">&quot;https://([^/$:]+):?([^/$]*)(/?.*)&quot;</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">what</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">regex_match</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">re</span><span class="p">))</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Invalid or unsupported URL: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">url</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+      <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Get the relevant parts of the URL</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">host</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">what</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+    <span class="c1">// Use default HTTPS port (443) if not specified</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">port</span> <span class="o">=</span> <span class="n">what</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">length</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">what</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">str</span><span class="p">()</span> <span class="o">:</span> <span class="s">&quot;443&quot;</span><span class="p">;</span>
+    <span class="c1">// Use deault path (&#39;/&#39;) if not specified</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">path</span> <span class="o">=</span> <span class="n">what</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">length</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">what</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">str</span><span class="p">()</span> <span class="o">:</span> <span class="s">&quot;/&quot;</span><span class="p">;</span>
+
+    <span class="c1">// Use HTTP/1.1</span>
+    <span class="k">const</span> <span class="kt">int</span> <span class="n">version</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+
+    <span class="c1">// The io_context is required for all I/O</span>
+    <span class="n">net</span><span class="o">::</span><span class="n">io_context</span> <span class="n">ioc</span><span class="p">;</span>
+
+    <span class="c1">// The SSL context is required, and holds certificates</span>
+    <span class="n">ssl</span><span class="o">::</span><span class="n">context</span> <span class="n">ctx</span><span class="p">{</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">};</span>
+
+    <span class="c1">// Use the operating systems default certficates for verification</span>
+    <span class="n">ctx</span><span class="p">.</span><span class="n">use_default_certificates</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+    <span class="c1">// Verify the remote server&#39;s certificate</span>
+    <span class="n">ctx</span><span class="p">.</span><span class="n">verify_server_certificate</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+    <span class="c1">// Construct the TLS stream with the parameters from the context</span>
+    <span class="n">ssl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">beast</span><span class="o">::</span><span class="n">tcp_stream</span><span class="o">&gt;</span> <span class="n">stream</span><span class="p">(</span><span class="n">ioc</span><span class="p">,</span> <span class="n">ctx</span><span class="p">);</span>
+
+    <span class="c1">// Set SNI hostname (many hosts need this to handshake successfully)</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">set_server_hostname</span><span class="p">(</span><span class="n">host</span><span class="p">);</span>
+
+    <span class="c1">// Look up the domain name</span>
+    <span class="n">tcp</span><span class="o">::</span><span class="n">resolver</span> <span class="n">resolver</span><span class="p">(</span><span class="n">ioc</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="k">const</span> <span class="n">results</span> <span class="o">=</span> <span class="n">resolver</span><span class="p">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">);</span>
+
+    <span class="c1">// Make the connection on the IP address we get from a lookup</span>
+    <span class="n">beast</span><span class="o">::</span><span class="n">get_lowest_layer</span><span class="p">(</span><span class="n">stream</span><span class="p">).</span><span class="n">connect</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
+
+    <span class="c1">// Perform the TLS handshake</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">handshake</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">client</span><span class="p">);</span>
+
+    <span class="c1">// Set up an HTTP GET request message</span>
+    <span class="n">http</span><span class="o">::</span><span class="n">request</span><span class="o">&lt;</span><span class="n">http</span><span class="o">::</span><span class="n">string_body</span><span class="o">&gt;</span> <span class="n">req</span><span class="p">{</span><span class="n">http</span><span class="o">::</span><span class="n">verb</span><span class="o">::</span><span class="n">get</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">version</span><span class="p">};</span>
+    <span class="n">req</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">http</span><span class="o">::</span><span class="n">field</span><span class="o">::</span><span class="n">host</span><span class="p">,</span> <span class="n">host</span><span class="p">);</span>
+    <span class="n">req</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">http</span><span class="o">::</span><span class="n">field</span><span class="o">::</span><span class="n">user_agent</span><span class="p">,</span> <span class="n">BOOST_BEAST_VERSION_STRING</span><span class="p">);</span>
+
+    <span class="c1">// Send the HTTP request to the remote host</span>
+    <span class="n">http</span><span class="o">::</span><span class="n">write</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">req</span><span class="p">);</span>
+
+    <span class="c1">// This buffer is used for reading and must be persisted</span>
+    <span class="n">beast</span><span class="o">::</span><span class="n">flat_buffer</span> <span class="n">buffer</span><span class="p">;</span>
+
+    <span class="c1">// Declare a container to hold the response</span>
+    <span class="n">http</span><span class="o">::</span><span class="n">response</span><span class="o">&lt;</span><span class="n">http</span><span class="o">::</span><span class="n">dynamic_body</span><span class="o">&gt;</span> <span class="n">res</span><span class="p">;</span>
+
+    <span class="c1">// Receive the HTTP response</span>
+    <span class="n">http</span><span class="o">::</span><span class="n">read</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+
+    <span class="c1">// Write the message to standard out</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+    <span class="c1">// Shutdown the TLS connection</span>
+    <span class="n">stream</span><span class="p">.</span><span class="n">shutdown</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Error: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+  <footer class="footer">
+    <div class="container">
+      <p class="pull-right">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+      </p>
+      <p>
+        Revised Sep 05, 2021.<br/>
+        boost.wintls b090c41
+. &copy; Copyright 2021, Kasper Laudrup.<br/>
+        Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
+      </p>
+    </div>
+  </footer>
+
+  </body>
+</html>

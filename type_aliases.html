@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Type aliases &#8212; boost.wintls</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Functions" href="functions.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+<div id="navbar" class="navbar navbar-default navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">
+          boost.wintls</a>
+      <span class="navbar-text navbar-version pull-left"><b></b></span>
+    </div>
+    <div class="collapse navbar-collapse nav-collapse">
+      <ul class="nav navbar-nav">
+        
+          
+        <li><a href="usage.html">Usage</a></li>
+        
+        
+          
+            <li class="dropdown">
+              <a href="examples.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Examples<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="https_client.html">HTTPS Client</a></li>
+                
+                  <li><a href="async_https_client.html">Asynchronous HTTPS Client</a></li>
+                
+                  <li><a href="echo_client.html">Echo Client</a></li>
+                
+                  <li><a href="echo_server.html">Echo Server</a></li>
+                
+              </ul>
+            </li>
+          
+        
+          
+            <li class="dropdown">
+              <a href="API.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">API<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="classes.html">Classes</a></li>
+                
+                  <li><a href="enumerations.html">Enumerations</a></li>
+                
+                  <li><a href="functions.html">Functions</a></li>
+                
+                  <li><a href="">Type aliases</a></li>
+                
+              </ul>
+            </li>
+          
+        
+        <li><a href="https://github.com/laudrup/boost-wintls">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="type-aliases">
+<h1>Type aliases<a class="headerlink" href="#type-aliases" title="Permalink to this headline">¶</a></h1>
+<section id="cert-context-ptr">
+<h2>cert_context_ptr<a class="headerlink" href="#cert-context-ptr" title="Permalink to this headline">¶</a></h2>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5boost6wintls16cert_context_ptrE">
+<span id="_CPPv3N5boost6wintls16cert_context_ptrE"></span><span id="_CPPv2N5boost6wintls16cert_context_ptrE"></span><span class="target" id="namespaceboost_1_1wintls_1a200c19246951544b2b5803b42176107f"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cert_context_ptr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">CERT_CONTEXT</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">decltype</span></span><span class="p"><span class="pre">(</span></span><span class="o"><span class="pre">&amp;</span></span><span class="n"><span class="pre">CertFreeCertificateContext</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N5boost6wintls16cert_context_ptrE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><p>Custom std::unique_ptr for managing a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-cert_context">CERT_CONTEXT</a></p>
+ </p>
+</dd></dl>
+
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+  <footer class="footer">
+    <div class="container">
+      <p class="pull-right">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+      </p>
+      <p>
+        Revised Sep 05, 2021.<br/>
+        boost.wintls b090c41
+. &copy; Copyright 2021, Kasper Laudrup.<br/>
+        Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
+      </p>
+    </div>
+  </footer>
+
+  </body>
+</html>

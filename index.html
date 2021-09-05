@@ -1,738 +1,199 @@
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Overview &#8212; boost::wintls</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Overview &#8212; boost.wintls</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body>
-  <div class="document">
-    
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><h3><a href="#">boost::wintls</a></h3>
-<ul>
-<li><a class="reference internal" href="#">Overview</a><ul>
-<li><a class="reference internal" href="#motivation">Motivation</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#examples">Examples</a><ul>
-<li><a class="reference internal" href="#https-client">HTTPS Client</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#classes">Classes</a><ul>
-<li><a class="reference internal" href="#boost-wintls-context">boost::wintls::context</a></li>
-<li><a class="reference internal" href="#boost-wintls-stream">boost::wintls::stream</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#enumerations">Enumerations</a><ul>
-<li><a class="reference internal" href="#boost-wintls-handshake-type">boost::wintls::handshake_type</a></li>
-<li><a class="reference internal" href="#boost-wintls-method">boost::wintls::method</a></li>
-</ul>
-</li>
-</ul>
-
-        </div>
-      </div>
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
-  <div class="section" id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
-<p>This library implements TLS stream functionality using native Windows <a class="reference external" href="https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/">SSPI/Schannel</a> implementation.</p>
-<div class="section" id="motivation">
-<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
-<p>Avoid dependency on OpenSSL on Windows as well as being able to use
-certificates and keys from the Windows certificate stores directly.</p>
-</div>
-</div>
-<div class="section" id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<p>Full code to the examples can be found in the <a class="reference external" href="https://github.com/laudrup/boost-wintls/tree/master/examples">examples</a> directory.</p>
-<div class="section" id="https-client">
-<h2>HTTPS Client<a class="headerlink" href="#https-client" title="Permalink to this headline">¶</a></h2>
-<p>This example demonstrates a basic synchronous HTTPS client using
-boost::beast.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;boost/beast/core.hpp&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;boost/beast/http.hpp&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;boost/beast/version.hpp&gt;</span><span class="cp"></span>
-
-<span class="cp">#ifdef _WIN32</span>
-<span class="cp">#include</span> <span class="cpf">&lt;boost/wintls.hpp&gt;</span><span class="cp"></span>
-<span class="cp">#else</span>
-<span class="cp">#include</span> <span class="cpf">&lt;boost/beast/ssl.hpp&gt;</span><span class="cp"></span>
-<span class="cp">#endif</span>
-
-<span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;regex&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp"></span>
-
-<span class="k">namespace</span> <span class="n">beast</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">beast</span><span class="p">;</span>      <span class="c1">// from &lt;boost/beast.hpp&gt;</span>
-<span class="k">namespace</span> <span class="n">http</span> <span class="o">=</span> <span class="n">beast</span><span class="o">::</span><span class="n">http</span><span class="p">;</span>        <span class="c1">// from &lt;boost/beast/http.hpp&gt;</span>
-<span class="k">namespace</span> <span class="n">net</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="p">;</span>         <span class="c1">// from &lt;boost/asio.hpp&gt;</span>
-
-<span class="cp">#ifdef _WIN32</span>
-<span class="k">namespace</span> <span class="n">ssl</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="p">;</span>                        <span class="c1">// from &lt;boost/wintls/wintls.hpp&gt;</span>
-<span class="k">using</span> <span class="n">method</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="p">;</span>                 <span class="c1">// from &lt;boost/wintls/method.hpp&gt;</span>
-<span class="k">using</span> <span class="n">handshake_type</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="p">;</span> <span class="c1">// from &lt;boost/wintls/handshake_type.hpp&gt;</span>
-<span class="cp">#else</span>
-<span class="k">namespace</span> <span class="n">ssl</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="p">;</span>                                     <span class="c1">// from &lt;boost/asio/ssl.hpp&gt;</span>
-<span class="k">using</span> <span class="n">method</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">context_base</span><span class="o">::</span><span class="n">method</span><span class="p">;</span>                <span class="c1">// from &lt;boost/asio/ssl/context_base.hpp&gt;</span>
-<span class="k">using</span> <span class="n">handshake_type</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">stream_base</span><span class="o">::</span><span class="n">handshake_type</span><span class="p">;</span> <span class="c1">// from &lt;boost/asio/ssl/context_base.hpp&gt;</span>
-<span class="cp">#endif</span>
-
-<span class="k">using</span> <span class="n">tcp</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span>    <span class="c1">// from &lt;boost/asio/ip/tcp.hpp&gt;</span>
-
-<span class="c1">//------------------------------------------------------------------------------</span>
-
-<span class="c1">// Performs an HTTP GET and prints the response</span>
-<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">try</span> <span class="p">{</span>
-    <span class="c1">// Exactly one command line argument required - the HTTPS URL</span>
-    <span class="k">if</span><span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Usage: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; [HTTPS_URL]</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Example: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; https://www.boost.org/LICENSE_1_0.txt</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-      <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">url</span><span class="p">{</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]};</span>
-
-    <span class="c1">// Very basic URL matching. Not a full URL validator.</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">re</span><span class="p">(</span><span class="s">&quot;https://([^/$:]+):?([^/$]*)(/?.*)&quot;</span><span class="p">);</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">what</span><span class="p">;</span>
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">regex_match</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">re</span><span class="p">))</span> <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Invalid or unsupported URL: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">url</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-      <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// Get the relevant parts of the URL</span>
-    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">host</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">what</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
-    <span class="c1">// Use default HTTPS port (443) if not specified</span>
-    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">port</span> <span class="o">=</span> <span class="n">what</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">length</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">what</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">str</span><span class="p">()</span> <span class="o">:</span> <span class="s">&quot;443&quot;</span><span class="p">;</span>
-    <span class="c1">// Use deault path (&#39;/&#39;) if not specified</span>
-    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">path</span> <span class="o">=</span> <span class="n">what</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">length</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">what</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">str</span><span class="p">()</span> <span class="o">:</span> <span class="s">&quot;/&quot;</span><span class="p">;</span>
-
-    <span class="c1">// Use HTTP/1.1</span>
-    <span class="k">const</span> <span class="kt">int</span> <span class="n">version</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
-
-    <span class="c1">// The io_context is required for all I/O</span>
-    <span class="n">net</span><span class="o">::</span><span class="n">io_context</span> <span class="n">ioc</span><span class="p">;</span>
-
-    <span class="c1">// The SSL context is required, and holds certificates</span>
-    <span class="n">ssl</span><span class="o">::</span><span class="n">context</span> <span class="n">ctx</span><span class="p">{</span><span class="n">method</span><span class="o">::</span><span class="n">tlsv12_client</span><span class="p">};</span>
-
-    <span class="c1">// Use the operating systems default certficates for verification</span>
-    <span class="n">ctx</span><span class="p">.</span><span class="n">set_default_verify_paths</span><span class="p">();</span>
-
-    <span class="c1">// Verify the remote server&#39;s certificate</span>
-<span class="cp">#ifdef _WIN32</span>
-    <span class="n">ctx</span><span class="p">.</span><span class="n">verify_server_certificate</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-<span class="cp">#else</span>
-    <span class="n">ctx</span><span class="p">.</span><span class="n">set_verify_mode</span><span class="p">(</span><span class="n">ssl</span><span class="o">::</span><span class="n">verify_peer</span><span class="p">);</span>
-<span class="cp">#endif</span>
-
-    <span class="c1">// Construct the TLS stream with the parameters from the context</span>
-    <span class="n">ssl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">beast</span><span class="o">::</span><span class="n">tcp_stream</span><span class="o">&gt;</span> <span class="n">stream</span><span class="p">(</span><span class="n">ioc</span><span class="p">,</span> <span class="n">ctx</span><span class="p">);</span>
-
-    <span class="c1">// Look up the domain name</span>
-    <span class="n">tcp</span><span class="o">::</span><span class="n">resolver</span> <span class="n">resolver</span><span class="p">(</span><span class="n">ioc</span><span class="p">);</span>
-    <span class="k">auto</span> <span class="k">const</span> <span class="n">results</span> <span class="o">=</span> <span class="n">resolver</span><span class="p">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">);</span>
-
-    <span class="c1">// Make the connection on the IP address we get from a lookup</span>
-    <span class="n">beast</span><span class="o">::</span><span class="n">get_lowest_layer</span><span class="p">(</span><span class="n">stream</span><span class="p">).</span><span class="n">connect</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
-
-    <span class="c1">// Perform the TLS handshake</span>
-    <span class="n">stream</span><span class="p">.</span><span class="n">handshake</span><span class="p">(</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">client</span><span class="p">);</span>
-
-    <span class="c1">// Set up an HTTP GET request message</span>
-    <span class="n">http</span><span class="o">::</span><span class="n">request</span><span class="o">&lt;</span><span class="n">http</span><span class="o">::</span><span class="n">string_body</span><span class="o">&gt;</span> <span class="n">req</span><span class="p">{</span><span class="n">http</span><span class="o">::</span><span class="n">verb</span><span class="o">::</span><span class="n">get</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">version</span><span class="p">};</span>
-    <span class="n">req</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">http</span><span class="o">::</span><span class="n">field</span><span class="o">::</span><span class="n">host</span><span class="p">,</span> <span class="n">host</span><span class="p">);</span>
-    <span class="n">req</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">http</span><span class="o">::</span><span class="n">field</span><span class="o">::</span><span class="n">user_agent</span><span class="p">,</span> <span class="n">BOOST_BEAST_VERSION_STRING</span><span class="p">);</span>
-
-    <span class="c1">// Send the HTTP request to the remote host</span>
-    <span class="n">http</span><span class="o">::</span><span class="n">write</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">req</span><span class="p">);</span>
-
-    <span class="c1">// This buffer is used for reading and must be persisted</span>
-    <span class="n">beast</span><span class="o">::</span><span class="n">flat_buffer</span> <span class="n">buffer</span><span class="p">;</span>
-
-    <span class="c1">// Declare a container to hold the response</span>
-    <span class="n">http</span><span class="o">::</span><span class="n">response</span><span class="o">&lt;</span><span class="n">http</span><span class="o">::</span><span class="n">dynamic_body</span><span class="o">&gt;</span> <span class="n">res</span><span class="p">;</span>
-
-    <span class="c1">// Receive the HTTP response</span>
-    <span class="n">http</span><span class="o">::</span><span class="n">read</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
-
-    <span class="c1">// Write the message to standard out</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-
-    <span class="c1">// Shutdown the TLS connection</span>
-    <span class="n">stream</span><span class="p">.</span><span class="n">shutdown</span><span class="p">();</span>
-  <span class="p">}</span>
-  <span class="k">catch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Error: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-    <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
-  <span class="p">}</span>
-  <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="classes">
-<h1>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="boost-wintls-context">
-<h2>boost::wintls::context<a class="headerlink" href="#boost-wintls-context" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="_CPPv2N5boost6wintls7contextE">
-<span id="boost::wintls::context"></span><span class="target" id="classboost_1_1wintls_1_1context"></span><em class="property">class </em><code class="descclassname">boost::wintls::</code><code class="descname">context</code><a class="headerlink" href="#_CPPv2N5boost6wintls7contextE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls7context7contextE6method">
-<span id="boost::wintls::context::context__method"></span><span class="target" id="classboost_1_1wintls_1_1context_1a3a2a53ce43b9223a597d4d5870434a39"></span><code class="descname">context</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv2N5boost6wintls6methodE" title="boost::wintls::method">method</a> <em>connection_method</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls7context7contextE6method" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Construct a context. </p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">method</span></code>: The <a class="reference internal" href="#namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76"><span class="std std-ref">method</span></a> to use for connections. </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls7context25verify_server_certificateEb">
-<span id="boost::wintls::context::verify_server_certificate__b"></span><span class="target" id="classboost_1_1wintls_1_1context_1afe6e310fd654e838f9a519fac9f41f6f"></span>void <code class="descname">verify_server_certificate</code><span class="sig-paren">(</span>bool <em>verify</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls7context25verify_server_certificateEb" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Enables/disables remote server certificate verification. </p>
-<p>This function may be used to enable clients to verify the certificate presented by the server with the known trusted certificates.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">verify</span></code>: True if the remote server certificate should be verified </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="boost-wintls-stream">
-<h2>boost::wintls::stream<a class="headerlink" href="#boost-wintls-stream" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt>
-<span class="target" id="classboost_1_1wintls_1_1stream"></span><em class="property">template </em>&lt;<em class="property">class</em> NextLayer&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6streamE">
-<span id="boost::wintls::stream"></span><em class="property">class </em><code class="descclassname">boost::wintls::</code><code class="descname">stream</code><a class="headerlink" href="#_CPPv2N5boost6wintls6streamE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Provides stream-oriented functionality using Windows SSPI/Schannel. </p>
-<p>The stream class template provides asynchronous and blocking stream-oriented functionality using Windows SSPI/Schannel.</p>
-<p><dl class="docutils">
-<dt><strong>Template Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">NextLayer</span></code>: The type representing the next layer, to which data will be read and written during operations. For synchronous operations, the type must support the <em>SyncStream</em> concept. For asynchronous operations, the type must support the <em>AsyncStream</em> concept. </li>
-</ul>
-</dd>
-</dl>
-</p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Types</p>
-<dl class="type">
-<dt id="_CPPv2IEN5boost6wintls6streamI9NextLayerE15next_layer_typeE">
-template&lt;&gt;<br /><span class="target" id="classboost_1_1wintls_1_1stream_1a794bcf0d095b70bb887c0ec4c8521f23"></span><em class="property">using </em><code class="descname">next_layer_type</code> = <em class="property">typename</em> std::remove_reference&lt;NextLayer&gt;::type<a class="headerlink" href="#_CPPv2IEN5boost6wintls6streamI9NextLayerE15next_layer_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>The type of the next layer. </p>
-</dd></dl>
-
-<dl class="type">
-<dt id="_CPPv2IEN5boost6wintls6streamI9NextLayerE13executor_typeE">
-template&lt;&gt;<br /><span class="target" id="classboost_1_1wintls_1_1stream_1ad71b3312f63ac02f63040af789d93b95"></span><em class="property">using </em><code class="descname">executor_type</code> = <em class="property">typename</em> std::remove_reference&lt;<a class="reference internal" href="#_CPPv2IEN5boost6wintls6streamI9NextLayerE15next_layer_typeE" title="boost::wintls::stream&lt;NextLayer&gt;::next_layer_type">next_layer_type</a>&gt;::type::executor_type<a class="headerlink" href="#_CPPv2IEN5boost6wintls6streamI9NextLayerE13executor_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>The type of the executor associated with the object. </p>
-</dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> Arg&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream6streamERR3ArgR7context">
-<span id="boost::wintls::stream::stream__ArgRR.contextR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1ac9258d555ebdd9892d664e2a4c3e8e98"></span><code class="descname">stream</code><span class="sig-paren">(</span>Arg &amp;&amp;<em>arg</em>, <a class="reference internal" href="#_CPPv2N5boost6wintls7contextE" title="boost::wintls::context">context</a> &amp;<em>ctx</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream6streamERR3ArgR7context" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Construct a stream. </p>
-<p>This constructor creates a stream and initialises the underlying stream object.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">arg</span></code>: The argument to be passed to initialise the underlying stream. </li>
-<li><code class="docutils literal"><span class="pre">ctx</span></code>: The wintls <a class="reference internal" href="#classboost_1_1wintls_1_1context"><span class="std std-ref">context</span></a> to be used for the stream. </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls6stream12get_executorEv">
-<span id="boost::wintls::stream::get_executor"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a10f231fefa992c85b57a4ebbb5250e47"></span>executor_type <code class="descname">get_executor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream12get_executorEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Get the executor associated with the object. </p>
-<p>This function may be used to obtain the executor object that the stream uses to dispatch handlers for asynchronous operations.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>A copy of the executor that stream will use to dispatch handlers. </dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2NK5boost6wintls6stream10next_layerEv">
-<span id="boost::wintls::stream::next_layerC"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a826f7f7a4b2e8f53d1699f6f862991c1"></span><em class="property">const</em> next_layer_type &amp;<code class="descname">next_layer</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK5boost6wintls6stream10next_layerEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Get a reference to the next layer. </p>
-<p>This function returns a reference to the next layer in a stack of stream layers.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>A reference to the next layer in the stack of stream layers. Ownership is not transferred to the caller. </dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls6stream10next_layerEv">
-<span id="boost::wintls::stream::next_layer"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a65e522f78882768fc728da58e5827e9f"></span>next_layer_type &amp;<code class="descname">next_layer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream10next_layerEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Get a reference to the next layer. </p>
-<p>This function returns a reference to the next layer in a stack of stream layers.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>A reference to the next layer in the stack of stream layers. Ownership is not transferred to the caller. </dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls6stream9handshakeE14handshake_typeRN5boost6system10error_codeE">
-<span id="boost::wintls::stream::handshake__handshake_type.boost::system::error_codeR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1aa5cd6e00750f0a952ba7ccb462b78d93"></span>void <code class="descname">handshake</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv2N5boost6wintls14handshake_typeE" title="boost::wintls::handshake_type">handshake_type</a> <em>type</em>, boost::system::error_code &amp;<em>ec</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream9handshakeE14handshake_typeRN5boost6system10error_codeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Perform TLS handshaking. </p>
-<p>This function is used to perform TLS handshaking on the stream. The function call will block until handshaking is complete or an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">type</span></code>: The <a class="reference internal" href="#namespaceboost_1_1wintls_1a61d555fb61e53b05ea72b3459a05e18e"><span class="std std-ref">handshake_type</span></a> to be performed, i.e. client or server. </li>
-<li><code class="docutils literal"><span class="pre">ec</span></code>: Set to indicate what error occurred, if any. </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls6stream9handshakeE14handshake_type">
-<span id="boost::wintls::stream::handshake__handshake_type"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a453ce178a24231e3d156ae27aad2e906"></span>void <code class="descname">handshake</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv2N5boost6wintls14handshake_typeE" title="boost::wintls::handshake_type">handshake_type</a> <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream9handshakeE14handshake_type" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Perform TLS handshaking. </p>
-<p>This function is used to perform TLS handshaking on the stream. The function call will block until handshaking is complete or an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">type</span></code>: The <a class="reference internal" href="#namespaceboost_1_1wintls_1a61d555fb61e53b05ea72b3459a05e18e"><span class="std std-ref">handshake_type</span></a> to be performed, i.e. client or server.</li>
-</ul>
-</dd>
-<dt><strong>Exceptions</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">boost::system::system_error</span></code>: Thrown on failure. </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> CompletionToken&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream15async_handshakeE14handshake_typeRR15CompletionToken">
-<span id="boost::wintls::stream::async_handshake__handshake_type.CompletionTokenRR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1ae5325681c4a63e8da327df8953ea8f4a"></span>auto <code class="descname">async_handshake</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv2N5boost6wintls14handshake_typeE" title="boost::wintls::handshake_type">handshake_type</a> <em>type</em>, CompletionToken &amp;&amp;<em>handler</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream15async_handshakeE14handshake_typeRR15CompletionToken" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Start an asynchronous TLS handshake. </p>
-<p>This function is used to asynchronously perform an TLS handshake on the stream. This function call always returns immediately.</p>
-<p><dl class="docutils">
-<dt><strong>Note</strong></dt>
-<dd>Regardless of whether the asynchronous operation completes immediately or not, the handler will not be invoked from within this function. Invocation of the handler will be performed in a manner equivalent to using <code class="docutils literal"><span class="pre">net::post</span></code>. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">type</span></code>: The <a class="reference internal" href="#namespaceboost_1_1wintls_1a61d555fb61e53b05ea72b3459a05e18e"><span class="std std-ref">handshake_type</span></a> to be performed, i.e. client or server. </li>
-<li><code class="docutils literal"><span class="pre">handler</span></code>: The handler to be called when the operation completes. The implementation takes ownership of the handler by performing a decay-copy. The handler must be invocable with this signature: <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span>
-    <span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span> <span class="c1">// Result of operation.</span>
-<span class="p">);</span>
-</pre></div>
-</div>
-</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> MutableBufferSequence&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream9read_someERK21MutableBufferSequenceRN5boost6system10error_codeE">
-<span id="boost::wintls::stream::read_some__MutableBufferSequenceCR.boost::system::error_codeR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a40ded6a28e3caa21aad1543c2aae299c"></span>size_t <code class="descname">read_some</code><span class="sig-paren">(</span><em class="property">const</em> MutableBufferSequence &amp;<em>buffers</em>, boost::system::error_code &amp;<em>ec</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream9read_someERK21MutableBufferSequenceRN5boost6system10error_codeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Read some data from the stream. </p>
-<p>This function is used to read data from the stream. The function call will block until one or more bytes of data has been read successfully, or until an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>The number of bytes read.</dd>
-<dt><strong>Note</strong></dt>
-<dd>The <code class="docutils literal"><span class="pre">read_some</span></code> operation may not read all of the requested number of bytes. Consider using the <code class="docutils literal"><span class="pre">net::read</span></code> function if you need to ensure that the requested amount of data is read before the blocking operation completes. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">ec</span></code>: Set to indicate what error occurred, if any. </li>
-<li><code class="docutils literal"><span class="pre">buffers</span></code>: The buffers into which the data will be read.</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> MutableBufferSequence&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream9read_someERK21MutableBufferSequence">
-<span id="boost::wintls::stream::read_some__MutableBufferSequenceCR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a99c2d657c1c01e03475f48ec0d206bc1"></span>size_t <code class="descname">read_some</code><span class="sig-paren">(</span><em class="property">const</em> MutableBufferSequence &amp;<em>buffers</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream9read_someERK21MutableBufferSequence" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Read some data from the stream. </p>
-<p>This function is used to read data from the stream. The function call will block until one or more bytes of data has been read successfully, or until an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>The number of bytes read.</dd>
-<dt><strong>Note</strong></dt>
-<dd>The <code class="docutils literal"><span class="pre">read_some</span></code> operation may not read all of the requested number of bytes. Consider using the <code class="docutils literal"><span class="pre">net::read</span></code> function if you need to ensure that the requested amount of data is read before the blocking operation completes. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">buffers</span></code>: The buffers into which the data will be read.</li>
-</ul>
-</dd>
-<dt><strong>Exceptions</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">boost::system::system_error</span></code>: Thrown on failure.</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> MutableBufferSequence, <em class="property">class</em> CompletionToken&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream15async_read_someERK21MutableBufferSequenceRR15CompletionToken">
-<span id="boost::wintls::stream::async_read_some__MutableBufferSequenceCR.CompletionTokenRR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a51976596355a61240c6a537d5ff5f504"></span>auto <code class="descname">async_read_some</code><span class="sig-paren">(</span><em class="property">const</em> MutableBufferSequence &amp;<em>buffers</em>, CompletionToken &amp;&amp;<em>handler</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream15async_read_someERK21MutableBufferSequenceRR15CompletionToken" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Start an asynchronous read. </p>
-<p>This function is used to asynchronously read one or more bytes of data from the stream. The function call always returns immediately.</p>
-<p><dl class="docutils">
-<dt><strong>Note</strong></dt>
-<dd>The <code class="docutils literal"><span class="pre">async_read_some</span></code> operation may not read all of the requested number of bytes. Consider using the <code class="docutils literal"><span class="pre">net::async_read</span></code> function if you need to ensure that the requested amount of data is read before the asynchronous operation completes. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">buffers</span></code>: The buffers into which the data will be read. Although the buffers object may be copied as necessary, ownership of the underlying buffers is retained by the caller, which must guarantee that they remain valid until the handler is called. </li>
-<li><code class="docutils literal"><span class="pre">handler</span></code>: The handler to be called when the read operation completes. Copies will be made of the handler as required. The equivalent function signature of the handler must be: <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span>
-    <span class="k">const</span> <span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span> <span class="n">error</span><span class="p">,</span> <span class="c1">// Result of operation.</span>
-    <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">bytes_transferred</span>           <span class="c1">// Number of bytes read.</span>
-<span class="p">);</span> 
-</pre></div>
-</div>
-</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> ConstBufferSequence&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream10write_someERK19ConstBufferSequenceRN5boost6system10error_codeE">
-<span id="boost::wintls::stream::write_some__ConstBufferSequenceCR.boost::system::error_codeR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a3363024079d7064cd7497f6b5e78dea8"></span>std::size_t <code class="descname">write_some</code><span class="sig-paren">(</span><em class="property">const</em> ConstBufferSequence &amp;<em>buffers</em>, boost::system::error_code &amp;<em>ec</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream10write_someERK19ConstBufferSequenceRN5boost6system10error_codeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Write some data to the stream. </p>
-<p>This function is used to write data on the stream. The function call will block until one or more bytes of data has been written successfully, or until an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>The number of bytes written.</dd>
-<dt><strong>Note</strong></dt>
-<dd>The <code class="docutils literal"><span class="pre">write_some</span></code> operation may not transmit all of the data to the peer. Consider using the <code class="docutils literal"><span class="pre">net::write</span></code> function if you need to ensure that all data is written before the blocking operation completes. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">buffers</span></code>: The data to be written. </li>
-<li><code class="docutils literal"><span class="pre">ec</span></code>: Set to indicate what error occurred, if any.</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> ConstBufferSequence&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream10write_someERK19ConstBufferSequence">
-<span id="boost::wintls::stream::write_some__ConstBufferSequenceCR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1acb9d4868de67544aef46306562e59d2e"></span>std::size_t <code class="descname">write_some</code><span class="sig-paren">(</span><em class="property">const</em> ConstBufferSequence &amp;<em>buffers</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream10write_someERK19ConstBufferSequence" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Write some data to the stream. </p>
-<p>This function is used to write data on the stream. The function call will block until one or more bytes of data has been written successfully, or until an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Return</strong></dt>
-<dd>The number of bytes written.</dd>
-<dt><strong>Note</strong></dt>
-<dd>The <code class="docutils literal"><span class="pre">write_some</span></code> operation may not transmit all of the data to the peer. Consider using the <code class="docutils literal"><span class="pre">net::write</span></code> function if you need to ensure that all data is written before the blocking operation completes. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">buffers</span></code>: The data to be written.</li>
-</ul>
-</dd>
-<dt><strong>Exceptions</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">boost::system::system_error</span></code>: Thrown on failure.</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> ConstBufferSequence, <em class="property">class</em> CompletionToken&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream16async_write_someERK19ConstBufferSequenceRR15CompletionToken">
-<span id="boost::wintls::stream::async_write_some__ConstBufferSequenceCR.CompletionTokenRR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a1c7014ac5e0e6f46f6338cd65896721e"></span>auto <code class="descname">async_write_some</code><span class="sig-paren">(</span><em class="property">const</em> ConstBufferSequence &amp;<em>buffers</em>, CompletionToken &amp;&amp;<em>handler</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream16async_write_someERK19ConstBufferSequenceRR15CompletionToken" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Start an asynchronous write. </p>
-<p>This function is used to asynchronously write one or more bytes of data to the stream. The function call always returns immediately.</p>
-<p><dl class="docutils">
-<dt><strong>Note</strong></dt>
-<dd>The <code class="docutils literal"><span class="pre">async_write_some</span></code> operation may not transmit all of the data to the peer. Consider using the <code class="docutils literal"><span class="pre">net::async_write</span></code> function if you need to ensure that all data is written before the asynchronous operation completes. </dd>
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">buffers</span></code>: The data to be written to the stream. Although the buffers object may be copied as necessary, ownership of the underlying buffers is retained by the caller, which must guarantee that they remain valid until the handler is called. </li>
-<li><code class="docutils literal"><span class="pre">handler</span></code>: The handler to be called when the write operation completes. Copies will be made of the handler as required. The equivalent function signature of the handler must be: <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span>
-    <span class="k">const</span> <span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span> <span class="n">error</span><span class="p">,</span> <span class="c1">// Result of operation.</span>
-    <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">bytes_transferred</span>           <span class="c1">// Number of bytes written.</span>
-<span class="p">);</span>
-</pre></div>
-</div>
-</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls6stream8shutdownERN5boost6system10error_codeE">
-<span id="boost::wintls::stream::shutdown__boost::system::error_codeR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1ace810bb1e12c2eef3d08d0494eeebb3f"></span>void <code class="descname">shutdown</code><span class="sig-paren">(</span>boost::system::error_code &amp;<em>ec</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream8shutdownERN5boost6system10error_codeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Shut down TLS on the stream. </p>
-<p>This function is used to shut down TLS on the stream. The function call will block until TLS has been shut down or an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">ec</span></code>: Set to indicate what error occurred, if any. </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv2N5boost6wintls6stream8shutdownEv">
-<span id="boost::wintls::stream::shutdown"></span><span class="target" id="classboost_1_1wintls_1_1stream_1a881639348d87da6ab9ff0ee2f23dcd27"></span>void <code class="descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream8shutdownEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Shut down TLS on the stream. </p>
-<p>This function is used to shut down TLS on the stream. The function call will block until TLS has been shut down or an error occurs.</p>
-<p><dl class="docutils">
-<dt><strong>Exceptions</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">boost::system::system_error</span></code>: Thrown on failure. </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<em class="property">template </em>&lt;<em class="property">class</em> CompletionToken&gt;</dt>
-<dt id="_CPPv2N5boost6wintls6stream14async_shutdownERR15CompletionToken">
-<span id="boost::wintls::stream::async_shutdown__CompletionTokenRR"></span><span class="target" id="classboost_1_1wintls_1_1stream_1abc2b3b98b50537f33a42c858cbabbb09"></span>auto <code class="descname">async_shutdown</code><span class="sig-paren">(</span>CompletionToken &amp;&amp;<em>handler</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N5boost6wintls6stream14async_shutdownERR15CompletionToken" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Asynchronously shut down TLS on the stream. </p>
-<p>This function is used to asynchronously shut down TLS on the stream. This function call always returns immediately.</p>
-<p><dl class="docutils">
-<dt><strong>Parameters</strong></dt>
-<dd><ul class="breatheparameterlist first last simple">
-<li><code class="docutils literal"><span class="pre">handler</span></code>: The handler to be called when the handshake operation completes. Copies will be made of the handler as required. The equivalent function signature of the handler must be: <div class="highlight-c++"><div class="highlight"><pre><span></span> <span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span>
-     <span class="k">const</span> <span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span> <span class="n">error</span> <span class="c1">// Result of operation.</span>
-<span class="p">);</span>
-</pre></div>
-</div>
- </li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-</div>
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="enumerations">
-<h1>Enumerations<a class="headerlink" href="#enumerations" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="boost-wintls-handshake-type">
-<h2>boost::wintls::handshake_type<a class="headerlink" href="#boost-wintls-handshake-type" title="Permalink to this headline">¶</a></h2>
-<dl class="type">
-<dt id="_CPPv2N5boost6wintls14handshake_typeE">
-<span id="boost::wintls::handshake_type"></span><span class="target" id="namespaceboost_1_1wintls_1a61d555fb61e53b05ea72b3459a05e18e"></span><em class="property">enum </em><code class="descclassname">boost::wintls::</code><code class="descname">handshake_type</code><a class="headerlink" href="#_CPPv2N5boost6wintls14handshake_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Different handshake types. </p>
-<p><em>Values:</em></p>
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls6clientE">
-<span class="target" id="namespaceboost_1_1wintls_1a61d555fb61e53b05ea72b3459a05e18ea62608e08adc29a8d6dbc9754e659f125"></span><code class="descname">client</code><a class="headerlink" href="#_CPPv2N5boost6wintls6clientE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Perform handshaking as a client. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls6serverE">
-<span class="target" id="namespaceboost_1_1wintls_1a61d555fb61e53b05ea72b3459a05e18eacf1e8c14e54505f60aa10ceb8d5d8ab3"></span><code class="descname">server</code><a class="headerlink" href="#_CPPv2N5boost6wintls6serverE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Perform handshaking as a server. </p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="boost-wintls-method">
-<h2>boost::wintls::method<a class="headerlink" href="#boost-wintls-method" title="Permalink to this headline">¶</a></h2>
-<dl class="type">
-<dt id="_CPPv2N5boost6wintls6methodE">
-<span id="boost::wintls::method"></span><span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76"></span><em class="property">enum </em><code class="descclassname">boost::wintls::</code><code class="descname">method</code><a class="headerlink" href="#_CPPv2N5boost6wintls6methodE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Different methods supported by a context. </p>
-<p><em>Values:</em></p>
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls14system_defaultE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a58d95037dcc67dbc2c0cf8f96183c91b"></span><code class="descname">system_default</code> = 0<a class="headerlink" href="#_CPPv2N5boost6wintls14system_defaultE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Operating system defaults. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls5sslv3E">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76adef3b949c28fa1a904ff16518e8ab242"></span><code class="descname">sslv3</code> = SP_PROT_SSL3_SERVER | SP_PROT_SSL3_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls5sslv3E" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Generic SSL version 3. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls12sslv3_clientE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76ab70fed2fa452c0d744d6e477ed9ea5e4"></span><code class="descname">sslv3_client</code> = SP_PROT_SSL3_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls12sslv3_clientE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>SSL version 3 client. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls12sslv3_serverE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a1994b155df596567f35ce249b20f80ee"></span><code class="descname">sslv3_server</code> = SP_PROT_SSL3_SERVER<a class="headerlink" href="#_CPPv2N5boost6wintls12sslv3_serverE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>SSL version 3 server. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls5tlsv1E">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76afadfb475886aeca19d4c138662a553a0"></span><code class="descname">tlsv1</code> = SP_PROT_TLS1_SERVER | SP_PROT_TLS1_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls5tlsv1E" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Generic TLS version 1. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls12tlsv1_clientE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a72fa5a4dd8091dd95bbdcd67ce465b5a"></span><code class="descname">tlsv1_client</code> = SP_PROT_TLS1_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls12tlsv1_clientE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>TLS version 1 client. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls12tlsv1_serverE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a6e485faab3f753b298bcc64419adb0b9"></span><code class="descname">tlsv1_server</code> = SP_PROT_TLS1_SERVER<a class="headerlink" href="#_CPPv2N5boost6wintls12tlsv1_serverE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>TLS version 1 server. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls6tlsv11E">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a88009fd0bcebf92190823be1b8e6a193"></span><code class="descname">tlsv11</code> = SP_PROT_TLS1_1_SERVER | SP_PROT_TLS1_1_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls6tlsv11E" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Generic TLS version 1.1. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls13tlsv11_clientE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76aae22c07c34bb90bb6a84ed1adbda9a89"></span><code class="descname">tlsv11_client</code> = SP_PROT_TLS1_1_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls13tlsv11_clientE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>TLS version 1.1 client. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls13tlsv11_serverE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a2174c95b08cdaef712215abd9146df0d"></span><code class="descname">tlsv11_server</code> = SP_PROT_TLS1_1_SERVER<a class="headerlink" href="#_CPPv2N5boost6wintls13tlsv11_serverE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>TLS version 1.1 server. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls6tlsv12E">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a28968cc75797766242e5378d5ea9d0f9"></span><code class="descname">tlsv12</code> = SP_PROT_TLS1_2_SERVER | SP_PROT_TLS1_2_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls6tlsv12E" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Generic TLS version 1.2. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls13tlsv12_clientE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76afe50d51ef6bfc8be14bc9ac83bdfc757"></span><code class="descname">tlsv12_client</code> = SP_PROT_TLS1_2_CLIENT<a class="headerlink" href="#_CPPv2N5boost6wintls13tlsv12_clientE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>TLS version 1.2 client. </p>
-</dd></dl>
-
-<dl class="enumerator">
-<dt id="_CPPv2N5boost6wintls13tlsv12_serverE">
-<span class="target" id="namespaceboost_1_1wintls_1a501a09a2ea2e9ecefb8d5b7de4337b76a5e6c191e746a4f809b2dceae3a286878"></span><code class="descname">tlsv12_server</code> = SP_PROT_TLS1_2_SERVER<a class="headerlink" href="#_CPPv2N5boost6wintls13tlsv12_serverE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>TLS version 1.2 server. </p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-
-
-          </div>
-        </div>
-      </div>
-    <div class="clearer"></div>
-  </div>
-    <div class="footer">
-      &copy;2020, Kasper Laudrup.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
-      
-      |
-      <a href="_sources/index.rst.txt"
-          rel="nofollow">Page source</a>
+    <link rel="next" title="Usage" href="usage.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+<div id="navbar" class="navbar navbar-default navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">
+          boost.wintls</a>
+      <span class="navbar-text navbar-version pull-left"><b></b></span>
     </div>
+    <div class="collapse navbar-collapse nav-collapse">
+      <ul class="nav navbar-nav">
+        
+          
+        <li><a href="usage.html">Usage</a></li>
+        
+        
+          
+            <li class="dropdown">
+              <a href="examples.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Examples<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="https_client.html">HTTPS Client</a></li>
+                
+                  <li><a href="async_https_client.html">Asynchronous HTTPS Client</a></li>
+                
+                  <li><a href="echo_client.html">Echo Client</a></li>
+                
+                  <li><a href="echo_server.html">Echo Server</a></li>
+                
+              </ul>
+            </li>
+          
+        
+          
+            <li class="dropdown">
+              <a href="API.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">API<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="classes.html">Classes</a></li>
+                
+                  <li><a href="enumerations.html">Enumerations</a></li>
+                
+                  <li><a href="functions.html">Functions</a></li>
+                
+                  <li><a href="type_aliases.html">Type aliases</a></li>
+                
+              </ul>
+            </li>
+          
+        
+        <li><a href="https://github.com/laudrup/boost-wintls">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
 
-    
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <figure class="align-default">
+<img alt="Boost.Wintls logo" src="_images/logo.jpg" />
+</figure>
+<section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p>This library implements TLS stream functionality for <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a>
+using native Windows <a class="reference external" href="https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/">SSPI/Schannel</a> implementation.</p>
+<p>To the extend possible it provides the same functionality as the
+<a class="reference external" href="https://www.openssl.org/">OpenSSL</a> implementation used by <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> and provides some
+helper <a class="reference internal" href="functions.html#functions"><span class="std std-ref">functions</span></a> for converting and managing certificates and keys in
+standard formats used by <a class="reference external" href="https://www.openssl.org/">OpenSSL</a>.</p>
+<p>Released under the <a class="reference external" href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License</a>. Source code available on <a class="reference external" href="https://github.com/laudrup/boost-wintls">GitHub</a>.</p>
+<section id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> uses <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> for TLS encryption which has a few
+downsides when used on Windows:</p>
+<ul class="simple">
+<li><p>Requires maintaining a separate copy of trusted certificate
+authorities although the operating system already ships with and
+maintains a store of trusted certificates.</p></li>
+<li><p>When used as a server, <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> requires access to the private key
+as a file readable by the running process which could potentially
+lead to security issues if measures are not taken to ensure the
+private key is properly protected.</p></li>
+<li><p>Installing third party libraries and software in general on Windows
+is often a complicated process since no central packaging system
+exists, so any security updates to <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> would have to be
+maintained by the software using the <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> library.</p></li>
+</ul>
+<p>This library avoids these issues by using the native Windows TLS
+implementation (<a class="reference external" href="https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/">SSPI/SChannel</a>) which uses the methods for storing
+certificates and keys provided by the Windows operating system itself.</p>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#setting-up-a-context">Setting up a context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#client-usage">Client usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#server-usage">Server usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#initializing-a-stream">Initializing a stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#handshaking">Handshaking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#using-the-stream">Using the stream</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https_client.html">HTTPS Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async_https_client.html">Asynchronous HTTPS Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="echo_client.html">Echo Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="echo_server.html">Echo Server</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="API.html">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes.html#context">context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes.html#stream">stream</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="enumerations.html">Enumerations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="enumerations.html#handshake-type">handshake_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="enumerations.html#method">method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="enumerations.html#file-format">file_format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="functions.html#x509-to-cert-context">x509_to_cert_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions.html#import-private-key">import_private_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions.html#delete-private-key">delete_private_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions.html#assign-private-key">assign_private_key</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="type_aliases.html">Type aliases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="type_aliases.html#cert-context-ptr">cert_context_ptr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
 
-    
+
+    </div>
+      
+  </div>
+</div>
+  <footer class="footer">
+    <div class="container">
+      <p class="pull-right">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+      </p>
+      <p>
+        Revised Sep 05, 2021.<br/>
+        boost.wintls b090c41
+. &copy; Copyright 2021, Kasper Laudrup.<br/>
+        Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
+      </p>
+    </div>
+  </footer>
+
   </body>
 </html>

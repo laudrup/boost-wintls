@@ -11,41 +11,33 @@ project(boost-wintls
   DESCRIPTION "Native Windows TLS stream for Boost.Asio"
   HOMEPAGE_URL "https://wintls.dev/"
   LANGUAGES CXX
-  )
+)
 
 option(ENABLE_TESTING "Enable Test Builds" ${WIN32})
 option(ENABLE_EXAMPLES "Enable Examples Builds" ${WIN32})
 option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ${UNIX})
 option(ENABLE_ADDRESS_SANITIZER "Enable Address Sanitizer" OFF)
 
+add_library(${PROJECT_NAME} INTERFACE)
+
+target_include_directories(${PROJECT_NAME}
+  INTERFACE
+  $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_14)
+
 if(WIN32)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
-  find_package(Boost REQUIRED)
 
-  add_library(boost-wintls INTERFACE)
-  set_property(TARGET boost-wintls PROPERTY CXX_STANDARD 14)
-
-  target_link_libraries(boost-wintls INTERFACE
-    Boost::headers
-    )
-
-  target_link_libraries(boost-wintls INTERFACE
-    Crypt32
-    Secur32
-    Rpcrt4 # TODO: Remove when we no longer use uuid
-    )
-
-  # Target Windows 7
-  target_compile_definitions(boost-wintls INTERFACE
-    _WIN32_WINNT=0x0601
-    )
-
-  target_compile_definitions(boost-wintls INTERFACE
-    BOOST_DATE_TIME_NO_LIB
-    BOOST_REGEX_NO_LIB
-    )
+  target_compile_definitions(${PROJECT_NAME} INTERFACE
+    BOOST_ALL_NO_LIB        # Disable auto linking boost libraries
+    _CRT_SECURE_NO_WARNINGS # Ignore silly warnings on not using MS specific "secure" C functions
+    _WIN32_WINNT=0x0601     # Target Windows 7
+  )
 
   # Based on https://github.com/lefticus/cpp_starter_project
   set(MSVC_WARNINGS
@@ -69,25 +61,30 @@ if(WIN32)
     /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
     /w15038 # data member 'member1' will be initialized after data member 'member2'
     /permissive- # standards conformance mode for MSVC compiler.
-    )
+  )
 
-  target_include_directories(boost-wintls INTERFACE include)
-  target_compile_options(boost-wintls INTERFACE ${MSVC_WARNINGS})
-  target_compile_definitions(boost-wintls INTERFACE _CRT_SECURE_NO_WARNINGS)
+  target_compile_options(${PROJECT_NAME} INTERFACE ${MSVC_WARNINGS})
 
   # Generate .pdb files with debug info for release builds
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+endif()
 
-  if(ENABLE_ADDRESS_SANITIZER)
-    message(STATUS "Enabling Address Sanitizer.")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /fsanitize=address")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /incremental:no")
-  endif()
-else()
-  set(ENABLE_TESTING OFF)
-  set(ENABLE_EXAMPLES OFF)
-  set(ENABLE_DOCUMENTATION ON)
+find_package(Boost REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} INTERFACE
+  Boost::headers
+)
+
+target_link_libraries(${PROJECT_NAME} INTERFACE
+  crypt32
+  secur32
+)
+
+if(ENABLE_ADDRESS_SANITIZER)
+  message(STATUS "Enabling Address Sanitizer.")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /fsanitize=address")
+  set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /incremental:no")
 endif()
 
 if(ENABLE_TESTING)

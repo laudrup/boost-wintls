@@ -30,9 +30,22 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
 add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
 
 set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
-set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
+set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/html)
 set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
-file(GLOB SPHINX_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.rst)
+set(SPHINX_SOURCE_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/API.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/async_https_client.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/classes.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/echo_client.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/echo_server.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/enumerations.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/examples.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/functions.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/https_client.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/index.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/type_aliases.rst
+  ${CMAKE_CURRENT_SOURCE_DIR}/usage.rst
+)
 
 add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
 	COMMAND
@@ -50,6 +63,7 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
     ${SPHINX_SOURCE_FILES}
 		${DOXYGEN_INDEX_FILE}
 	MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
-	COMMENT "Generating documentation with Sphinx")
+	COMMENT "Generating documentation with Sphinx"
+)
 
-add_custom_target(sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
+add_custom_target(doc ALL DEPENDS ${SPHINX_INDEX_FILE})

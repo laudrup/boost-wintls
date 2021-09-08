@@ -1,12 +1,21 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(boost-wintls CXX)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(VersionFromGit)
 
-option(ENABLE_TESTING "Enable Test Builds" ON)
-option(ENABLE_EXAMPLES "Enable Examples Builds" ON)
-option(ENABLE_DOCUMENTATION "Enable Documentation Builds" OFF)
+version_from_git()
+
+project(boost-wintls
+  VERSION ${VERSION}
+  DESCRIPTION "Native Windows TLS stream for Boost.Asio"
+  HOMEPAGE_URL "https://wintls.dev/"
+  LANGUAGES CXX
+  )
+
+option(ENABLE_TESTING "Enable Test Builds" ${WIN32})
+option(ENABLE_EXAMPLES "Enable Examples Builds" ${WIN32})
+option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ${UNIX})
 option(ENABLE_ADDRESS_SANITIZER "Enable Address Sanitizer" OFF)
 
 if(WIN32)

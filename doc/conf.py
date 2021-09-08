@@ -14,7 +14,6 @@ extensions = ['sphinx.ext.autosectionlabel',
               'breathe',
               'toctree_elements',
               'remove_inline_specifier',
-              'git_revision'
               ]
 
 highlight_language = 'c++'

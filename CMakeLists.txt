@@ -79,6 +79,8 @@ target_link_libraries(${PROJECT_NAME} INTERFACE
 target_link_libraries(${PROJECT_NAME} INTERFACE
   crypt32
   secur32
+  ws2_32
+  wsock32
 )
 
 if(ENABLE_ADDRESS_SANITIZER)

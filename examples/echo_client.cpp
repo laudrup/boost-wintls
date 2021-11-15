@@ -69,13 +69,13 @@ private:
         });
   }
 
-  void receive_response(std::size_t length) {
+  void receive_response(std::size_t size) {
     boost::asio::async_read(
-        stream_, boost::asio::buffer(reply_, length),
-        [this](const boost::system::error_code& error, std::size_t length) {
-          if (!error) {
+        stream_, boost::asio::buffer(reply_, size),
+        [this](const boost::system::error_code& ec, std::size_t length) {
+          if (!ec) {
             std::cout << "Reply: ";
-            std::cout.write(reply_, length);
+            std::cout.write(reply_, static_cast<std::streamsize>(length));
             std::cout << "\n";
             stream_.async_shutdown([](const boost::system::error_code& error) {
               if(error) {
@@ -83,7 +83,7 @@ private:
               }
             });
           } else {
-            std::cerr << "Read failed: " << error.message() << "\n";
+            std::cerr << "Read failed: " << ec.message() << "\n";
           }
         });
   }

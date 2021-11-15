@@ -180,8 +180,8 @@ TEST_CASE("underlying stream errors") {
         client.stream.async_handshake(wintls_client_stream::handshake_type::client,
                                       [&client_ec, &client, &buffer](const boost::system::error_code& ec) {
                                         REQUIRE_FALSE(ec);
-                                        net::async_read(client.stream, buffer, [&client_ec](const boost::system::error_code& ec, std::size_t) {
-                                          client_ec = ec;
+                                        net::async_read(client.stream, buffer, [&client_ec](const boost::system::error_code& error, std::size_t) {
+                                          client_ec = error;
                                         });
                                       });
         io_context.run();
@@ -192,8 +192,8 @@ TEST_CASE("underlying stream errors") {
         client.stream.async_handshake(wintls_client_stream::handshake_type::client,
                                       [&client_ec, &client, &buffer](const boost::system::error_code& ec) {
                                         REQUIRE_FALSE(ec);
-                                        net::async_write(client.stream, buffer, [&client_ec](const boost::system::error_code& ec, std::size_t) {
-                                          client_ec = ec;
+                                        net::async_write(client.stream, buffer, [&client_ec](const boost::system::error_code& error, std::size_t) {
+                                          client_ec = error;
                                         });
                                       });
         io_context.run();

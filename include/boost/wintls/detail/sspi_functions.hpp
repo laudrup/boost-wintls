@@ -81,7 +81,7 @@ inline SECURITY_STATUS DecryptMessage(PCtxtHandle phContext, PSecBufferDesc pMes
 }
 
 inline SECURITY_STATUS QueryContextAttributes(PCtxtHandle phContext, unsigned long ulAttribute, void* pBuffer) {
-  return sspi_function_table()->QueryContextAttributes(phContext, ulAttribute, pBuffer);
+  return sspi_function_table()->QueryContextAttributesW(phContext, ulAttribute, pBuffer);
 }
 
 inline SECURITY_STATUS EncryptMessage(PCtxtHandle phContext, unsigned long fQOP, PSecBufferDesc pMessage, unsigned long MessageSeqNo) {

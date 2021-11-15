@@ -48,7 +48,7 @@ public:
   }
 
   // Start the asynchronous operation
-  void run(const std::string& host, const std::string& port, const std::string& path, int version) {
+  void run(const std::string& host, const std::string& port, const std::string& path, unsigned version) {
     // Set SNI hostname (many hosts need this to handshake successfully)
     stream_.set_server_hostname(host);
 
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
   const std::string path = what[3].length() > 0 ? what[3].str() : "/";
 
   // Use HTTP/1.1
-  const int version = 11;
+  const unsigned version = 11;
 
   // The io_context is required for all I/O
   net::io_context ioc;

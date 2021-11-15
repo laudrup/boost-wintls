@@ -22,7 +22,7 @@ namespace wintls {
 namespace detail {
 
 inline boost::system::error_code get_last_error() noexcept {
-  return boost::system::error_code(GetLastError(), boost::system::system_category());
+  return boost::system::error_code(static_cast<int>(GetLastError()), boost::system::system_category());
 }
 
 inline void throw_last_error(const char* msg) {

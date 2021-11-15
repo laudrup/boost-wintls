@@ -28,7 +28,7 @@ public:
 
   std::string received_message() const {
     return std::string(net::buffers_begin(recv_buffer_.data()),
-                       net::buffers_begin(recv_buffer_.data()) + recv_buffer_.size());
+                       net::buffers_begin(recv_buffer_.data()) + static_cast<std::ptrdiff_t>(recv_buffer_.size()));
   }
 
 private:

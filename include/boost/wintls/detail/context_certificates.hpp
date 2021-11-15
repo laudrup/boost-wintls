@@ -59,16 +59,16 @@ public:
       } chain_engine;
 
       if (!CertCreateCertificateChainEngine(&chain_engine_config, &chain_engine.ptr)) {
-        return GetLastError();
+        return static_cast<HRESULT>(GetLastError());
       }
 
-      status = verify_certificate_chain(cert, chain_engine.ptr);
+      status = static_cast<HRESULT>(verify_certificate_chain(cert, chain_engine.ptr));
     }
 
     if (status != ERROR_SUCCESS && use_default_cert_store) {
       // Calling CertGetCertificateChain with a NULL pointer engine uses
       // the default system certificate store
-      status = verify_certificate_chain(cert, nullptr);
+      status = static_cast<HRESULT>(verify_certificate_chain(cert, nullptr));
     }
 
     return status;
@@ -78,7 +78,7 @@ public:
   cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
-  HRESULT verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
+  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 

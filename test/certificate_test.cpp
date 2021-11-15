@@ -31,7 +31,7 @@ bool container_exists(const std::string& name) {
     if (last_error == static_cast<DWORD>(NTE_BAD_KEYSET)) {
       return false;
     }
-    throw boost::system::system_error(last_error, boost::system::system_category());
+    throw boost::system::system_error(static_cast<int>(last_error), boost::system::system_category());
   }
   CryptReleaseContext(ptr, 0);
   return true;

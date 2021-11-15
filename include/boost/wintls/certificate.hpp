@@ -181,7 +181,7 @@ inline void delete_private_key(const std::string& name) {
   HCRYPTKEY ptr = 0;
   if (!CryptAcquireContextA(&ptr, name.c_str(), nullptr, PROV_RSA_FULL, CRYPT_DELETEKEYSET)) {
 
-    throw boost::system::system_error(GetLastError(), boost::system::system_category());
+    throw boost::system::system_error(static_cast<int>(GetLastError()), boost::system::system_category());
   }
 }
 

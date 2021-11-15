@@ -27,8 +27,7 @@ namespace {
 std::string generate_data(std::size_t size) {
   std::string ret(size, '\0');
   for (std::size_t i = 0; i < size - 1; ++i) {
-  const char cur_char = i % 26;
-    ret[i] = cur_char + 65;
+    ret[i] = static_cast<char>(i % 26 + 65);
   }
   return ret;
 }
@@ -48,7 +47,7 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
                                  0x1000, 0x1000 - 1, 0x1000 + 1,
                                  0x10000, 0x10000 - 1, 0x10000 + 1,
                                  0x100000, 0x100000 - 1, 0x100000 + 1);
-  const std::string test_data = generate_data(test_data_size);
+  const std::string test_data = generate_data(static_cast<std::size_t>(test_data_size));
 
   net::io_context io_context;
 

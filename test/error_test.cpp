@@ -12,7 +12,7 @@
 extern "C" __declspec(dllimport) void __stdcall SetLastError(unsigned long);
 
 TEST_CASE("SECURITY_STATUS error code") {
-  SECURITY_STATUS sc = 0x80090326;
+  auto sc = static_cast<SECURITY_STATUS>(0x80090326);
   auto ec = boost::wintls::error::make_error_code(sc);
   CHECK(ec.value() == sc);
   CHECK(ec.message() == "The message received was unexpected or badly formatted");

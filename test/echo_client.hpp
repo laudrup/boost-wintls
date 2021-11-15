@@ -38,7 +38,7 @@ public:
 
   template <typename T>
   T data() const {
-    return T(net::buffers_begin(buffer_.data()), net::buffers_begin(buffer_.data()) + buffer_.size());
+    return T(net::buffers_begin(buffer_.data()), net::buffers_begin(buffer_.data()) + static_cast<std::ptrdiff_t>(buffer_.size()));
   }
 
 private:

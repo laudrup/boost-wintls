@@ -48,7 +48,7 @@ public:
 
     SCHANNEL_CRED creds{};
     creds.dwVersion = SCHANNEL_CRED_VERSION;
-    creds.grbitEnabledProtocols = static_cast<int>(context_.method_);
+    creds.grbitEnabledProtocols = static_cast<DWORD>(context_.method_);
     creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION;
 
     auto usage = [this]() {
@@ -69,8 +69,8 @@ public:
 
     TimeStamp expiry;
     last_error_ = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                   const_cast<LPWSTR>(UNISP_NAME),
-                                                                   usage,
+                                                                   const_cast<LPWSTR>(UNISP_NAME_W),
+                                                                   static_cast<unsigned>(usage),
                                                                    nullptr,
                                                                    &creds,
                                                                    nullptr,
@@ -194,7 +194,7 @@ public:
 
           cert_context_ptr remote_cert{ctx_ptr, &CertFreeCertificateContext};
 
-          last_error_ = context_.verify_certificate(remote_cert.get());
+          last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get()));
           if (last_error_ != SEC_E_OK) {
             return state::error;
           }

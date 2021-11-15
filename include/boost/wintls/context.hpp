@@ -115,7 +115,7 @@ private:
     if (!verify_server_certificate_) {
       return ERROR_SUCCESS;
     }
-    return ctx_certs_.verify_certificate(cert);
+    return static_cast<DWORD>(ctx_certs_.verify_certificate(cert));
   }
 
   const CERT_CONTEXT* server_cert() const {

@@ -52,7 +52,6 @@ typedef long NTSTATUS;
 typedef long SECURITY_STATUS;
 
 typedef uint64_t QWORD;
-typedef UCHAR* STRING;
 
 typedef unsigned int UINT;
 typedef uint8_t UINT8;

@@ -259,10 +259,11 @@ public:
   template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers) {
     boost::system::error_code ec{};
-    read_some(buffers, ec);
+    auto read = read_some(buffers, ec);
     if (ec) {
       detail::throw_error(ec);
     }
+    return read;
   }
 
   /** Start an asynchronous read.
@@ -347,10 +348,11 @@ public:
   template <class ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers) {
     boost::system::error_code ec{};
-    write_some(buffers, ec);
+    auto wrote = write_some(buffers, ec);
     if (ec) {
       detail::throw_error(ec);
     }
+    return wrote;
   }
 
 

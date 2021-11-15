@@ -17,6 +17,7 @@ option(ENABLE_TESTING "Enable Test Builds" ${WIN32})
 option(ENABLE_EXAMPLES "Enable Examples Builds" ${WIN32})
 option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ${UNIX})
 option(ENABLE_ADDRESS_SANITIZER "Enable Address Sanitizer" OFF)
+option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 add_library(${PROJECT_NAME} INTERFACE)
 
@@ -62,6 +63,11 @@ if(WIN32)
     /w15038 # data member 'member1' will be initialized after data member 'member2'
     /permissive- # standards conformance mode for MSVC compiler.
   )
+
+  if(WARNINGS_AS_ERRORS)
+    set(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
+    set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
+  endif()
 
   set(CLANG_WARNINGS
     -Wall

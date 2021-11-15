@@ -72,9 +72,7 @@ target_compile_definitions(unittest PRIVATE
   TEST_CERTIFICATE_PATH="${CMAKE_CURRENT_BINARY_DIR}/test_server.cert"
   TEST_PRIVATE_KEY_PATH="${CMAKE_CURRENT_BINARY_DIR}/test_server.key"
   TEST_PRIVATE_KEY_NAME="${PROJECT_NAME}-test-key"
-  )
-
-target_compile_options(unittest PRIVATE /WX)
+)
 
 target_link_libraries(unittest PRIVATE
   OpenSSL::SSL

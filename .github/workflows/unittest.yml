@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         config: [Debug, Release]
-        toolset: [ClangCl, v141, v142]
+        toolset: [ClangCl, v141, v142, MinGW]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -27,7 +27,13 @@ jobs:
         TOOLSET: ${{ matrix.toolset }}
         BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       shell: bash
-      run: cmake -B build -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
+      run: |
+        if [ "$TOOLSET" = "MinGW" ] # TODO: Hack. There must be a nicer way to do this
+        then
+        cmake -B build -G "MinGW Makefiles" -DENABLE_DOCUMENTATION=OFF
+        else
+        cmake -B build -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
+        fi
     - name: Build
       env:
         CONFIG: ${{ matrix.config }}

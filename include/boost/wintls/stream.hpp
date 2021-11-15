@@ -43,8 +43,10 @@ public:
   /// The type of the next layer.
   using next_layer_type = typename std::remove_reference<NextLayer>::type;
 
+#if !defined(BOOST_ASIO_NO_EXTENSIONS)
   /// The type of the lowest layer.
   typedef typename next_layer_type::lowest_layer_type lowest_layer_type;
+#endif
 
   /// The type of the executor associated with the object.
   using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;
@@ -103,6 +105,7 @@ public:
     return next_layer_;
   }
 
+#if !defined(BOOST_ASIO_NO_EXTENSIONS)
   /// Get a reference to the lowest layer.
   /**
    * This function returns a reference to the lowest layer in a stack of
@@ -128,6 +131,7 @@ public:
   {
 	  return next_layer_.lowest_layer();
   }
+#endif
 
   /** Set SNI hostname
    *

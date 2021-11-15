@@ -43,6 +43,9 @@ public:
   /// The type of the next layer.
   using next_layer_type = typename std::remove_reference<NextLayer>::type;
 
+  /// The type of the lowest layer.
+  typedef typename next_layer_type::lowest_layer_type lowest_layer_type;
+
   /// The type of the executor associated with the object.
   using executor_type = typename std::remove_reference<next_layer_type>::type::executor_type;
 
@@ -98,6 +101,32 @@ public:
    */
   next_layer_type& next_layer() {
     return next_layer_;
+  }
+
+  /// Get a reference to the lowest layer.
+  /**
+   * This function returns a reference to the lowest layer in a stack of
+   * stream layers.
+   *
+   * @return A reference to the lowest layer in the stack of stream layers.
+   * Ownership is not transferred to the caller.
+   */
+  lowest_layer_type& lowest_layer()
+  {
+	  return next_layer_.lowest_layer();
+  }
+
+  /// Get a reference to the lowest layer.
+  /**
+   * This function returns a reference to the lowest layer in a stack of
+   * stream layers.
+   *
+   * @return A reference to the lowest layer in the stack of stream layers.
+   * Ownership is not transferred to the caller.
+   */
+  const lowest_layer_type& lowest_layer() const
+  {
+	  return next_layer_.lowest_layer();
   }
 
   /** Set SNI hostname

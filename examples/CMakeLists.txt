@@ -22,6 +22,7 @@ target_link_libraries(echo_client PRIVATE
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # Temporary workaround issue https://github.com/boostorg/beast/issues/1582
   target_compile_options(https_client PRIVATE "$<$<CONFIG:RELEASE>:-wd4702>")
+  target_compile_options(async_https_client PRIVATE "$<$<CONFIG:RELEASE>:-wd4702>")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

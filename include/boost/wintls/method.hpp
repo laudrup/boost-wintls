@@ -10,6 +10,23 @@
 
 #include <boost/wintls/detail/sspi_types.hpp>
 
+#ifndef SP_PROT_TLS1_1_SERVER
+#define SP_PROT_TLS1_1_SERVER 0x100
+#endif
+
+#ifndef SP_PROT_TLS1_1_CLIENT
+#define SP_PROT_TLS1_1_CLIENT 0x200
+#endif
+
+#ifndef SP_PROT_TLS1_2_SERVER
+#define SP_PROT_TLS1_2_SERVER 0x400
+#endif
+
+#ifndef SP_PROT_TLS1_2_CLIENT
+#define SP_PROT_TLS1_2_CLIENT 0x800
+#endif
+
+
 namespace boost {
 namespace wintls {
 

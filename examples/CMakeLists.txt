@@ -26,4 +26,5 @@ endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_options(https_client PRIVATE -Wno-unused-private-field)
+  target_compile_options(async_https_client PRIVATE -Wno-unused-private-field)
 endif()

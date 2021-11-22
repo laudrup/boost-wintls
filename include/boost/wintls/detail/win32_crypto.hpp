@@ -11,7 +11,6 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/error.hpp>
 
-
 #include <wincrypt.h>
 
 namespace boost {

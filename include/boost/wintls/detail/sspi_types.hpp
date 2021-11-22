@@ -8,32 +8,27 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_TYPES_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_TYPES_HPP
 
-// TODO: Avoid cluttering global namespace (and avoid Windows headers if possible)
-// Maybe copy some relevant parts from here:
-// https://github.com/ArvidNorr/FreeRDP/blob/master/include/freerdp/sspi/sspi.h
+#include <boost/wintls/detail/win_types.hpp>
+
 #ifndef SECURITY_WIN32
 #define SECURITY_WIN32
-#else
 #define BOOST_WINTLS_SECURITY_WIN32_DEFINED
-#endif
+#endif // SECURITY_WIN32
 
-#ifndef UNICODE
-#define UNICODE
-#else
-#define BOOST_WINTLS_UNICODE_DEFINED
-#endif
+#ifdef UNICODE
+#undef UNICODE
+#define BOOST_WINTLS_UNICODE_UNDEFINED
+#endif // UNICODE
 
 #include <schannel.h>
 #include <security.h>
-#include <sspi.h>
-#include <wincrypt.h>
 
-#ifndef BOOST_WINTLS_SECURITY_WIN32_DEFINED
+#ifdef BOOST_WINTLS_SECURITY_WIN32_DEFINED
 #undef SECURITY_WIN32
-#endif
+#endif // BOOST_WINTLS_SECURITY_WIN32_DEFINED
 
-#ifndef BOOST_WINTLS_UNICODE_DEFINED
-#undef UNICODE
-#endif
+#ifdef BOOST_WINTLS_UNICODE_UNDEFINED
+#define UNICODE
+#endif // BOOST_WINTLS_UNICODE_UNDEFINED
 
 #endif // BOOST_WINTLS_DETAIL_SSPI_TYPES_HPP

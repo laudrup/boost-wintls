@@ -20,6 +20,7 @@
 
 #include <array>
 #include <memory>
+#include <string>
 
 namespace boost {
 namespace wintls {
@@ -69,7 +70,7 @@ public:
 
     TimeStamp expiry;
     last_error_ = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
-                                                                   const_cast<LPWSTR>(UNISP_NAME_W),
+                                                                   const_cast<SEC_CHAR*>(UNISP_NAME),
                                                                    static_cast<unsigned>(usage),
                                                                    nullptr,
                                                                    &creds,
@@ -88,7 +89,7 @@ public:
         handshake_output_buffers buffers;
         last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
                                                                         nullptr,
-                                                                        server_hostname_.get(),
+                                                                        const_cast<SEC_CHAR*>(server_hostname_.c_str()),
                                                                         client_context_flags,
                                                                         0,
                                                                         SECURITY_NATIVE_DREP,
@@ -130,7 +131,7 @@ public:
       case handshake_type::client:
         last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
                                                                         ctxt_handle_.get(),
-                                                                        server_hostname_.get(),
+                                                                        const_cast<SEC_CHAR*>(server_hostname_.c_str()),
                                                                         client_context_flags,
                                                                         0,
                                                                         SECURITY_NATIVE_DREP,
@@ -237,10 +238,7 @@ public:
   }
 
   void set_server_hostname(const std::string& hostname) {
-    const auto size = hostname.size() + 1;
-    server_hostname_ = std::make_unique<WCHAR[]>(size);
-    const auto size_converted = mbstowcs(server_hostname_.get(), hostname.c_str(), size);
-    BOOST_VERIFY_MSG(size_converted == hostname.size(), "mbstowcs");
+    server_hostname_ = hostname;
   }
 
 private:
@@ -254,7 +252,7 @@ private:
   sspi_context_buffer out_buffer_;
   net::mutable_buffer in_buffer_;
   handshake_input_buffers input_buffers_;
-  std::unique_ptr<WCHAR[]> server_hostname_;
+  std::string server_hostname_;
 };
 
 } // namespace detail

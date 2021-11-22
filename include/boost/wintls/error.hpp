@@ -9,6 +9,7 @@
 #define BOOST_WINTLS_ERROR_HPP
 
 #include <boost/wintls/detail/error.hpp>
+#include <boost/wintls/detail/sspi_types.hpp>
 
 namespace boost {
 namespace wintls {

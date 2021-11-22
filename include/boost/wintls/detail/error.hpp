@@ -8,14 +8,8 @@
 #ifndef BOOST_WINTLS_DETAIL_ERROR_HPP
 #define BOOST_WINTLS_DETAIL_ERROR_HPP
 
-#include <boost/wintls/detail/config.hpp>
-
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
-
-extern "C" {
-  BOOST_SYMBOL_IMPORT DWORD GetLastError();
-}
 
 namespace boost {
 namespace wintls {

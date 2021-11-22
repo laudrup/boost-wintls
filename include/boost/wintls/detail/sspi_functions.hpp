@@ -15,15 +15,15 @@ namespace wintls {
 namespace detail {
 namespace sspi_functions {
 
-inline SecurityFunctionTableW* sspi_function_table() {
-  static SecurityFunctionTableW* impl = InitSecurityInterfaceW();
+inline SecurityFunctionTable* sspi_function_table() {
+  static SecurityFunctionTable* impl = InitSecurityInterface();
   // TODO: Figure out some way to signal this to the user instead of aborting
   BOOST_ASSERT_MSG(impl != nullptr, "Unable to initialize SecurityFunctionTable");
   return impl;
 }
 
-inline SECURITY_STATUS AcquireCredentialsHandle(SEC_WCHAR* pPrincipal,
-                                                SEC_WCHAR* pPackage,
+inline SECURITY_STATUS AcquireCredentialsHandle(SEC_CHAR* pPrincipal,
+                                                SEC_CHAR* pPackage,
                                                 unsigned long fCredentialUse,
                                                 void* pvLogonId,
                                                 void* pAuthData,
@@ -31,7 +31,7 @@ inline SECURITY_STATUS AcquireCredentialsHandle(SEC_WCHAR* pPrincipal,
                                                 void* pvGetKeyArgument,
                                                 PCredHandle phCredential,
                                                 PTimeStamp ptsExpiry) {
-  return sspi_function_table()->AcquireCredentialsHandleW(pPrincipal,
+  return sspi_function_table()->AcquireCredentialsHandle(pPrincipal,
                                                           pPackage,
                                                           fCredentialUse,
                                                           pvLogonId,
@@ -48,7 +48,7 @@ inline SECURITY_STATUS DeleteSecurityContext(PCtxtHandle phContext) {
 
 inline SECURITY_STATUS InitializeSecurityContext(PCredHandle phCredential,
                                                  PCtxtHandle phContext,
-                                                 SEC_WCHAR* pTargetName,
+                                                 SEC_CHAR* pTargetName,
                                                  unsigned long fContextReq,
                                                  unsigned long Reserved1,
                                                  unsigned long TargetDataRep,
@@ -58,7 +58,7 @@ inline SECURITY_STATUS InitializeSecurityContext(PCredHandle phCredential,
                                                  PSecBufferDesc pOutput,
                                                  unsigned long* pfContextAttr,
                                                  PTimeStamp ptsExpiry) {
-  return sspi_function_table()->InitializeSecurityContextW(phCredential,
+  return sspi_function_table()->InitializeSecurityContext(phCredential,
                                                            phContext,
                                                            pTargetName,
                                                            fContextReq,
@@ -81,7 +81,7 @@ inline SECURITY_STATUS DecryptMessage(PCtxtHandle phContext, PSecBufferDesc pMes
 }
 
 inline SECURITY_STATUS QueryContextAttributes(PCtxtHandle phContext, unsigned long ulAttribute, void* pBuffer) {
-  return sspi_function_table()->QueryContextAttributesW(phContext, ulAttribute, pBuffer);
+  return sspi_function_table()->QueryContextAttributes(phContext, ulAttribute, pBuffer);
 }
 
 inline SECURITY_STATUS EncryptMessage(PCtxtHandle phContext, unsigned long fQOP, PSecBufferDesc pMessage, unsigned long MessageSeqNo) {

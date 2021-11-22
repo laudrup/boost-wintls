@@ -32,6 +32,20 @@ jobs:
             test_args: "-C Debug"
             }
           - {
+            name: "MSVC 2019 (Toolset 142, Debug, Unicode)",
+            os: windows-2019,
+            config_args: "-T v142",
+            build_args: "--config Debug -- -p:CharacterSet=Unicode",
+            test_args: "-C Debug"
+            }
+          - {
+            name: "MSVC 2019 (Toolset 142, Release, Unicode)",
+            os: windows-2019,
+            config_args: "-T v142",
+            build_args: "--config Release -- -p:CharacterSet=Unicode",
+            test_args: "-C Release"
+            }
+          - {
             name: "MSVC 2019 (Toolset 142, Release)",
             os: windows-2019,
             config_args: "-T v142",

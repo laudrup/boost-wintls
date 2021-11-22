@@ -5,11 +5,43 @@ on: [push, pull_request]
 jobs:
   unittest:
     runs-on: windows-latest
-    name: Build and run unittests
+    name: ${{ matrix.config.name }}
     strategy:
+      fail-fast: false
       matrix:
-        config: [Debug, Release]
-        toolset: [ClangCl, v141, v142, MinGW]
+        config:
+          - {
+            name: "MSVC 2019 (Toolset 141, Debug)",
+            config_args: "-T v141",
+            build_args: "--config Debug",
+            test_args: "-C Debug"
+            }
+          - {
+            name: "MSVC 2019 (Toolset 141, Release)",
+            config_args: "-T v141",
+            build_args: "--config Release",
+            test_args: "-C Release"
+            }
+          - {
+            name: "MSVC 2019 (Toolset 142, Debug)",
+            config_args: "-T v142",
+            build_args: "--config Debug",
+            test_args: "-C Debug"
+            }
+          - {
+            name: "MSVC 2019 (Toolset 142, Release)",
+            config_args: "-T v142",
+            build_args: "--config Release",
+            test_args: "-C Release"
+            }
+          - {
+            name: "ClangCL",
+            config_args: "-T ClangCL"
+            }
+          - {
+            name: "MinGW",
+            config_args: "-G MinGW Makefiles"
+            }
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -24,24 +56,18 @@ jobs:
       run: cinst openssl
     - name: Configure
       env:
-        TOOLSET: ${{ matrix.toolset }}
+        CMAKE_ARGS: ${{ matrix.config.config_args }}
         BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       shell: bash
-      run: |
-        if [ "$TOOLSET" = "MinGW" ] # TODO: Hack. There must be a nicer way to do this
-        then
-        cmake -B build -G "MinGW Makefiles" -DENABLE_DOCUMENTATION=OFF
-        else
-        cmake -B build -T $TOOLSET -DENABLE_DOCUMENTATION=OFF
-        fi
+      run: cmake -B build -DENABLE_DOCUMENTATION=OFF "${CMAKE_ARGS}"
     - name: Build
       env:
-        CONFIG: ${{ matrix.config }}
+        CMAKE_ARGS: ${{ matrix.config.build_args }}
       shell: bash
-      run: cmake --build build/ --config $CONFIG
+      run: cmake --build build/ ${CMAKE_ARGS}
     - name: Run tests
       env:
-        CONFIG: ${{ matrix.config }}
+        CTEST_ARGS: ${{ matrix.config.test_args }}
       shell: bash
-      run: ctest -C $CONFIG --output-on-failure
+      run: ctest --output-on-failure ${CTEST_ARGS}
       working-directory: build/

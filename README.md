@@ -38,8 +38,14 @@ existing Boost.Asio.SSL implementation.
 Boost 1.72, but at least newer versions ought to work as well.
 
 A working C++ compiler supporting the C++14 standard is required.
-Currently tested compilers are MSVC for Visual Studio 2019 and Clang
-11.
+Currently tested compilers are:
+
+- MSVC for Visual Studio 2019
+- MSVC for Visual Studio 2017
+- Clang
+- MinGW64 (GCC)
+
+Only 64 bit builds have been tested.
 
 ## Building
 

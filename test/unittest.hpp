@@ -29,16 +29,6 @@ struct StringMaker<boost::system::error_code> {
 };
 }
 
-inline std::vector<char> test_cert_bytes() {
-  std::ifstream ifs{TEST_CERTIFICATE_PATH};
-  return {std::istreambuf_iterator<char>{ifs}, {}};
-}
-
-inline std::vector<char> test_key_bytes() {
-  std::ifstream ifs{TEST_PRIVATE_KEY_PATH};
-  return {std::istreambuf_iterator<char>{ifs}, {}};
-}
-
 namespace net = boost::wintls::net;
 namespace asio_ssl = boost::asio::ssl;
 using test_stream = boost::beast::test::stream;

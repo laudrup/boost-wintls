@@ -5,8 +5,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "async_echo_server.hpp"
 #include "async_echo_client.hpp"
+#include "async_echo_server.hpp"
+#include "certificate.hpp"
 #include "tls_record.hpp"
 #include "unittest.hpp"
 
@@ -23,8 +24,8 @@ TEST_CASE("certificates") {
   boost::wintls::context client_ctx(boost::wintls::method::system_default);
 
   boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
-  server_ctx.use_certificate_chain_file(TEST_CERTIFICATE_PATH);
-  server_ctx.use_private_key_file(TEST_PRIVATE_KEY_PATH, boost::asio::ssl::context::pem);
+  server_ctx.use_certificate_chain(net::buffer(test_certificate));
+  server_ctx.use_private_key(net::buffer(test_key), boost::asio::ssl::context::pem);
 
   net::io_context io_context;
   boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
@@ -107,8 +108,7 @@ TEST_CASE("certificates") {
 
     client_ctx.verify_server_certificate(true);
 
-    const auto x509 = test_cert_bytes();
-    const auto cert_ptr = x509_to_cert_context(net::buffer(x509), boost::wintls::file_format::pem);
+    const auto cert_ptr = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
     client_ctx.add_certificate_authority(cert_ptr.get());
 
     auto client_error = errc::make_error_code(errc::not_supported);

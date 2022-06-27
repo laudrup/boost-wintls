@@ -5,6 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include "certificate.hpp"
 #include "unittest.hpp"
 
 #include <boost/wintls/certificate.hpp>
@@ -40,8 +41,7 @@ bool container_exists(const std::string& name) {
 
 TEST_CASE("certificate conversion") {
   SECTION("valid cert bytes") {
-    const auto cert_bytes = test_cert_bytes();
-    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem);
+    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
     CHECK(get_cert_name(cert.get()) == "localhost");
   }
 
@@ -59,11 +59,11 @@ TEST_CASE("import private key") {
   const std::string name{"boost::wintls crypto test container"};
   REQUIRE_FALSE(container_exists(name));
 
-  boost::wintls::import_private_key(net::buffer(test_key_bytes()), boost::wintls::file_format::pem, name);
+  boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, name);
   CHECK(container_exists(name));
 
   boost::system::error_code ec;
-  boost::wintls::import_private_key(net::buffer(test_key_bytes()), boost::wintls::file_format::pem, name, ec);
+  boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, name, ec);
   CHECK(ec.value() == NTE_EXISTS);
 
   boost::wintls::delete_private_key(name);

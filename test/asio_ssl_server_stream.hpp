@@ -7,13 +7,14 @@
 #ifndef ASIO_SSL_SERVER_STREAM_HPP
 #define ASIO_SSL_SERVER_STREAM_HPP
 
+#include "certificate.hpp"
 #include "unittest.hpp"
 
 struct asio_ssl_server_context : public asio_ssl::context {
   asio_ssl_server_context()
     : asio_ssl::context(asio_ssl::context_base::tls) {
-    use_certificate_file(TEST_CERTIFICATE_PATH, asio_ssl::context_base::pem);
-    use_private_key_file(TEST_PRIVATE_KEY_PATH, asio_ssl::context_base::pem);
+    use_certificate(net::buffer(test_certificate), asio_ssl::context_base::pem);
+    use_private_key(net::buffer(test_key), asio_ssl::context_base::pem);
   }
 };
 

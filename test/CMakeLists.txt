@@ -13,22 +13,11 @@ if(NOT Threads_FOUND)
   return()
 endif()
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_server.key ${CMAKE_CURRENT_BINARY_DIR}/test_server.cert
-  COMMAND openssl req -nodes -new -x509  -keyout test_server.key -out test_server.cert -subj "/C=DK/L=Copenhagen/O=Reptilicus/CN=localhost"
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  VERBATIM
-  )
-
-add_custom_target(
-  generate-certificate
-  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_server.key ${CMAKE_CURRENT_BINARY_DIR}/test_server.cert
-  )
-
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.13.6)
+  GIT_TAG        v2.13.6
+)
 
 FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
@@ -43,36 +32,16 @@ set(test_sources
   sspi_buffer_sequence_test.cpp
   stream_test.cpp
   decrypted_data_buffer_test.cpp
-  )
+)
 
 add_executable(unittest
   ${test_sources}
-  )
+)
 
 if(ENABLE_ADDRESS_SANITIZER)
   # Workaround for: https://github.com/catchorg/Catch2/issues/898
   target_compile_definitions(unittest PRIVATE CATCH_CONFIG_NO_WINDOWS_SEH)
 endif()
-
-add_custom_command(OUTPUT "$ENV{userprofile}/.rnd"
-  COMMAND openssl rand -out "$ENV{userprofile}/.rnd"
-  VERBATIM
-)
-
-add_custom_target(
-  generate-random
-  DEPENDS "$ENV{userprofile}/.rnd"
-  )
-
-add_dependencies(generate-certificate generate-random)
-
-add_dependencies(unittest generate-certificate)
-
-target_compile_definitions(unittest PRIVATE
-  TEST_CERTIFICATE_PATH="${CMAKE_CURRENT_BINARY_DIR}/test_server.cert"
-  TEST_PRIVATE_KEY_PATH="${CMAKE_CURRENT_BINARY_DIR}/test_server.key"
-  TEST_PRIVATE_KEY_NAME="${PROJECT_NAME}-test-key"
-)
 
 target_link_libraries(unittest PRIVATE
   OpenSSL::SSL
@@ -80,7 +49,7 @@ target_link_libraries(unittest PRIVATE
   Threads::Threads
   Catch2::Catch2
   boost-wintls
-  )
+)
 
 include(CTest)
 include(Catch)

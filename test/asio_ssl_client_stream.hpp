@@ -8,11 +8,12 @@
 #define ASIO_SSL_CLIENT_STREAM_HPP
 
 #include "unittest.hpp"
+#include "certificate.hpp"
 
 struct asio_ssl_client_context : public asio_ssl::context {
   asio_ssl_client_context()
     : asio_ssl::context(asio_ssl::context_base::tls) {
-    load_verify_file(TEST_CERTIFICATE_PATH);
+    add_certificate_authority(net::buffer(test_certificate));
   }
 };
 

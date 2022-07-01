@@ -119,12 +119,14 @@ target_link_libraries(${PROJECT_NAME} INTERFACE
   Boost::headers
 )
 
-target_link_libraries(${PROJECT_NAME} INTERFACE
-  crypt32
-  secur32
-  ws2_32
-  wsock32
-)
+if(MINGW)
+  target_link_libraries(${PROJECT_NAME} INTERFACE
+    crypt32
+    secur32
+    ws2_32
+    wsock32
+  )
+endif()
 
 if(ENABLE_ADDRESS_SANITIZER)
   message(STATUS "Enabling Address Sanitizer.")

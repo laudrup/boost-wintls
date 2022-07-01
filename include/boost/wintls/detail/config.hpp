@@ -11,6 +11,11 @@
 #include <boost/config.hpp>
 #include <boost/asio.hpp>
 
+#if !defined(__MINGW32__)
+#pragma comment(lib, "crypt32")
+#pragma comment(lib, "secur32")
+#endif // __MINGW32__
+
 namespace boost {
 namespace wintls {
 

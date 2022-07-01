@@ -8,6 +8,8 @@
 #ifndef BOOST_WINTLS_HPP
 #define BOOST_WINTLS_HPP
 
+#include <boost/wintls/detail/config.hpp>
+
 #include <boost/wintls/certificate.hpp>
 #include <boost/wintls/context.hpp>
 #include <boost/wintls/error.hpp>

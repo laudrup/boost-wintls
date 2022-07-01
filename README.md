@@ -65,6 +65,11 @@ cmake ..
 cmake --build .
 ```
 
+If the provided CMake scripts are not used and you are using the
+MinGW64 compiler the `crypt32`, `secur32`, `ws2_32` and `wsock32`
+libraries needs to be linked with your libraries/executables.
+
+
 ## Quickstart
 
 Similar to Boost.Asio.SSL a

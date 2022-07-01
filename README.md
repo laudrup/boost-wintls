@@ -2,6 +2,10 @@
 
 # Native Windows TLS stream for Boost.Asio
 
+<a href="https://www.stopputin.net/">
+    <img style="display: block; margin-left: 20%; margin-right: auto; width: 7%" alt = "Support Ukraine" src="https://raw.githubusercontent.com/laudrup/boost-wintls/master/doc/support-ukraine.png">
+</a>
+
 [wintls.dev](https://wintls.dev/)
 
 Build | Coverage | Coverity Analysis |
@@ -115,7 +119,10 @@ Documentation is available [here](https://laudrup.github.io/boost-wintls).
 
 Pull requests, issue reporting etc. are very much welcome.
 
-Also, if you use this library and find it useful, I would love to know.
+If you use this library and find it useful, I would love to know. You should also consider donating to one of the funds that help victims of the war in Ukraine:
+
+[https://www.stopputin.net/](https://www.stopputin.net/)
+
 
 ## Thanks
 

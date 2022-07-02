@@ -10,8 +10,11 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-  boost::system::error_code ec;
+  // Ensure the test are using US English locale. Some tests depend on
+  // comparing potentially localized message strings.
+  SetThreadUILanguage(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT));
 
+  boost::system::error_code ec;
   boost::wintls::delete_private_key(test_key_name, ec);
   boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, test_key_name, ec);
   if (ec) {

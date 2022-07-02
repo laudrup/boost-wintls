@@ -38,7 +38,7 @@ jobs:
     - name: Build with cov-build
       shell: bash
       run: |
-        cov-analysis-win64-2020.09/bin/cov-build --dir cov-int cmake --build build/
+        cov-analysis-win64-2021.12.1/bin/cov-build --dir cov-int cmake --build build/
         7z a boost-wintls.zip cov-int
     - name: Upload to coverity-scan
       shell: bash

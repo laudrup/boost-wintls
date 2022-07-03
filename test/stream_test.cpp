@@ -40,7 +40,7 @@ TEST_CASE("moved stream") {
   boost::wintls::stream<test_stream> moved_server_stream(ioc, server_ctx);
   boost::wintls::stream<test_stream> server_stream(std::move(moved_server_stream));
 
-  wintls_server_context client_ctx;
+  wintls_client_context client_ctx;
   boost::wintls::stream<test_stream> moved_client_stream(ioc, client_ctx);
   boost::wintls::stream<test_stream> client_stream(std::move(moved_client_stream));
 

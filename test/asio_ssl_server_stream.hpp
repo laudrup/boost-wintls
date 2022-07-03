@@ -16,6 +16,11 @@ struct asio_ssl_server_context : public asio_ssl::context {
     use_certificate(net::buffer(test_certificate), asio_ssl::context_base::pem);
     use_private_key(net::buffer(test_key), asio_ssl::context_base::pem);
   }
+
+  void enable_client_verify(){
+    set_verify_mode(asio_ssl::verify_peer | asio_ssl::verify_fail_if_no_peer_cert);
+    add_certificate_authority(net::buffer(test_certificate));
+  }
 };
 
 struct asio_ssl_server_stream {

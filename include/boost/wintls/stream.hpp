@@ -149,6 +149,22 @@ public:
         case detail::sspi_handshake::state::error:
           ec = sspi_stream_->handshake.last_error();
           return;
+        case detail::sspi_handshake::state::done_with_data:{
+          std::size_t size_written = net::write(next_layer_, sspi_stream_->handshake.out_buffer(), ec);
+          if (ec) {
+            return;
+          }
+          sspi_stream_->handshake.size_written(size_written);
+          return;
+        }
+        case detail::sspi_handshake::state::error_with_data:{
+          std::size_t size_written = net::write(next_layer_, sspi_stream_->handshake.out_buffer(), ec);
+          if (ec) {
+            return;
+          }
+          sspi_stream_->handshake.size_written(size_written);
+          return;
+        }
         case detail::sspi_handshake::state::done:
           BOOST_UNREACHABLE_RETURN(0);
       }

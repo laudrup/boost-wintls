@@ -157,3 +157,4 @@ set(CPACK_SOURCE_IGNORE_FILES
   "__pycache__"
 )
 include(CPack)
+include(ClangFormat)

@@ -10,6 +10,7 @@
 
 #include <boost/wintls/certificate.hpp>
 #include <boost/wintls/error.hpp>
+#include <boost/wintls/detail/context_certificates.hpp>
 
 #include <fstream>
 #include <iterator>
@@ -71,4 +72,16 @@ TEST_CASE("import private key") {
 
   boost::wintls::delete_private_key(name, ec);
   CHECK(ec.value() == NTE_BAD_KEYSET);
+}
+
+TEST_CASE("verify certificate host name") {
+  const auto cert = boost::wintls::x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+  boost::wintls::detail::context_certificates ctx_certs;
+  ctx_certs.add_certificate_authority(cert.get());
+  // success case: host name is not verified when parameter is empty string
+  CHECK(ctx_certs.verify_certificate(cert.get(), "") == ERROR_SUCCESS);
+  // success case: test_certificate contains the host name "localhost"
+  CHECK(ctx_certs.verify_certificate(cert.get(), "localhost") == ERROR_SUCCESS);
+  // fail case: incorrect host name 
+  CHECK(ctx_certs.verify_certificate(cert.get(), "wrong.host") == CERT_E_CN_NO_MATCH);
 }

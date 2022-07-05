@@ -13,6 +13,8 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/context_certificates.hpp>
 
+#include <string>
+
 namespace boost {
 namespace wintls {
 
@@ -111,11 +113,11 @@ public:
   }
 
 private:
-  DWORD verify_certificate(const CERT_CONTEXT* cert) {
+  DWORD verify_certificate(const CERT_CONTEXT* cert, const std::string& server_hostname) {
     if (!verify_server_certificate_) {
       return ERROR_SUCCESS;
     }
-    return static_cast<DWORD>(ctx_certs_.verify_certificate(cert));
+    return static_cast<DWORD>(ctx_certs_.verify_certificate(cert, server_hostname));
   }
 
   const CERT_CONTEXT* server_cert() const {

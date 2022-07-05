@@ -13,8 +13,10 @@
 #include <boost/wintls/certificate.hpp>
 #include <boost/wintls/error.hpp>
 
+#include <cstdlib>
 #include <functional>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 namespace boost {
@@ -43,7 +45,7 @@ public:
     }
   }
 
-  HRESULT verify_certificate(const CERT_CONTEXT* cert) {
+  HRESULT verify_certificate(const CERT_CONTEXT* cert, const std::string& server_hostname) {
     HRESULT status = CERT_E_UNTRUSTEDROOT;
 
     if (cert_store_) {
@@ -62,13 +64,13 @@ public:
         return static_cast<HRESULT>(GetLastError());
       }
 
-      status = static_cast<HRESULT>(verify_certificate_chain(cert, chain_engine.ptr));
+      status = static_cast<HRESULT>(verify_certificate_chain(cert, chain_engine.ptr, server_hostname));
     }
 
     if (status != ERROR_SUCCESS && use_default_cert_store) {
       // Calling CertGetCertificateChain with a NULL pointer engine uses
       // the default system certificate store
-      status = static_cast<HRESULT>(verify_certificate_chain(cert, nullptr));
+      status = static_cast<HRESULT>(verify_certificate_chain(cert, nullptr, server_hostname));
     }
 
     return status;
@@ -78,7 +80,7 @@ public:
   cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
-  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine) {
+  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine, const std::string& server_hostname) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
@@ -100,6 +102,13 @@ private:
     HTTPSPolicyCallbackData https_policy{};
     https_policy.cbStruct = sizeof(https_policy);
     https_policy.dwAuthType = AUTHTYPE_SERVER;
+    // add parameter to verify the host name if it was actually set
+    std::wstring whostname;
+    if (!server_hostname.empty()) {
+      whostname.resize(server_hostname.size(), L' ');
+      whostname.resize(std::mbstowcs(&whostname[0], server_hostname.data(), server_hostname.size()));
+      https_policy.pwszServerName = &whostname[0];
+    }
 
     CERT_CHAIN_POLICY_PARA policy_params{};
     policy_params.cbSize = sizeof(policy_params);

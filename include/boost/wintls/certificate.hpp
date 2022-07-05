@@ -218,7 +218,7 @@ inline void delete_private_key(const std::string& name, boost::system::error_cod
  * existing or non accessible key will result in unexpected behavior
  * when used with a @ref stream operating as a server.
  *
- * @param cert The certifcate to associate with the private key.
+ * @param cert The certificate to associate with the private key.
  *
  * @param name The name of the private key in the default cryptographic key provider.
  *

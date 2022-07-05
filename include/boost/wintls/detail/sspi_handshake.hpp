@@ -276,7 +276,7 @@ private:
 
     cert_context_ptr remote_cert{ctx_ptr, &CertFreeCertificateContext};
 
-    last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get()));
+    last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get(), server_hostname_));
     if (last_error_ != SEC_E_OK) {
       return last_error_;
     }

@@ -51,6 +51,9 @@ public:
   void run(const std::string& host, const std::string& port, const std::string& path, unsigned version) {
     // Set SNI hostname (many hosts need this to handshake successfully)
     stream_.set_server_hostname(host);
+    
+    // Enable Check whether the Server Certificate was revoked
+    stream_.set_certificate_revocation_check(true);
 
     // Set up an HTTP GET request message
     req_.version(version);
@@ -156,7 +159,7 @@ int main(int argc, char** argv) {
   const std::string host = std::string(what[1]);
   // Use default HTTPS port (443) if not specified
   const std::string port = what[2].length() > 0 ? what[2].str() : "443";
-  // Use deault path ('/') if not specified
+  // Use default path ('/') if not specified
   const std::string path = what[3].length() > 0 ? what[3].str() : "/";
 
   // Use HTTP/1.1
@@ -168,7 +171,7 @@ int main(int argc, char** argv) {
   // The SSL context is required, and holds certificates
   ssl::context ctx{boost::wintls::method::system_default};
 
-  // Use the operating systems default certficates for verification
+  // Use the operating systems default certificates for verification
   ctx.use_default_certificates(true);
 
   // Verify the remote server's certificate

@@ -43,6 +43,10 @@ if(ENABLE_ADDRESS_SANITIZER)
   target_compile_definitions(unittest PRIVATE CATCH_CONFIG_NO_WINDOWS_SEH)
 endif()
 
+target_compile_definitions(unittest PRIVATE
+  TEST_CERTIFICATES_PATH="${CMAKE_CURRENT_LIST_DIR}/test_certificates/"
+)
+
 target_link_libraries(unittest PRIVATE
   OpenSSL::SSL
   OpenSSL::Crypto

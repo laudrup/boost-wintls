@@ -14,6 +14,8 @@
 
 #include <fstream>
 #include <iterator>
+#include <memory>
+#include <string>
 #include <vector>
 #include <cstdint>
 
@@ -37,6 +39,91 @@ bool container_exists(const std::string& name) {
   }
   CryptReleaseContext(ptr, 0);
   return true;
+}
+
+// Add a certificate from the PEM formatted string cert_str to the given store.
+// If get_handle is true, a handle to the certificate in the store is returned.
+// Otherwise, the certificate will be owned by the store and nullptr is returned.
+boost::wintls::cert_context_ptr add_cert_str_to_store(HCERTSTORE store,
+                                                      const net::const_buffer& cert_str,
+                                                      bool get_handle) {
+  PCCERT_CONTEXT cert_in_store = nullptr;
+  const auto cert_data = boost::wintls::detail::crypt_string_to_binary(cert_str);
+  if (!CertAddEncodedCertificateToStore(store,
+                                        X509_ASN_ENCODING,
+                                        cert_data.data(),
+                                        static_cast<DWORD>(cert_data.size()),
+                                        CERT_STORE_ADD_ALWAYS,
+                                        get_handle ? &cert_in_store : nullptr)) {
+    boost::wintls::detail::throw_last_error("CertAddEncodedCertificateToStore");
+  }
+  if (get_handle)
+    return {cert_in_store, &CertFreeCertificateContext};
+  return {nullptr, [](PCCERT_CONTEXT){ return TRUE; }};
+}
+
+// Load a PEM formatted certificate chain from the given file.
+// Assumes that the first certificate in the file is the leaf certificate
+// and returns a context for this certificate which internally holds a store
+// containing all remaining certificates from the file.
+boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
+  std::ifstream ifs(path);
+  if (ifs.fail()) {
+    throw std::runtime_error("Failed to open file " + path);
+  }
+  constexpr auto begin_cert_str = "-----BEGIN CERTIFICATE-----";
+  constexpr auto end_cert_str = "-----END CERTIFICATE-----";
+  constexpr std::size_t end_cert_str_size = 25;
+  // find the first certificate in the file
+  std::string str{std::istreambuf_iterator<char>{ifs}, {}};
+  auto cert_begin = str.find(begin_cert_str, 0);
+  auto cert_end = str.find(end_cert_str, cert_begin);
+  if (cert_begin == std::string::npos || cert_end == std::string::npos) {
+    throw std::runtime_error("Error parsing certificate chain in PEM format from file " + path);
+  } 
+  // Open a temporary store for the chain.
+  // Use CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, so the context of the leaf certificate can take ownership.
+  const auto chain_store = boost::wintls::detail::cert_store_ptr{
+      CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, nullptr),
+        [](HCERTSTORE store) { CertCloseStore(store, 0); }
+      };
+  auto leaf_ctx = add_cert_str_to_store(chain_store.get(),
+                                        net::buffer(&str[cert_begin], cert_end + end_cert_str_size - cert_begin),
+                                        true);
+  // add any remaining certificates to the chain_store
+  for (cert_begin = str.find(begin_cert_str, cert_end); 
+       cert_begin != std::string::npos; 
+       cert_begin = str.find(begin_cert_str, cert_end)) {
+    cert_end = str.find(end_cert_str, cert_begin);
+    if (cert_end == std::string::npos) {
+      throw std::runtime_error("Error parsing certificate chain in PEM format from file " + path);
+    }
+    add_cert_str_to_store(chain_store.get(),
+                          net::buffer(&str[cert_begin], cert_end + end_cert_str_size - cert_begin),
+                          false);
+  }
+  return leaf_ctx;
+}
+
+using crl_ctx_ptr = std::unique_ptr<const CRL_CONTEXT, decltype(&CertFreeCRLContext)>;
+
+crl_ctx_ptr x509_to_crl_context(const net::const_buffer& x509) {
+  const auto data = boost::wintls::detail::crypt_string_to_binary(x509);
+  const auto crl = CertCreateCRLContext(X509_ASN_ENCODING, data.data(), static_cast<DWORD>(data.size()));
+  if (!crl) {
+    boost::wintls::detail::throw_last_error("CertCreateCRLContext");
+  }
+  return crl_ctx_ptr{crl, &CertFreeCRLContext};
+}
+
+crl_ctx_ptr crl_from_file(const std::string& path) {
+  const auto crl_bytes = bytes_from_file(path);
+  return x509_to_crl_context(net::buffer(crl_bytes));
+}
+
+boost::wintls::cert_context_ptr cert_from_file(const std::string& path) {
+  const auto cert_bytes = bytes_from_file(path);
+  return boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem);
 }
 }
 
@@ -75,13 +162,51 @@ TEST_CASE("import private key") {
 }
 
 TEST_CASE("verify certificate host name") {
-  const auto cert = boost::wintls::x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
   boost::wintls::detail::context_certificates ctx_certs;
-  ctx_certs.add_certificate_authority(cert.get());
+  ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
+
+  const auto cert = load_chain_file(TEST_CERTIFICATES_PATH "leaf_chain.pem");
+
   // success case: host name is not verified when parameter is empty string
   CHECK(ctx_certs.verify_certificate(cert.get(), "", false) == ERROR_SUCCESS);
-  // success case: test_certificate contains the host name "localhost"
-  CHECK(ctx_certs.verify_certificate(cert.get(), "localhost", false) == ERROR_SUCCESS);
-  // fail case: incorrect host name 
+  // success case: certificate contains the common name "wintls.test"
+  CHECK(ctx_certs.verify_certificate(cert.get(), "wintls.test", false) == ERROR_SUCCESS);
+  // success case: certificate allows alternative names "*.wintls.test"
+  CHECK(ctx_certs.verify_certificate(cert.get(), "subdomain.wintls.test", false) == ERROR_SUCCESS);
+  // fail case: incorrect host name
   CHECK(ctx_certs.verify_certificate(cert.get(), "wrong.host", false) == CERT_E_CN_NO_MATCH);
+}
+
+TEST_CASE("check certificate revocation") {
+  SECTION("single self signed certificate") {
+    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+    boost::wintls::detail::context_certificates ctx_certs;
+    ctx_certs.add_certificate_authority(cert.get());
+    // It appears that there is no revocation check done in this case,
+    // otherwise this should fail with CRYPT_E_NO_REVOCATION_CHECK
+    // as the certificate does not supply any information how to check for revocation.
+    // Note that this does not depend on whether we pass CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
+    // or CERT_CHAIN_REVOCATION_CHECK_CHAIN to CertGetCertificateChain.
+    // So apparently root certificates are never checked for revocation, which probably makes sense.
+    CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == ERROR_SUCCESS);
+  }
+
+  SECTION("self signed certificate chain") {
+    boost::wintls::detail::context_certificates ctx_certs;
+    ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
+
+    const auto cert = load_chain_file(TEST_CERTIFICATES_PATH "leaf_chain.pem");
+
+    // fail case: cannot check for revocation (no CRL or OCSP endpoint specified and no local CRL available)
+    CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == CRYPT_E_NO_REVOCATION_CHECK);
+
+    // success case: empty CRLs available
+    ctx_certs.add_crl(crl_from_file(TEST_CERTIFICATES_PATH "ca_intermediate_empty.crl.pem").get());
+    ctx_certs.add_crl(crl_from_file(TEST_CERTIFICATES_PATH "ca_root_empty.crl.pem").get());
+    CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == ERROR_SUCCESS);
+
+    // fail case: CRL of ca_intermediate with revoked leaf certificate
+    ctx_certs.add_crl(crl_from_file(TEST_CERTIFICATES_PATH "ca_intermediate_leaf_revoked.crl.pem").get());
+    CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == CRYPT_E_REVOKED);
+  }
 }

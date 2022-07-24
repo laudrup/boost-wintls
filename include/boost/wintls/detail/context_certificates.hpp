@@ -28,20 +28,22 @@ using cert_store_ptr = std::unique_ptr<std::remove_pointer_t<HCERTSTORE>, std::f
 class context_certificates {
 public:
   void add_certificate_authority(const CERT_CONTEXT* cert) {
-    if (!cert_store_) {
-      cert_store_ = cert_store_ptr{
-        CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr),
-        [](HCERTSTORE store) { CertCloseStore(store, 0); }
-      };
-      if (!cert_store_) {
-        throw_last_error("CertOpenStore");
-      }
-    }
+    init_cert_store();
     if(!CertAddCertificateContextToStore(cert_store_.get(),
                                          cert,
                                          CERT_STORE_ADD_ALWAYS,
                                          nullptr)) {
       throw_last_error("CertAddCertificateContextToStore");
+    }
+  }
+
+  void add_crl(const CRL_CONTEXT* crl_ctx) {
+    init_cert_store();
+    if (!CertAddCRLContextToStore(cert_store_.get(),
+                                  crl_ctx,
+                                  CERT_STORE_ADD_ALWAYS,
+                                  nullptr)) {
+      throw_last_error("CertAddCRLContextToStore");
     }
   }
 
@@ -80,6 +82,18 @@ public:
   cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
+  void init_cert_store() {
+    if (!cert_store_) {
+      cert_store_ = cert_store_ptr{
+        CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr),
+        [](HCERTSTORE store) { CertCloseStore(store, 0); }
+      };
+      if (!cert_store_) {
+        throw_last_error("CertOpenStore");
+      }
+    }
+  }
+
   DWORD verify_certificate_chain(const CERT_CONTEXT* cert, 
                                  HCERTCHAINENGINE engine, 
                                  const std::string& server_hostname, 

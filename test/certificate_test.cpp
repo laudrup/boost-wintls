@@ -79,9 +79,9 @@ TEST_CASE("verify certificate host name") {
   boost::wintls::detail::context_certificates ctx_certs;
   ctx_certs.add_certificate_authority(cert.get());
   // success case: host name is not verified when parameter is empty string
-  CHECK(ctx_certs.verify_certificate(cert.get(), "") == ERROR_SUCCESS);
+  CHECK(ctx_certs.verify_certificate(cert.get(), "", false) == ERROR_SUCCESS);
   // success case: test_certificate contains the host name "localhost"
-  CHECK(ctx_certs.verify_certificate(cert.get(), "localhost") == ERROR_SUCCESS);
+  CHECK(ctx_certs.verify_certificate(cert.get(), "localhost", false) == ERROR_SUCCESS);
   // fail case: incorrect host name 
-  CHECK(ctx_certs.verify_certificate(cert.get(), "wrong.host") == CERT_E_CN_NO_MATCH);
+  CHECK(ctx_certs.verify_certificate(cert.get(), "wrong.host", false) == CERT_E_CN_NO_MATCH);
 }

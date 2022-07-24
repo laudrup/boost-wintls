@@ -55,6 +55,13 @@ public:
     creds.dwVersion = SCHANNEL_CRED_VERSION;
     creds.grbitEnabledProtocols = static_cast<DWORD>(context_.method_);
     creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_DEFAULT_CREDS;
+    // If revocation checking is enables, specify SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
+    // to cause the TLS certificate status request extension (commonly known as OCSP stapling)
+    // to be sent. This flag matches the CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
+    // flag that we pass to the CertGetCertificateChain calls during our manual authentication.
+    if (check_revocation_) {
+      creds.dwFlags |= SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT;
+    }
 
     auto usage = [this]() {
       switch (handshake_type_) {
@@ -263,6 +270,10 @@ public:
     server_hostname_ = hostname;
   }
 
+  void set_certificate_revocation_check(bool check) {
+    check_revocation_ = check;
+  }
+
 private:
   SECURITY_STATUS manual_auth(){
     if (!context_.verify_server_certificate_) {
@@ -276,7 +287,7 @@ private:
 
     cert_context_ptr remote_cert{ctx_ptr, &CertFreeCertificateContext};
 
-    last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get(), server_hostname_));
+    last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get(), server_hostname_, check_revocation_));
     if (last_error_ != SEC_E_OK) {
       return last_error_;
     }
@@ -294,6 +305,7 @@ private:
   net::mutable_buffer in_buffer_;
   handshake_input_buffers input_buffers_;
   std::string server_hostname_;
+  bool check_revocation_ = false;
 };
 
 } // namespace detail

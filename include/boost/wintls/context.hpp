@@ -113,11 +113,11 @@ public:
   }
 
 private:
-  DWORD verify_certificate(const CERT_CONTEXT* cert, const std::string& server_hostname) {
+  DWORD verify_certificate(const CERT_CONTEXT* cert, const std::string& server_hostname, bool check_revocation) {
     if (!verify_server_certificate_) {
       return ERROR_SUCCESS;
     }
-    return static_cast<DWORD>(ctx_certs_.verify_certificate(cert, server_hostname));
+    return static_cast<DWORD>(ctx_certs_.verify_certificate(cert, server_hostname, check_revocation));
   }
 
   const CERT_CONTEXT* server_cert() const {

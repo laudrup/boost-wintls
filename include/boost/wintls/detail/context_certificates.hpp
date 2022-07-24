@@ -45,7 +45,7 @@ public:
     }
   }
 
-  HRESULT verify_certificate(const CERT_CONTEXT* cert, const std::string& server_hostname) {
+  HRESULT verify_certificate(const CERT_CONTEXT* cert, const std::string& server_hostname, bool check_revocation) {
     HRESULT status = CERT_E_UNTRUSTEDROOT;
 
     if (cert_store_) {
@@ -64,13 +64,13 @@ public:
         return static_cast<HRESULT>(GetLastError());
       }
 
-      status = static_cast<HRESULT>(verify_certificate_chain(cert, chain_engine.ptr, server_hostname));
+      status = static_cast<HRESULT>(verify_certificate_chain(cert, chain_engine.ptr, server_hostname, check_revocation));
     }
 
     if (status != ERROR_SUCCESS && use_default_cert_store) {
       // Calling CertGetCertificateChain with a NULL pointer engine uses
       // the default system certificate store
-      status = static_cast<HRESULT>(verify_certificate_chain(cert, nullptr, server_hostname));
+      status = static_cast<HRESULT>(verify_certificate_chain(cert, nullptr, server_hostname, check_revocation));
     }
 
     return status;
@@ -80,17 +80,22 @@ public:
   cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
-  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, HCERTCHAINENGINE engine, const std::string& server_hostname) {
+  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, 
+                                 HCERTCHAINENGINE engine, 
+                                 const std::string& server_hostname, 
+                                 bool check_revocation) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);
 
     const CERT_CHAIN_CONTEXT* chain_ctx_ptr;
+    DWORD chain_flags = check_revocation ? CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
+                                         : 0;
     if(!CertGetCertificateChain(engine,
                                 cert,
                                 nullptr,
                                 cert->hCertStore,
                                 &chain_parameters,
-                                0,
+                                chain_flags,
                                 nullptr,
                                 &chain_ctx_ptr)) {
       return GetLastError();
@@ -98,6 +103,9 @@ private:
 
     std::unique_ptr<const CERT_CHAIN_CONTEXT, decltype(&CertFreeCertificateChain)>
       scoped_chain_ctx{chain_ctx_ptr, &CertFreeCertificateChain};
+    // We could return here if (scoped_chain_ctx->TrustStatus.dwErrorStatus != CERT_TRUST_NO_ERROR),
+    // but we would have to map the error code to a system error ourselves,.
+    // Instead we rely on CertVerifyCertificateChainPolicy to obtain the appropriate system error.
 
     HTTPSPolicyCallbackData https_policy{};
     https_policy.cbStruct = sizeof(https_policy);

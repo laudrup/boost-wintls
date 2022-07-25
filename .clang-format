@@ -1,5 +1,4 @@
 Language: Cpp
-BasedOnStyle: None
 AlignAfterOpenBracket: Align
 AlignEscapedNewlines: Left
 AlignOperands: Align
@@ -30,11 +29,15 @@ EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: Always
 FixNamespaceComments: true
 IncludeBlocks: Regroup
+IndentCaseLabels: true
 IndentWidth: 2
 LambdaBodyIndentation: Signature
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PackConstructorInitializers: Never
+PenaltyBreakAssignment: 100
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Left
 QualifierAlignment: Left
 ReferenceAlignment: Left
@@ -49,7 +52,7 @@ SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
 SpaceBeforeCpp11BracedList: false
 SpaceBeforeInheritanceColon: true
-SpaceBeforeParens: Always
+SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
 SpaceInEmptyParentheses: false

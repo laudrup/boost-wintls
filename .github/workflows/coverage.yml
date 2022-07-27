@@ -8,7 +8,7 @@ on:
 
 jobs:
   codecoverage:
-    runs-on: windows-latest
+    runs-on: windows-2019
     name: Generate and upload code coverage
     steps:
     - name: Checkout

@@ -32,8 +32,9 @@ struct StringMaker<boost::system::error_code> {
 
 inline std::vector<unsigned char> bytes_from_file(const std::string& path) {
   std::ifstream ifs{path};
-  if (ifs.fail())
-      throw std::runtime_error("Failed to open file " + path);
+  if (ifs.fail()) {
+    throw std::runtime_error("Failed to open file " + path);
+  }
   return {std::istreambuf_iterator<char>{ifs}, {}};
 }
 

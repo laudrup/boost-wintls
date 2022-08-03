@@ -57,8 +57,9 @@ boost::wintls::cert_context_ptr add_cert_str_to_store(HCERTSTORE store,
                                         get_handle ? &cert_in_store : nullptr)) {
     boost::wintls::detail::throw_last_error("CertAddEncodedCertificateToStore");
   }
-  if (get_handle)
+  if (get_handle) {
     return {cert_in_store, &CertFreeCertificateContext};
+  }
   return {nullptr, [](PCCERT_CONTEXT){ return TRUE; }};
 }
 

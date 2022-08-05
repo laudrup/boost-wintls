@@ -19,13 +19,20 @@ target_link_libraries(echo_client PRIVATE
   boost-wintls
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # Temporary workaround issue https://github.com/boostorg/beast/issues/1582
   target_compile_options(https_client PRIVATE "$<$<CONFIG:RELEASE>:-wd4702>")
   target_compile_options(async_https_client PRIVATE "$<$<CONFIG:RELEASE>:-wd4702>")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  target_compile_options(echo_client PRIVATE -Wno-unused-private-field)
+  target_compile_options(echo_server PRIVATE -Wno-unused-private-field)
   target_compile_options(https_client PRIVATE -Wno-unused-private-field)
   target_compile_options(async_https_client PRIVATE -Wno-unused-private-field)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # Work around string table overflow by enabling optimizations
+  target_compile_options(async_https_client PRIVATE -Os)
 endif()

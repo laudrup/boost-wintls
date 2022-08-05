@@ -10,8 +10,6 @@
 
 #include "unittest.hpp"
 
-#include <boost/asio.hpp>
-
 template<typename Stream>
 class async_echo_server : public Stream {
 public:

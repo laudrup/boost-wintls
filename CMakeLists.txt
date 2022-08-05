@@ -45,7 +45,6 @@ if(WIN32)
     /W4 # Baseline reasonable warnings
     /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
     /w14263 # 'function': member function does not override any base class virtual member function
-    /w14265 # 'classname': class has virtual functions, but destructor is not virtual instances of this class may not be destructed correctly
     /w14287 # 'operator': unsigned/negative constant mismatch
     /we4289 # nonstandard extension used: 'variable': loop control variable declared in the for-loop is used outside the for-loop scope
     /w14296 # 'operator': expression is always 'boolean_value'
@@ -61,6 +60,7 @@ if(WIN32)
     /w14906 # string literal cast to 'LPWSTR'
     /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
     /w15038 # data member 'member1' will be initialized after data member 'member2'
+    /w14062 # enumerator 'identifier' in switch of enum 'enumeration' is not handled
     /permissive- # standards conformance mode for MSVC compiler.
   )
 

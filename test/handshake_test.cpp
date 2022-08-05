@@ -18,8 +18,6 @@
 #include "wintls_server_stream.hpp"
 
 #include <boost/system/error_code.hpp>
-#include <boost/beast/_experimental/test/stream.hpp>
-#include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
 namespace boost {

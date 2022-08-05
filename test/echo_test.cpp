@@ -17,8 +17,6 @@
 
 #include <boost/wintls.hpp>
 
-#include <boost/asio.hpp>
-
 #include <cstdint>
 #include <string>
 #include <tuple>

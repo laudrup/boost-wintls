@@ -39,13 +39,13 @@ on Microsoft Windows although it is intended to be used alongside the
 existing Boost.Asio.SSL implementation.
 
 [Boost](https://www.boost.org) is required. Currently tested with
-Boost 1.72, but at least newer versions ought to work as well.
+Boost 1.75 to 1.79 but most newer versions ought to work.
 
 A working C++ compiler supporting the C++14 standard is required.
 Currently tested compilers are:
 
+- MSVC for Visual Studio 2022
 - MSVC for Visual Studio 2019
-- MSVC for Visual Studio 2017
 - Clang
 - MinGW64 (GCC)
 

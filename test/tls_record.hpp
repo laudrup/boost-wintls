@@ -9,7 +9,6 @@
 
 #include "unittest.hpp"
 
-#include <boost/asio.hpp>
 #include <boost/variant.hpp>
 
 #include <cstdint>

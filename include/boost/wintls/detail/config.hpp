@@ -9,7 +9,15 @@
 #define BOOST_WINTLS_DETAIL_CONFIG_HPP
 
 #include <boost/config.hpp>
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#endif
 #include <boost/asio.hpp>
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 #if !defined(__MINGW32__)
 #pragma comment(lib, "crypt32")

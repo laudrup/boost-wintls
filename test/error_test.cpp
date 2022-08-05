@@ -30,5 +30,5 @@ TEST_CASE("throw last error") {
   }
   CHECK(error.code().value() == 0x00000053);
   CHECK(error.code().message() == "Fail on INT 24");
-  CHECK(error.what() == std::string("YetAnotherUglyWindowsAPIFunctionEx3: Fail on INT 24"));
+  CHECK_THAT(error.what(), Catch::Contains("YetAnotherUglyWindowsAPIFunctionEx3: Fail on INT 24"));
 }

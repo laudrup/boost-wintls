@@ -26,6 +26,13 @@
 #define SP_PROT_TLS1_2_CLIENT 0x800
 #endif
 
+#ifndef SP_PROT_TLS1_3_SERVER
+#define SP_PROT_TLS1_3_SERVER 0x1000
+#endif
+
+#ifndef SP_PROT_TLS1_3_CLIENT
+#define SP_PROT_TLS1_3_CLIENT 0x2000
+#endif
 
 namespace boost {
 namespace wintls {
@@ -69,7 +76,16 @@ enum class method {
   tlsv12_client = SP_PROT_TLS1_2_CLIENT,
 
   /// TLS version 1.2 server.
-  tlsv12_server = SP_PROT_TLS1_2_SERVER
+  tlsv12_server = SP_PROT_TLS1_2_SERVER,
+
+  /// Generic TLS version 1.3.
+  tlsv13 = SP_PROT_TLS1_3_SERVER | SP_PROT_TLS1_3_CLIENT,
+
+  /// TLS version 1.3 client.
+  tlsv13_client = SP_PROT_TLS1_3_CLIENT,
+
+  /// TLS version 1.3 server.
+  tlsv13_server = SP_PROT_TLS1_3_SERVER
 };
 
 } // namespace wintls

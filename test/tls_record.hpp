@@ -18,7 +18,8 @@ enum class tls_version : std::uint16_t {
   ssl_3_0 = 0x0300,
   tls_1_0 = 0x0301,
   tls_1_1 = 0x0302,
-  tls_1_2 = 0x0303
+  tls_1_2 = 0x0303,
+  tls_1_3 = 0x0304
 };
 
 struct tls_change_cipher_spec {

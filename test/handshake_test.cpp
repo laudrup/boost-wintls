@@ -22,6 +22,50 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
+namespace boost {
+namespace wintls {
+
+std::ostream& operator<<(std::ostream& os, const method meth) {
+  switch (meth) {
+    case method::system_default:
+      return os << "system_default";
+    case method::sslv3:
+      return os << "sslv3";
+    case method::sslv3_client:
+      return os << "sslv3_client";
+    case method::sslv3_server:
+      return os << "sslv3_server";
+    case method::tlsv1:
+      return os << "tlsv1";
+    case method::tlsv1_client:
+      return os << "tlsv1_client";
+    case method::tlsv1_server:
+      return os << "tlsv1_server";
+    case method::tlsv11:
+      return os << "tlsv11";
+    case method::tlsv11_client:
+      return os << "tlsv11_client";
+    case method::tlsv11_server:
+      return os << "tlsv11_server";
+    case method::tlsv12:
+      return os << "tlsv12";
+    case method::tlsv12_client:
+      return os << "tlsv12_client";
+    case method::tlsv12_server:
+      return os << "tlsv12_server";
+    case method::tlsv13:
+      return os << "tlsv13";
+    case method::tlsv13_client:
+      return os << "tlsv13_client";
+    case method::tlsv13_server:
+      return os << "tlsv13_server";
+  }
+  BOOST_UNREACHABLE_RETURN(0);
+}
+
+} // namespace wintls
+} // namespace boost
+
 TEST_CASE("certificates") {
   using namespace std::string_literals;
 
@@ -166,7 +210,7 @@ TEST_CASE("client certificates") {
     // and expected error code is 199. Error message is correct.
     // Seems like the error code lower bits are right, take the lower 2 bytes of the int.
     // It is unclear why this happens.
-    CHECK(server_error.message() == "peer did not return a certificate");
+    CHECK_THAT(server_error.message(), Catch::Contains("peer did not return a certificate"));
     CHECK((server_error.value() & 0xff) == SSL_R_PEER_DID_NOT_RETURN_A_CERTIFICATE);
   }
 
@@ -366,7 +410,9 @@ TEST_CASE("ssl/tls versions") {
         { boost::wintls::method::tlsv11, tls_version::tls_1_1 },
         { boost::wintls::method::tlsv11_client, tls_version::tls_1_1 },
         { boost::wintls::method::tlsv12, tls_version::tls_1_2 },
-        { boost::wintls::method::tlsv12_client, tls_version::tls_1_2 }
+        { boost::wintls::method::tlsv12_client, tls_version::tls_1_2 },
+        { boost::wintls::method::tlsv13, tls_version::tls_1_3 },
+        { boost::wintls::method::tlsv13_client, tls_version::tls_1_3 }
       })
     );
 
@@ -381,7 +427,12 @@ TEST_CASE("ssl/tls versions") {
   client_stream.next_layer().connect(server_stream);
 
   client_stream.async_handshake(boost::wintls::handshake_type::client,
-                                [](const boost::system::error_code& ec) {
+                                [method, &io_context](const boost::system::error_code& ec) {
+                                  if (ec.value() == SEC_E_ALGORITHM_MISMATCH) {
+                                    WARN("Protocol not supported: " << method);
+                                    io_context.stop();
+                                    return;
+                                  }
                                   REQUIRE(ec == net::error::eof);
                                 });
 

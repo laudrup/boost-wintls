@@ -11,6 +11,18 @@ jobs:
       matrix:
         config:
           - {
+            name: "MSVC 2022 (Debug)",
+            os: windows-2022,
+            build_args: "--config Debug",
+            test_args: "-C Debug"
+            }
+          - {
+            name: "MSVC 2022 (Release)",
+            os: windows-2022,
+            build_args: "--config Release",
+            test_args: "-C Release"
+            }
+          - {
             name: "MSVC 2019 (Toolset 141, Debug)",
             os: windows-2019,
             config_args: "-T v141",
@@ -49,20 +61,6 @@ jobs:
             name: "MSVC 2019 (Toolset 142, Release)",
             os: windows-2019,
             config_args: "-T v142",
-            build_args: "--config Release",
-            test_args: "-C Release"
-            }
-          - {
-            name: "MSVC 2017 (Debug)",
-            os: windows-2016,
-            config_args: "-A x64",
-            build_args: "--config Debug",
-            test_args: "-C Debug"
-            }
-          - {
-            name: "MSVC 2017 (Release)",
-            os: windows-2016,
-            config_args: "-A x64",
             build_args: "--config Release",
             test_args: "-C Release"
             }

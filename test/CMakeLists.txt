@@ -1,5 +1,6 @@
 Include(FetchContent)
 
+find_package(Boost COMPONENTS filesystem)
 find_package(OpenSSL COMPONENTS SSL Crypto)
 find_package(Threads)
 
@@ -44,7 +45,7 @@ if(ENABLE_ADDRESS_SANITIZER)
 endif()
 
 target_compile_definitions(unittest PRIVATE
-  TEST_CERTIFICATES_PATH="${CMAKE_CURRENT_LIST_DIR}/test_certificates/"
+  TEST_CERTIFICATES_PATH="${CMAKE_CURRENT_LIST_DIR}/test_certificates/gen/"
 )
 
 target_link_libraries(unittest PRIVATE
@@ -52,6 +53,7 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::Crypto
   Threads::Threads
   Catch2::Catch2
+  Boost::filesystem
   boost-wintls
 )
 

@@ -1,41 +1,47 @@
-# store some temporary files in a subfolder that can be removed later
-mkdir -p tmp
+# This script is used to generate all the files in ./gen using the config files from ./conf.
+# These files are used from the unit tests in certificate_test.cpp
+
+# Clear all previously generated files
+rm -rf gen
+mkdir -p gen
 
 # Generate self signed Root certificate valid for 100 years
-openssl req -days 36525 -nodes -new -x509 -keyout ca_root.key -out ca_root.crt -config conf/ca_root.conf
+openssl req -days 36525 -nodes -new -x509 -keyout gen/ca_root.key -out gen/ca_root.crt -config conf/ca_root.conf
 # Request intermediate certificate
-openssl req -nodes -new -keyout ca_intermediate.key -out tmp/ca_intermediate.csr -config conf/ca_intermediate.conf
-# Request leaf certificate
-openssl req -nodes -new -keyout leaf.key -out tmp/leaf.csr -config conf/leaf.conf
+openssl req -nodes -new -keyout gen/ca_intermediate.key             -out gen/ca_intermediate.csr             -config conf/ca_intermediate.conf
+# Request leaf certificates
+openssl req -nodes -new -keyout gen/leaf.key                        -out gen/leaf.csr                        -config conf/leaf.conf
+openssl req -nodes -new -keyout gen/leaf_ocsp.key                   -out gen/leaf_ocsp.csr                   -config conf/leaf_ocsp.conf
+openssl req -nodes -new -keyout gen/leaf_ocsp_revoked.key           -out gen/leaf_ocsp_revoked.csr           -config conf/leaf_ocsp.conf
+openssl req -nodes -new -keyout gen/ocsp_signer_ca_intermediate.key -out gen/ocsp_signer_ca_intermediate.csr -config conf/ocsp_signer_ca_intermediate.conf
 
 # Setup for signing the subordinate certificates
-touch tmp/certindex
-echo 01 > tmp/certserial
-echo 01 > tmp/crlnumber
+touch gen/certindex
+echo 01 > gen/certserial
+echo 01 > gen/crlnumber
+mkdir -p gen/newcerts
 
 # Sign intermediate certificate
-openssl x509 -req -CAcreateserial -days 36525 -extensions req_v3_ca -extfile conf/ca_intermediate.conf -in tmp/ca_intermediate.csr -out ca_intermediate.crt -CAkey ca_root.key -CA ca_root.crt
-# Sign leaf certificate
-openssl x509 -req -CAcreateserial -days 36525 -extensions req_v3_usr -extfile conf/leaf.conf -in tmp/leaf.csr -out leaf.crt -CAkey ca_intermediate.key -CA ca_intermediate.crt
+openssl x509 -req -CA gen/ca_root.crt -CAkey gen/ca_root.key -CAcreateserial  -days 36525 -extensions req_v3_ca -extfile conf/ca_intermediate.conf -in gen/ca_intermediate.csr -out gen/ca_intermediate.crt 
+# Sign leaf certificates
+SIGN_LEAF_COMMON_PARAMS="ca  -config conf/ca_intermediate.conf -extensions req_v3_usr -batch"
+openssl $SIGN_LEAF_COMMON_PARAMS -extfile conf/leaf.conf                        -in gen/leaf.csr                        -out gen/leaf.crt
+openssl $SIGN_LEAF_COMMON_PARAMS -extfile conf/leaf_ocsp.conf                   -in gen/leaf_ocsp.csr                   -out gen/leaf_ocsp.crt
+openssl $SIGN_LEAF_COMMON_PARAMS -extfile conf/leaf_ocsp.conf                   -in gen/leaf_ocsp_revoked.csr           -out gen/leaf_ocsp_revoked.crt
+openssl $SIGN_LEAF_COMMON_PARAMS -extfile conf/ocsp_signer_ca_intermediate.conf -in gen/ocsp_signer_ca_intermediate.csr -out gen/ocsp_signer_ca_intermediate.crt
 
-# Create certificate chain for leaf.crt
-cat leaf.crt ca_intermediate.crt ca_root.crt > leaf_chain.pem
+# Create certificate chains for the leaf certificates
+cat gen/leaf.crt              gen/ca_intermediate.crt gen/ca_root.crt > gen/leaf_chain.pem
+cat gen/leaf_ocsp.crt         gen/ca_intermediate.crt gen/ca_root.crt > gen/leaf_ocsp_chain.pem
+cat gen/leaf_ocsp_revoked.crt gen/ca_intermediate.crt gen/ca_root.crt > gen/leaf_ocsp_revoked_chain.pem
 
 # Generate empty CRL
-openssl ca -config conf/ca_root.conf -gencrl -keyfile ca_root.key -cert ca_root.crt -out ca_root_empty.crl.pem
-openssl ca -config conf/ca_intermediate.conf -gencrl -keyfile ca_intermediate.key -cert ca_intermediate.crt -out ca_intermediate_empty.crl.pem
+openssl ca -config conf/ca_root.conf         -gencrl -out gen/ca_root_empty.crl.pem
+openssl ca -config conf/ca_intermediate.conf -gencrl -out gen/ca_intermediate_empty.crl.pem
 
-# revoke leaf.crt
-openssl ca -config conf/ca_intermediate.conf -revoke leaf.crt -keyfile ca_intermediate.key -cert ca_intermediate.crt
+# Revoke leaf.crt and leaf_ocsp_revoked.crt
+openssl ca -config conf/ca_intermediate.conf -revoke gen/leaf.crt
+openssl ca -config conf/ca_intermediate.conf -revoke gen/leaf_ocsp_revoked.crt
 
-# revoke ca_intermediate.crt
-openssl ca -config conf/ca_root.conf -revoke ca_intermediate.crt -keyfile ca_root.key -cert ca_root.crt
-
-# Generate CRLs including the revoked certificates
-openssl ca -config conf/ca_root.conf -gencrl -keyfile ca_root.key -cert ca_root.crt -out ca_root_intermediate_revoked.crl.pem
-openssl ca -config conf/ca_intermediate.conf -gencrl -keyfile ca_intermediate.key -cert ca_intermediate.crt -out ca_intermediate_leaf_revoked.crl.pem
-
-# keep only the files actually used from the unit test
-rm -r tmp
-rm *.srl
-rm *.key
+# Generate CRL including the revoked certificates
+openssl ca -config conf/ca_intermediate.conf -gencrl -out gen/ca_intermediate_leaf_revoked.crl.pem

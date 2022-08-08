@@ -6,18 +6,20 @@
 //
 
 #include "certificate.hpp"
+#include "ocsp_responder.hpp"
 #include "unittest.hpp"
 
 #include <boost/wintls/certificate.hpp>
 #include <boost/wintls/error.hpp>
 #include <boost/wintls/detail/context_certificates.hpp>
 
+#include <chrono>
+#include <cstdint>
 #include <fstream>
 #include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 namespace {
 std::string get_cert_name(const CERT_CONTEXT* cert) {
@@ -192,7 +194,7 @@ TEST_CASE("check certificate revocation") {
     CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == ERROR_SUCCESS);
   }
 
-  SECTION("self signed certificate chain") {
+  SECTION("certificate chain with CRLs") {
     boost::wintls::detail::context_certificates ctx_certs;
     ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
 
@@ -209,5 +211,46 @@ TEST_CASE("check certificate revocation") {
     // fail case: CRL of ca_intermediate with revoked leaf certificate
     ctx_certs.add_crl(crl_from_file(TEST_CERTIFICATES_PATH "ca_intermediate_leaf_revoked.crl.pem").get());
     CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == CRYPT_E_REVOKED);
+  }
+
+  SECTION("certificate chain with OCSP") {
+    boost::wintls::detail::context_certificates ctx_certs;
+    ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
+
+    // fail case: OCSP responder is not running
+    const auto cert_ocsp = load_chain_file(TEST_CERTIFICATES_PATH "leaf_ocsp_chain.pem");
+    const auto res_without_responder = ctx_certs.verify_certificate(cert_ocsp.get(), "", true);
+    // NOTE: We start the openssl OCSP responder with '-nmin 1'
+    //       which causes the OCSP response to be cached by windows for one minute.
+    //       This is the smallest possible value. If we do not pass -nmin or -ndays to openssl,
+    //       it will seemingly consider the OCSP response to be valid indefinitely.
+    //       Therefore we allow a successful response here and print a warning in that case.
+    if (res_without_responder == ERROR_SUCCESS) {
+      WARN("Validation of the test certificate was successful even though the OCSP responder was not yet started.\n"
+           "This may happen if the unit test was run twice within one minute.");
+    } else {
+      CHECK(res_without_responder == CRYPT_E_REVOCATION_OFFLINE);
+    }
+
+    // success case: cert_ocsp is fine
+    auto ocsp_responder = start_ocsp_responder();
+    // 'running()' does not mean that it is responding yet, but that we did start the process correctly
+    CHECK(ocsp_responder.running());
+    // It takes a few seconds for the OCSP responder to become available.
+    // Therefore, we try to verify the certificate in a loop, but for at most 30 seconds.
+    auto res_with_responder = CRYPT_E_REVOCATION_OFFLINE;
+    const auto start = std::chrono::system_clock::now();
+    while (res_with_responder == CRYPT_E_REVOCATION_OFFLINE) {
+      res_with_responder = ctx_certs.verify_certificate(cert_ocsp.get(), "", true);
+      if (std::chrono::system_clock::now() - start > std::chrono::seconds(30)) {
+        WARN("OCSP responder did not provide a response within 30 seconds.");
+        break;
+      }
+    }
+    CHECK(res_with_responder == ERROR_SUCCESS);
+
+    // fail case: cert_ocsp_revoked is revoked
+    const auto cert_ocsp_revoked = load_chain_file(TEST_CERTIFICATES_PATH "leaf_ocsp_revoked_chain.pem");
+    CHECK(ctx_certs.verify_certificate(cert_ocsp_revoked.get(), "", true) == CRYPT_E_REVOKED);
   }
 }

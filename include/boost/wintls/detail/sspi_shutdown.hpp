@@ -31,7 +31,7 @@ public:
   boost::system::error_code operator()() {
     shutdown_buffers buffers;
 
-    SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(ctxt_handle_.get(), buffers);
+    SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(ctxt_handle_.get(), buffers.desc());
     if (sc != SEC_E_OK) {
       return error::make_error_code(sc);
     }
@@ -46,7 +46,7 @@ public:
                                                            nullptr,
                                                            0,
                                                            ctxt_handle_.get(),
-                                                           buffers,
+                                                           buffers.desc(),
                                                            &out_flags,
                                                            nullptr);
     if (sc != SEC_E_OK) {

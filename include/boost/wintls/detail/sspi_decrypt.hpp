@@ -55,7 +55,7 @@ public:
 
     input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
     const auto size = buffers_[0].cbBuffer;
-    last_error_ = detail::sspi_functions::DecryptMessage(ctxt_handle_.get(), buffers_, 0, nullptr);
+    last_error_ = detail::sspi_functions::DecryptMessage(ctxt_handle_.get(), buffers_.desc(), 0, nullptr);
 
     if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       buffers_[0].cbBuffer = size;

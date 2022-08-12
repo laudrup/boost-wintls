@@ -115,7 +115,7 @@ public:
                                                                         nullptr,
                                                                         0,
                                                                         ctxt_handle_.get(),
-                                                                        buffers,
+                                                                        buffers.desc(),
                                                                         &out_flags,
                                                                         nullptr);
         if (buffers[0].cbBuffer != 0 && buffers[0].pvBuffer != nullptr) {
@@ -154,10 +154,10 @@ public:
                                                                         client_context_flags,
                                                                         0,
                                                                         SECURITY_NATIVE_DREP,
-                                                                        input_buffers_,
+                                                                        input_buffers_.desc(),
                                                                         0,
                                                                         nullptr,
-                                                                        out_buffers,
+                                                                        out_buffers.desc(),
                                                                         &out_flags,
                                                                         nullptr);
         break;
@@ -169,11 +169,11 @@ public:
         }
         last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_.get(),
                                                                     ctxt_handle_ ? ctxt_handle_.get() : nullptr,
-                                                                    input_buffers_,
+                                                                    input_buffers_.desc(),
                                                                     f_context_req,
                                                                     SECURITY_NATIVE_DREP,
                                                                     ctxt_handle_.get(),
-                                                                    out_buffers,
+                                                                    out_buffers.desc(),
                                                                     &out_flags,
                                                                     &expiry);
       }

@@ -41,7 +41,7 @@ public:
   using iterator = typename array_type::iterator;
   using const_iterator = typename array_type::const_iterator;
 
-  operator PSecBufferDesc() {
+  PSecBufferDesc desc() {
     return &sec_buffer_desc_;
   }
 

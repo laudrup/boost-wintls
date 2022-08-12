@@ -32,7 +32,7 @@ public:
       return 0;
     }
 
-    sc = detail::sspi_functions::EncryptMessage(ctxt_handle_.get(), 0, buffers, 0);
+    sc = detail::sspi_functions::EncryptMessage(ctxt_handle_.get(), 0, buffers.desc(), 0);
     if (sc != SEC_E_OK) {
       ec = error::make_error_code(sc);
       return 0;

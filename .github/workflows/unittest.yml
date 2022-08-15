@@ -4,82 +4,55 @@ on: [push, pull_request]
 
 jobs:
   unittest:
-    name: "${{ matrix.config.name }} - Boost ${{ matrix.boost_version }}"
-    runs-on: ${{ matrix.config.os }}
+    name: "${{ matrix.generator }} ${{ matrix.toolset }} Boost ${{ matrix.boost_version }} ${{ matrix.build_type }} ${{ matrix.name_args }}"
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         boost_version: ["1.75.0", "1.76.0", "1.77.0", "1.78.0", "1.79.0"]
-        config:
-          - {
-            name: "MSVC 2022 (Debug)",
-            os: windows-2022,
-            build_args: "--config Debug",
-            test_args: "-C Debug"
-            }
-          - {
-            name: "MSVC 2022 (Release)",
-            os: windows-2022,
-            build_args: "--config Release",
-            test_args: "-C Release"
-            }
-          - {
-            name: "MSVC 2019 (Toolset 141, Debug)",
-            os: windows-2019,
-            config_args: "-T v141",
-            build_args: "--config Debug",
-            test_args: "-C Debug"
-            }
-          - {
-            name: "MSVC 2019 (Toolset 141, Release)",
-            os: windows-2019,
-            config_args: "-T v141",
-            build_args: "--config Release",
-            test_args: "-C Release"
-            }
-          - {
-            name: "MSVC 2019 (Toolset 142, Debug)",
-            os: windows-2019,
-            config_args: "-T v142",
-            build_args: "--config Debug",
-            test_args: "-C Debug"
-            }
-          - {
-            name: "MSVC 2019 (Toolset 142, Debug, Unicode)",
-            os: windows-2019,
-            config_args: "-T v142",
-            build_args: "--config Debug -- -p:CharacterSet=Unicode",
-            test_args: "-C Debug"
-            }
-          - {
-            name: "MSVC 2019 (Toolset 142, Release, Unicode)",
-            os: windows-2019,
-            config_args: "-T v142",
-            build_args: "--config Release -- -p:CharacterSet=Unicode",
-            test_args: "-C Release"
-            }
-          - {
-            name: "MSVC 2019 (Toolset 142, Release)",
-            os: windows-2019,
-            config_args: "-T v142",
-            build_args: "--config Release",
-            test_args: "-C Release"
-            }
-          - {
-            name: "ClangCL (Windows 2019)",
-            os: windows-2019,
-            config_args: "-T ClangCL"
-            }
-          - {
-            name: "MinGW (Windows 2019)",
-            os: windows-2019,
-            config_args: "-G MinGW Makefiles"
-            }
+        os: [windows-2019, windows-2022]
+        toolset: [v141, v142, v143, ClangCL]
+        build_type: [Debug, Release]
+        generator: ["Visual Studio 16 2019", "Visual Studio 17 2022"]
+        config_args: [""]
+        build_args: [""]
+        name_args: [""]
+        exclude:
+          - { os: windows-2019, toolset: v143 }
+          - { os: windows-2022, toolset: v141 }
+          - { os: windows-2019, generator: "Visual Studio 17 2022" }
+          - { os: windows-2022, generator: "Visual Studio 16 2019" }
+          - { toolset: ClangCL, build_type: Release }
+        include:
+          - boost_version: "1.79.0"
+            os: windows-2022
+            toolset: v143
+            build_type: Debug
+            generator: "Visual Studio 17 2022"
+            config_args: ""
+            build_args: "-- -p:CharacterSet=Unicode"
+            name_args: "Unicode"
+          - boost_version: "1.79.0"
+            os: windows-2022
+            toolset: v143
+            build_type: Debug
+            generator: "Visual Studio 17 2022"
+            config_args: "-A Win32 -DENABLE_TESTING:BOOL=OFF"
+            name_args: "32 bit"
+          - boost_version: "1.79.0"
+            os: windows-2019
+            toolset: ""
+            build_type: ""
+            generator: "MinGW Makefiles"
+            config_args: ""
+            name_args: ""
+
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
+
     - name: Install Boost
       uses: MarkusJx/install-boost@v2.3.0
       id: install-boost
@@ -87,23 +60,44 @@ jobs:
         boost_version: ${{ matrix.boost_version }}
         platform_version: 2019
         arch: null
-    - name: Add boost path
-      run: echo "BOOST_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }}" >> $env:GITHUB_ENV
+
+    - name: Add boost path to environment
+      run: echo BOOST_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }} >> $env:GITHUB_ENV
+
     - name: Install packages
       run: cinst openssl
+
+    - name: Create build directory
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
     - name: Configure
-      env:
-        CMAKE_ARGS: ${{ matrix.config.config_args }}
       shell: bash
-      run: cmake -B build -DENABLE_DOCUMENTATION=OFF "${CMAKE_ARGS}"
+      working-directory: ${{runner.workspace}}/build
+      run: |
+        cmake -T "${{matrix.toolset}}" \
+              -G "${{matrix.generator}}" \
+              ${{matrix.config_args}} \
+              $GITHUB_WORKSPACE
+
+    - name: Add build type configuration to environment
+      if: matrix.generator != 'MinGW Makefiles'
+      run: echo BUILD_CONFIG_ARG="--config ${{matrix.build_type}}" >> $env:GITHUB_ENV
+
     - name: Build
-      env:
-        CMAKE_ARGS: ${{ matrix.config.build_args }}
       shell: bash
-      run: cmake --build build/ ${CMAKE_ARGS}
+      working-directory: ${{runner.workspace}}/build
+      run: |
+        cmake --build . \
+        -j \
+        ${BUILD_CONFIG_ARG} \
+        ${{matrix.build_args}}
+
+    - name: Add test type configuration to environment
+      if: matrix.generator != 'MinGW Makefiles'
+      run: echo TEST_CONFIG_ARG="-C ${{matrix.build_type}}" >> $env:GITHUB_ENV
+
     - name: Run tests
+      working-directory: ${{runner.workspace}}/build
+      run: ctest ${TEST_CONFIG_ARG} -V
       env:
-        CTEST_ARGS: ${{ matrix.config.test_args }}
-      shell: bash
-      run: ctest --output-on-failure ${CTEST_ARGS}
-      working-directory: build/
+        CTEST_OUTPUT_ON_FAILURE: True

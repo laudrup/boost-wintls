@@ -4,8 +4,11 @@ on: [push, pull_request]
 
 jobs:
   unittest:
-    name: "${{ matrix.generator }} ${{ matrix.toolset }} Boost ${{ matrix.boost_version }} ${{ matrix.build_type }} ${{ matrix.name_args }}"
-    runs-on: ${{ matrix.os }}
+    name: "${{matrix.generator}} ${{matrix.toolset}} Boost ${{matrix.boost_version}} ${{matrix.build_type}} ${{matrix.name_args}}"
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -49,61 +52,68 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Add boost toolset to environment
       if: contains(fromJson('["1.78.0", "1.79.0"]'), matrix.boost_version)
-      shell: bash
-      run: echo BOOST_TOOLSET=$([[ "${{ matrix.generator }}" == "MinGW Makefiles" ]] && echo "mingw" || echo "msvc") >> $GITHUB_ENV
+      run: echo BOOST_TOOLSET=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "msvc") >> $GITHUB_ENV
+
+    - name: Add boost install path to environment
+      run: echo BOOST_INSTALL_PATH="${GITHUB_WORKSPACE}/boost-${{matrix.boost_version}}${BOOST_TOOLSET}" >> $GITHUB_ENV
+
+    - name: Add build type configuration to environment
+      if: matrix.generator != 'MinGW Makefiles'
+      run: echo BUILD_CONFIG_ARG="--config ${{matrix.build_type}}" >> $GITHUB_ENV
+
+    - name: Add test type configuration to environment
+      if: matrix.generator != 'MinGW Makefiles'
+      run: echo TEST_CONFIG_ARG="-C ${{matrix.build_type}}" >> $GITHUB_ENV
+
+    - name: Cache Boost installation
+      id: cache-boost
+      uses: actions/cache@v3
+      with:
+        path: ${{env.BOOST_INSTALL_PATH}}
+        key: ${{matrix.boost_version}}${{env.BOOST_TOOLSET}}
 
     - name: Install Boost
+      if: steps.cache-boost.outputs.cache-hit != 'true'
       uses: MarkusJx/install-boost@v2.3.1
-      id: install-boost
       with:
-        boost_version: ${{ matrix.boost_version }}
-        toolset: ${{ env.BOOST_TOOLSET }}
+        boost_version: ${{matrix.boost_version}}
+        toolset: ${{env.BOOST_TOOLSET}}
+        boost_install_dir: ${{env.BOOST_INSTALL_PATH}}
         platform_version: 2019
         arch: null
-
-    - name: Add boost path to environment
-      run: echo BOOST_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }} >> $env:GITHUB_ENV
 
     - name: Install packages
       run: cinst openssl
 
     - name: Create build directory
-      run: cmake -E make_directory ${{runner.workspace}}/build
+      run: mkdir build
 
     - name: Configure
-      shell: bash
-      working-directory: ${{runner.workspace}}/build
+      working-directory: build
       run: |
         cmake -T "${{matrix.toolset}}" \
               -G "${{matrix.generator}}" \
               ${{matrix.config_args}} \
-              $GITHUB_WORKSPACE
-
-    - name: Add build type configuration to environment
-      if: matrix.generator != 'MinGW Makefiles'
-      run: echo BUILD_CONFIG_ARG="--config ${{matrix.build_type}}" >> $env:GITHUB_ENV
+              "${GITHUB_WORKSPACE}"
+      env:
+        BOOST_ROOT: ${{env.BOOST_INSTALL_PATH}}/boost
 
     - name: Build
-      shell: bash
-      working-directory: ${{runner.workspace}}/build
+      working-directory: build
       run: |
         cmake --build . \
         -j \
         ${BUILD_CONFIG_ARG} \
         ${{matrix.build_args}}
 
-    - name: Add test type configuration to environment
-      if: matrix.generator != 'MinGW Makefiles'
-      run: echo TEST_CONFIG_ARG="-C ${{matrix.build_type}}" >> $env:GITHUB_ENV
-
     - name: Run tests
-      working-directory: ${{runner.workspace}}/build
+      working-directory: build
       run: ctest ${TEST_CONFIG_ARG} -V
       env:
         CTEST_OUTPUT_ON_FAILURE: True

@@ -13,6 +13,12 @@ project(boost-wintls
   LANGUAGES CXX
 )
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  message(STATUS "Building for 64 bit platform")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  message(STATUS "Building for 32 bit platform")
+endif()
+
 option(ENABLE_TESTING "Enable Test Builds" ${WIN32})
 option(ENABLE_EXAMPLES "Enable Examples Builds" ${WIN32})
 option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ${UNIX})

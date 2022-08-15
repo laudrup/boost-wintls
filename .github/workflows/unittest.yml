@@ -53,11 +53,17 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Add boost toolset to environment
+      if: contains(fromJson('["1.78.0", "1.79.0"]'), matrix.boost_version)
+      shell: bash
+      run: echo BOOST_TOOLSET=$([[ "${{ matrix.generator }}" == "MinGW Makefiles" ]] && echo "mingw" || echo "msvc") >> $GITHUB_ENV
+
     - name: Install Boost
-      uses: MarkusJx/install-boost@v2.3.0
+      uses: MarkusJx/install-boost@v2.3.1
       id: install-boost
       with:
         boost_version: ${{ matrix.boost_version }}
+        toolset: ${{ env.BOOST_TOOLSET }}
         platform_version: 2019
         arch: null
 

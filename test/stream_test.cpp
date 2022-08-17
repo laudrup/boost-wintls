@@ -111,7 +111,6 @@ TEST_CASE("underlying stream errors") {
     net::io_context io_context;
     echo_server<asio_ssl_server_stream> server(io_context);
     boost::system::error_code client_ec{};
-    boost::system::error_code server_ec{};
 
     SECTION("handshake error") {
       boost::beast::test::fail_count fc(4);

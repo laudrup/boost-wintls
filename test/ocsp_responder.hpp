@@ -8,6 +8,9 @@
 #ifndef BOOST_WINTLS_OCSP_RESPONDER_HPP
 #define BOOST_WINTLS_OCSP_RESPONDER_HPP
 
+// Boost.Process misses an algorithm include in Boost 1.77,
+// see https://github.com/boostorg/process/issues/213.
+#include <algorithm>
 #include <boost/process.hpp>
 
 // Start an OCSP responder at http://localhost:5000 that can provide OCSP responses for 

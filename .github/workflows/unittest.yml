@@ -26,6 +26,12 @@ jobs:
           - { os: windows-2019, generator: "Visual Studio 17 2022" }
           - { os: windows-2022, generator: "Visual Studio 16 2019" }
           - { toolset: ClangCL, build_type: Release }
+          # The following combinations are not available through install-boost
+          - { boost_version: "1.75.0", toolset: v143 }
+          - { boost_version: "1.76.0", toolset: v143 }
+          - { boost_version: "1.77.0", toolset: v143 }
+          - { boost_version: "1.78.0", toolset: v141 }
+          - { boost_version: "1.79.0", toolset: v141 }
         include:
           - boost_version: "1.79.0"
             os: windows-2022
@@ -60,8 +66,15 @@ jobs:
       if: contains(fromJson('["1.78.0", "1.79.0"]'), matrix.boost_version)
       run: echo BOOST_TOOLSET=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "msvc") >> $GITHUB_ENV
 
+    - name: Add boost platform version to environment
+      run: |
+        # The platform_version passed to boost-install determines the msvc toolset version for which static libs are installed.
+        declare -A toolset_to_platform_version=( [mingw]="2019" [v141]="2016" [v142]="2019" [v143]="2022" [ClangCL]="2019" )
+        key=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "${{matrix.toolset}}")
+        echo BOOST_PLATFORM_VERSION="${toolset_to_platform_version[$key]}" >> $GITHUB_ENV
+
     - name: Add boost install path to environment
-      run: echo BOOST_INSTALL_PATH="${GITHUB_WORKSPACE}/boost-${{matrix.boost_version}}${BOOST_TOOLSET}" >> $GITHUB_ENV
+      run: echo BOOST_INSTALL_PATH="${GITHUB_WORKSPACE}/boost-${{matrix.boost_version}}${BOOST_TOOLSET}${BOOST_PLATFORM_VERSION}" >> $GITHUB_ENV
 
     - name: Add build type configuration to environment
       if: matrix.generator != 'MinGW Makefiles'
@@ -76,7 +89,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{env.BOOST_INSTALL_PATH}}
-        key: ${{matrix.boost_version}}${{env.BOOST_TOOLSET}}
+        key: ${{matrix.boost_version}}${{env.BOOST_TOOLSET}}${{env.BOOST_PLATFORM_VERSION}}
 
     - name: Install Boost
       if: steps.cache-boost.outputs.cache-hit != 'true'
@@ -85,7 +98,7 @@ jobs:
         boost_version: ${{matrix.boost_version}}
         toolset: ${{env.BOOST_TOOLSET}}
         boost_install_dir: ${{env.BOOST_INSTALL_PATH}}
-        platform_version: 2019
+        platform_version: ${{env.BOOST_PLATFORM_VERSION}}
         arch: null
 
     - name: Install packages

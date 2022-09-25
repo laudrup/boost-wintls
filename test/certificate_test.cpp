@@ -212,7 +212,11 @@ TEST_CASE("check certificate revocation") {
     ctx_certs.add_crl(crl_from_file(TEST_CERTIFICATES_PATH "ca_intermediate_leaf_revoked.crl.pem").get());
     CHECK(ctx_certs.verify_certificate(cert.get(), "", true) == CRYPT_E_REVOKED);
   }
+}
 
+// This test takes about 15 seconds to run, as the OCSP responder takes that long to become available.
+// Therefore it is marked as integration test and not run by default.
+TEST_CASE("check certificate revocation (integration test)", "[.integration]") {
   SECTION("certificate chain with OCSP") {
     boost::wintls::detail::context_certificates ctx_certs;
     ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());

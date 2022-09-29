@@ -59,4 +59,4 @@ target_link_libraries(unittest PRIVATE
 
 include(CTest)
 include(Catch)
-catch_discover_tests(unittest)
+catch_discover_tests(unittest TEST_SPEC "*")

@@ -1,6 +1,5 @@
 Include(FetchContent)
 
-find_package(Boost COMPONENTS filesystem)
 find_package(OpenSSL COMPONENTS SSL Crypto)
 find_package(Threads)
 
@@ -53,7 +52,6 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::Crypto
   Threads::Threads
   Catch2::Catch2
-  Boost::filesystem
   boost-wintls
 )
 

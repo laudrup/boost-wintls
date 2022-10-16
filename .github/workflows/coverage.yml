@@ -19,7 +19,7 @@ jobs:
       uses: MarkusJx/install-boost@v1.0.1
       id: install-boost
       with:
-        boost_version: 1.72.0
+        boost_version: 1.79.0
     - name: Install packages
       run: cinst openssl opencppcoverage
     - name: Configure

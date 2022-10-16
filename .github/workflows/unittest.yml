@@ -72,7 +72,7 @@ jobs:
         declare -A toolset_to_platform_version=( [mingw]="2019" [v141]="2016" [v142]="2019" [v143]="2022" [ClangCL]="2019" )
         key=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "${{matrix.toolset}}")
         echo BOOST_PLATFORM_VERSION="${toolset_to_platform_version[$key]}" >> $GITHUB_ENV
-        
+
     # install-boost does not provide pre-built clang binaries, hence tell cmake/FindBoost that we want to use vc142 binaries.
     - name: Add boost compiler arg to environment
       if: matrix.toolset == 'ClangCL'

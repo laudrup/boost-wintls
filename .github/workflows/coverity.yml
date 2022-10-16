@@ -36,7 +36,7 @@ jobs:
       with:
         boost_version: 1.79.0
         toolset: msvc
-        platform_version: 2019
+        platform_version: 2022
 
     - name: Configure
       env:

@@ -8,7 +8,7 @@ on:
 
 jobs:
   codecoverage:
-    runs-on: windows-2019
+    runs-on: windows-2022
     name: Generate and upload code coverage
     steps:
     - name: Checkout
@@ -31,7 +31,7 @@ jobs:
       env:
         BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       shell: bash
-      run: cmake -B build -DENABLE_DOCUMENTATION=OFF
+      run: cmake -B build -T v143 -DENABLE_DOCUMENTATION=OFF
 
     - name: Build
       run: cmake --build build/ --target unittest

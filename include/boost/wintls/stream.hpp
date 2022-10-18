@@ -115,12 +115,12 @@ public:
   }
 
   /** Set revocation checking
-   *  
+   *
    *  Enable revocation checking for remote certificates.
    *
    *  Enabling this also causes the TLS certificate status request extension
    *  to be sent during the handshake. (I.e. we request OCSP stapling from the remote.)
-   * 
+   *
    *  @param check Whether to enable revocation checking
    */
   void set_certificate_revocation_check(bool check) {

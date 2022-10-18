@@ -28,7 +28,7 @@ namespace detail {
 
 class sspi_handshake {
 public:
-  // TODO: enhancement: done_with_data and error_with_data can be removed if 
+  // TODO: enhancement: done_with_data and error_with_data can be removed if
   // we move the manual validate logic out of the handshake loop.
   enum class state {
     data_needed,      // data needs to be read from peer
@@ -78,10 +78,10 @@ public:
       creds.cCreds = 1;
       creds.paCred = &server_cert;
     }
-    
+
     // TODO: rename server_cert field since it is also used for client cert.
     // Note: if client cert is set, sspi will auto validate server cert with it.
-    // Even though verify_server_certificate_ in context is set to false. 
+    // Even though verify_server_certificate_ in context is set to false.
     if (handshake_type_ == handshake_type::client && server_cert != nullptr) {
       creds.cCreds = 1;
       creds.paCred = &server_cert;

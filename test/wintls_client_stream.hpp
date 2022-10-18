@@ -33,11 +33,11 @@ struct wintls_client_context : public boost::wintls::context {
   }
   void with_test_client_cert(){
     with_test_cert_authority();
-    
-    // delete key in case last test run has dangling key. 
+
+    // delete key in case last test run has dangling key.
     boost::system::error_code dummy;
     boost::wintls::delete_private_key(test_key_name_client, dummy);
-    
+
     boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, test_key_name_client);
     needs_private_key_clean_up_ = true;
     boost::wintls::assign_private_key(authority_ptr_.get(), test_key_name_client);

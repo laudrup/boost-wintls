@@ -83,7 +83,7 @@ boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
   auto cert_end = str.find(end_cert_str, cert_begin);
   if (cert_begin == std::string::npos || cert_end == std::string::npos) {
     throw std::runtime_error("Error parsing certificate chain in PEM format from file " + path);
-  } 
+  }
   // Open a temporary store for the chain.
   // Use CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, so the context of the leaf certificate can take ownership.
   const auto chain_store = boost::wintls::detail::cert_store_ptr{
@@ -94,8 +94,8 @@ boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
                                         net::buffer(&str[cert_begin], cert_end + end_cert_str_size - cert_begin),
                                         true);
   // add any remaining certificates to the chain_store
-  for (cert_begin = str.find(begin_cert_str, cert_end); 
-       cert_begin != std::string::npos; 
+  for (cert_begin = str.find(begin_cert_str, cert_end);
+       cert_begin != std::string::npos;
        cert_begin = str.find(begin_cert_str, cert_end)) {
     cert_end = str.find(end_cert_str, cert_begin);
     if (cert_end == std::string::npos) {

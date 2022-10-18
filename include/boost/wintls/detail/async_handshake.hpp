@@ -90,7 +90,7 @@ struct async_handshake : boost::asio::coroutine {
           }
           break;
         }
-        
+
         if (handshake_state == detail::sspi_handshake::state::error_with_data) {
           BOOST_ASIO_CORO_YIELD {
             state_ = state::writing;

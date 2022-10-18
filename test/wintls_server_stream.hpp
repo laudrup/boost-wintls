@@ -18,7 +18,7 @@ struct wintls_server_context : public boost::wintls::context {
   wintls_server_context()
     : boost::wintls::context(boost::wintls::method::system_default),
       needs_private_key_clean_up_(false) {
-      // delete key in case last test run has dangling key. 
+      // delete key in case last test run has dangling key.
       boost::system::error_code dummy;
       boost::wintls::delete_private_key(test_key_name_server, dummy);
 
@@ -33,7 +33,7 @@ struct wintls_server_context : public boost::wintls::context {
   void enable_client_verify(){
     verify_server_certificate(true);
   }
-  
+
   ~wintls_server_context()
   {
     if(needs_private_key_clean_up_)

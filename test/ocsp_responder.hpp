@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <boost/process.hpp>
 
-// Start an OCSP responder at http://localhost:5000 that can provide OCSP responses for 
+// Start an OCSP responder at http://localhost:5000 that can provide OCSP responses for
 // test certificates signed by test_certificates/ca_intermediate.crt.
 inline boost::process::child start_ocsp_responder() {
   auto path = boost::process::search_path("openssl.exe");

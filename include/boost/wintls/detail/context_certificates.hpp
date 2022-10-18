@@ -94,9 +94,9 @@ private:
     }
   }
 
-  DWORD verify_certificate_chain(const CERT_CONTEXT* cert, 
-                                 HCERTCHAINENGINE engine, 
-                                 const std::string& server_hostname, 
+  DWORD verify_certificate_chain(const CERT_CONTEXT* cert,
+                                 HCERTCHAINENGINE engine,
+                                 const std::string& server_hostname,
                                  bool check_revocation) {
     CERT_CHAIN_PARA chain_parameters{};
     chain_parameters.cbSize = sizeof(chain_parameters);

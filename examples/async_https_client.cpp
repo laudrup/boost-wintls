@@ -51,7 +51,7 @@ public:
   void run(const std::string& host, const std::string& port, const std::string& path, unsigned version) {
     // Set SNI hostname (many hosts need this to handshake successfully)
     stream_.set_server_hostname(host);
-    
+
     // Enable Check whether the Server Certificate was revoked
     stream_.set_certificate_revocation_check(true);
 

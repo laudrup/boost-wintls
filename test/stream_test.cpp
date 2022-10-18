@@ -211,7 +211,7 @@ TEST_CASE("small reads") {
   SECTION("async client test") {
     async_echo_server<asio_ssl_server_stream> server(io_context);
     async_echo_client<wintls_client_stream> client(io_context, test_data);
-    client.stream.next_layer().read_size(0x10);
+    client.stream.next_layer().read_size(0x20);
     client.stream.next_layer().connect(server.stream.next_layer());
     server.run();
     client.run();
@@ -222,7 +222,7 @@ TEST_CASE("small reads") {
   SECTION("async server test") {
     async_echo_server<wintls_server_stream> server(io_context);
     async_echo_client<wintls_client_stream> client(io_context, test_data);
-    server.stream.next_layer().read_size(0x10);
+    server.stream.next_layer().read_size(0x20);
     client.stream.next_layer().connect(server.stream.next_layer());
     server.run();
     client.run();
@@ -233,7 +233,7 @@ TEST_CASE("small reads") {
   SECTION("sync test") {
     echo_server<asio_ssl_server_stream> server(io_context);
     echo_client<wintls_client_stream> client(io_context);
-    client.stream.next_layer().read_size(0x10);
+    client.stream.next_layer().read_size(0x20);
     client.stream.next_layer().connect(server.stream.next_layer());
 
     auto handshake_result = server.handshake();

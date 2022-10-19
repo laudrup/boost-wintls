@@ -441,7 +441,7 @@ TEST_CASE("ssl/tls versions") {
                                   REQUIRE(rec.type == tls_record::record_type::handshake);
                                   CHECK(rec.version == version);
                                   server_stream.close();
-                                  });
+                                });
 
     io_context.run();
 }

@@ -23,15 +23,19 @@ const std::string test_key_name_client = test_key_name + "-client";
 
 struct wintls_client_context : public boost::wintls::context {
   wintls_client_context()
-    : boost::wintls::context(boost::wintls::method::system_default),
-      needs_private_key_clean_up_(false), authority_ptr_(make_empty_cert_context_ptr()) { }
-  void with_test_cert_authority(){
-      if(!authority_ptr_){
-        authority_ptr_ = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
-        add_certificate_authority(authority_ptr_.get());
-      }
+    : boost::wintls::context(boost::wintls::method::system_default)
+    , needs_private_key_clean_up_(false)
+    , authority_ptr_(make_empty_cert_context_ptr()) {
   }
-  void with_test_client_cert(){
+
+  void with_test_cert_authority() {
+    if(!authority_ptr_) {
+      authority_ptr_ = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+      add_certificate_authority(authority_ptr_.get());
+    }
+  }
+
+  void with_test_client_cert() {
     with_test_cert_authority();
 
     // delete key in case last test run has dangling key.
@@ -44,18 +48,17 @@ struct wintls_client_context : public boost::wintls::context {
     use_certificate(authority_ptr_.get());
   }
 
-  void enable_server_verify(){
+  void enable_server_verify() {
     verify_server_certificate(true);
   }
 
-  ~wintls_client_context()
-  {
-    if(needs_private_key_clean_up_)
-    {
+  ~wintls_client_context() {
+    if(needs_private_key_clean_up_) {
       boost::wintls::delete_private_key(test_key_name_client);
       needs_private_key_clean_up_ = false;
     }
   }
+
 private:
   bool needs_private_key_clean_up_;
   boost::wintls::cert_context_ptr authority_ptr_;

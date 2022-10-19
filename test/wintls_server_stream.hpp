@@ -16,8 +16,8 @@ const std::string test_key_name_server = test_key_name + "-server";
 
 struct wintls_server_context : public boost::wintls::context {
   wintls_server_context()
-    : boost::wintls::context(boost::wintls::method::system_default),
-      needs_private_key_clean_up_(false) {
+    : boost::wintls::context(boost::wintls::method::system_default)
+    , needs_private_key_clean_up_(false) {
       // delete key in case last test run has dangling key.
       boost::system::error_code dummy;
       boost::wintls::delete_private_key(test_key_name_server, dummy);
@@ -30,18 +30,17 @@ struct wintls_server_context : public boost::wintls::context {
       boost::wintls::assign_private_key(cert_ptr.get(), test_key_name_server);
   }
 
-  void enable_client_verify(){
+  void enable_client_verify() {
     verify_server_certificate(true);
   }
 
-  ~wintls_server_context()
-  {
-    if(needs_private_key_clean_up_)
-    {
+  ~wintls_server_context() {
+    if(needs_private_key_clean_up_) {
       boost::wintls::delete_private_key(test_key_name_server);
       needs_private_key_clean_up_ = false;
     }
   }
+
 private:
   bool needs_private_key_clean_up_;
 };

@@ -44,6 +44,10 @@ if(ENABLE_ADDRESS_SANITIZER)
   target_compile_definitions(unittest PRIVATE CATCH_CONFIG_NO_WINDOWS_SEH)
 endif()
 
+if(MSVC)
+  target_compile_options(unittest PRIVATE "-bigobj")
+endif()
+
 target_compile_definitions(unittest PRIVATE
   TEST_CERTIFICATES_PATH="${CMAKE_CURRENT_LIST_DIR}/test_certificates/gen/"
 )

@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   int result = Catch::Session().run(argc, argv);
 
   boost::wintls::delete_private_key(test_key_name, ec);
-    if (ec) {
+  if (ec) {
     std::cerr << "Unable to delete private test key: " << ec.message() << "\n";
     return EXIT_FAILURE;
   }

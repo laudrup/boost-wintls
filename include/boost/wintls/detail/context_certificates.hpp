@@ -78,8 +78,26 @@ public:
     return status;
   }
 
+  void use_certificate(const CERT_CONTEXT* cert) {
+    HCRYPTPROV_OR_NCRYPT_KEY_HANDLE unused_0;
+    DWORD unused_1;
+    BOOL unused_2;
+    if (!CryptAcquireCertificatePrivateKey(cert,
+                                           CRYPT_ACQUIRE_COMPARE_KEY_FLAG,
+                                           nullptr,
+                                           &unused_0,
+                                           &unused_1,
+                                           &unused_2)) {
+      detail::throw_last_error("CryptAcquireCertificatePrivateKey");
+    }
+    server_cert_ = cert_context_ptr{CertDuplicateCertificateContext(cert), &CertFreeCertificateContext};
+  }
+
+  const CERT_CONTEXT* server_cert() const {
+    return server_cert_.get();
+  }
+
   bool use_default_cert_store = false;
-  cert_context_ptr server_cert{nullptr, &CertFreeCertificateContext};
 
 private:
   void init_cert_store() {
@@ -150,6 +168,7 @@ private:
   }
 
   cert_store_ptr cert_store_;
+  cert_context_ptr server_cert_{nullptr, &CertFreeCertificateContext};
 };
 
 } // namespace detail

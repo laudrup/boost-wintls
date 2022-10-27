@@ -101,15 +101,41 @@ public:
    * This function sets the certficate to use when using a @ref stream
    * as server.
    *
-   * @param cert The certificate with an associated private the
-   * @ref stream will use for encrypting messages when operating as a
-   * server.
+   * @param cert The private certificate the @ref stream will use for
+   * encrypting messages when operating as a server.
    *
-   * @note The certificate must be associated with a private key. Not
-   * doing so will result in unexpected behavior.
+   * @note The certificate must be a private certificate,
+   * ie. containing a reference to a private key. If the certificate
+   * is imported from a public certificate @ref assign_private_key can
+   * be used for that.
+   *
+   * @throws boost::system::system_error Thrown on failure.
    */
   void use_certificate(const CERT_CONTEXT* cert) {
-    ctx_certs_.server_cert = cert_context_ptr{CertDuplicateCertificateContext(cert), &CertFreeCertificateContext};
+    ctx_certs_.use_certificate(cert);
+  }
+
+  /** Set the certificate to use when operating as a server
+   *
+   * This function sets the certficate to use when using a @ref stream
+   * as server.
+   *
+   * @param cert The private certificate the @ref stream will use for
+   * encrypting messages when operating as a server.
+   *
+   * @note The certificate must be a private certificate,
+   * ie. containing a reference to a private key. If the certificate
+   * is imported from a public certificate @ref assign_private_key can
+   * be used for that.
+   *
+   * @param ec Set to indicate what error occurred, if any.
+   */
+  void use_certificate(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
+    try {
+      ctx_certs_.use_certificate(cert);
+    } catch (const boost::system::system_error& e) {
+      ec = e.code();
+    }
   }
 
 private:
@@ -121,7 +147,7 @@ private:
   }
 
   const CERT_CONTEXT* server_cert() const {
-    return ctx_certs_.server_cert.get();
+    return ctx_certs_.server_cert();
   }
 
   friend class detail::sspi_handshake;

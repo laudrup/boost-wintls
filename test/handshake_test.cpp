@@ -64,20 +64,97 @@ std::ostream& operator<<(std::ostream& os, const method meth) {
 } // namespace wintls
 } // namespace boost
 
+namespace {
+
+std::string wchar_to_string(const wchar_t* input) {
+  const auto length = static_cast<int>(std::wcslen(input));
+
+  const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, input, length, nullptr, 0, nullptr, nullptr);
+  if (size_needed == 0) {
+    boost::wintls::detail::throw_last_error("WideCharToMultiByte");
+  }
+
+  std::string output(size_needed, '\0');
+  const auto size_written = WideCharToMultiByte(CP_UTF8, 0, input, length, &output[0], size_needed, nullptr, nullptr);
+  if (size_written == 0) {
+    boost::wintls::detail::throw_last_error("WideCharToMultiByte");
+  }
+  return output;
+}
+
+std::vector<BYTE> string_to_x509_name(const std::string& str) {
+  DWORD size = 0;
+  std::vector<BYTE> ret;
+  if (!CertStrToName(X509_ASN_ENCODING, str.c_str(), CERT_X500_NAME_STR, nullptr, nullptr, &size, nullptr)) {
+    boost::wintls::detail::throw_last_error("CertStrToName");
+  }
+  ret.resize(size);
+  if (!CertStrToName(X509_ASN_ENCODING, str.c_str(), CERT_X500_NAME_STR, nullptr, ret.data(), &size, nullptr)) {
+    boost::wintls::detail::throw_last_error("CertStrToName");
+  }
+  return ret;
+}
+
+struct cert_name_blob {
+  cert_name_blob(const std::string& str)
+    : data_(string_to_x509_name(str)) {
+    blob.pbData = data_.data();
+    blob.cbData = static_cast<DWORD>(data_.size());
+  }
+
+  CERT_NAME_BLOB blob;
+private:
+  std::vector<BYTE> data_;
+};
+
+boost::wintls::cert_context_ptr create_self_signed_cert(const std::string& subject) {
+  cert_name_blob cert_subject(subject);
+  SYSTEMTIME expiry_date;
+  GetSystemTime(&expiry_date);
+  expiry_date.wYear += 1;
+
+  auto cert = CertCreateSelfSignCertificate(0,
+                                            &cert_subject.blob,
+                                            0,
+                                            0,
+                                            nullptr,
+                                            0,
+                                            &expiry_date,
+                                            0);
+  if (!cert) {
+    boost::wintls::detail::throw_last_error("CertCreateSelfSignCertificate");
+  }
+  return boost::wintls::cert_context_ptr{cert, &CertFreeCertificateContext};
+}
+
+std::string cert_container_name(const CERT_CONTEXT* cert) {
+  DWORD size = 0;
+  if (!CertGetCertificateContextProperty(cert,
+                                         CERT_KEY_PROV_INFO_PROP_ID,
+                                         nullptr,
+                                         &size)) {
+    boost::wintls::detail::throw_last_error("CertGetCertificateContextProperty");
+  }
+
+  std::vector<BYTE> data(size);
+  if (!CertGetCertificateContextProperty(cert,
+                                         CERT_KEY_PROV_INFO_PROP_ID,
+                                         data.data(),
+                                         &size)) {
+    boost::wintls::detail::throw_last_error("CertGetCertificateContextProperty");
+  }
+  const auto info = reinterpret_cast<CRYPT_KEY_PROV_INFO*>(data.data());
+  return wchar_to_string(info->pwszContainerName);
+}
+} // namespace
+
 TEST_CASE("certificates") {
   using namespace std::string_literals;
-
-  boost::wintls::context client_ctx(boost::wintls::method::system_default);
-
-  boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
-  server_ctx.use_certificate_chain(net::buffer(test_certificate));
-  server_ctx.use_private_key(net::buffer(test_key), boost::asio::ssl::context::pem);
+  using namespace boost::system;
 
   net::io_context io_context;
+  boost::wintls::context client_ctx(boost::wintls::method::system_default);
   boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
-  boost::asio::ssl::stream<test_stream> server_stream(io_context, server_ctx);
-
-  client_stream.next_layer().connect(server_stream.next_layer());
 
   SECTION("invalid certificate data") {
     // TODO: Instead of returning an error when given a null pointer
@@ -106,72 +183,160 @@ TEST_CASE("certificates") {
     */
   }
 
-  SECTION("no certificate validation") {
-    using namespace boost::system;
+  SECTION("server cert without private key") {
+    boost::wintls::context server_ctx(boost::wintls::method::system_default);
+    auto cert = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
 
-    auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
-                                  [&client_error, &io_context](const boost::system::error_code& ec) {
-                                    client_error = ec;
-                                    io_context.stop();
-                                  });
+    CHECK_THROWS_WITH(server_ctx.use_certificate(cert.get()),
+                      Catch::Matchers::Contains("Cannot find the certificate and private key for decryption"));
 
-    auto server_error = errc::make_error_code(errc::not_supported);
-    server_stream.async_handshake(asio_ssl::stream_base::server,
-                                  [&server_error](const boost::system::error_code& ec) {
-                                    server_error = ec;
-                                  });
-    io_context.run();
-    CHECK_FALSE(client_error);
-    CHECK_FALSE(server_error);
+    boost::system::error_code ec{};
+    server_ctx.use_certificate(cert.get(), ec);
+    CHECK(ec.category() == system_category());
+    CHECK(ec.value() & NTE_BAD_SIGNATURE);
   }
 
-  SECTION("no trusted certificate") {
-    using namespace boost::system;
+  SECTION("wintl server") {
+    boost::wintls::context server_ctx(boost::wintls::method::system_default);
+    const auto cert = create_self_signed_cert("CN=WinTLS, T=Test");
+    server_ctx.use_certificate(cert.get());
+    boost::wintls::stream<test_stream> server_stream(io_context, server_ctx);
 
-    client_ctx.verify_server_certificate(true);
+    client_stream.next_layer().connect(server_stream.next_layer());
 
-    auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
-                                  [&client_error](const boost::system::error_code& ec) {
-                                    client_error = ec;
-                                  });
+    SECTION("no certificate validation") {
+      auto client_error = errc::make_error_code(errc::not_supported);
+      client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                    [&client_error, &io_context](const boost::system::error_code& ec) {
+                                      client_error = ec;
+                                      io_context.stop();
+                                    });
 
-    auto server_error = errc::make_error_code(errc::not_supported);
-    server_stream.async_handshake(asio_ssl::stream_base::server,
-                                  [&server_error](const boost::system::error_code& ec) {
-                                    server_error = ec;
-                                  });
+      auto server_error = errc::make_error_code(errc::not_supported);
+      server_stream.async_handshake(boost::wintls::handshake_type::server,
+                                    [&server_error](const boost::system::error_code& ec) {
+                                      server_error = ec;
+                                    });
+      io_context.run();
+      CHECK_FALSE(client_error);
+      CHECK_FALSE(server_error);
+    }
 
-    io_context.run();
-    CHECK(client_error.category() == boost::system::system_category());
-    CHECK(client_error.value() == CERT_E_UNTRUSTEDROOT);
-    CHECK_FALSE(server_error);
+    SECTION("no trusted certificate") {
+      client_ctx.verify_server_certificate(true);
+
+      auto client_error = errc::make_error_code(errc::not_supported);
+      client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                    [&client_error](const boost::system::error_code& ec) {
+                                      client_error = ec;
+                                    });
+
+      auto server_error = errc::make_error_code(errc::not_supported);
+      server_stream.async_handshake(boost::wintls::handshake_type::server,
+                                    [&server_error](const boost::system::error_code& ec) {
+                                      server_error = ec;
+                                    });
+
+      io_context.run();
+      CHECK(client_error.category() == system_category());
+      CHECK(client_error.value() == CERT_E_UNTRUSTEDROOT);
+      CHECK_FALSE(server_error);
+    }
+
+    SECTION("trusted certificate verified") {
+      client_ctx.verify_server_certificate(true);
+      client_ctx.add_certificate_authority(cert.get());
+
+      auto client_error = errc::make_error_code(errc::not_supported);
+      client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                    [&client_error, &io_context](const boost::system::error_code& ec) {
+                                      client_error = ec;
+                                      io_context.stop();
+                                    });
+
+      auto server_error = errc::make_error_code(errc::not_supported);
+      server_stream.async_handshake(boost::wintls::handshake_type::server,
+                                    [&server_error](const boost::system::error_code& ec) {
+                                      server_error = ec;
+                                    });
+      io_context.run();
+      CHECK_FALSE(client_error);
+      CHECK_FALSE(server_error);
+    }
+
+    boost::wintls::delete_private_key(cert_container_name(cert.get()));
   }
 
-  SECTION("trusted certificate verified") {
-    using namespace boost::system;
+  SECTION("asio::ssl server") {
+    boost::asio::ssl::context server_ctx(boost::asio::ssl::context::tls_server);
+    server_ctx.use_certificate_chain(net::buffer(test_certificate));
+    server_ctx.use_private_key(net::buffer(test_key), boost::asio::ssl::context::pem);
 
-    client_ctx.verify_server_certificate(true);
+    boost::asio::ssl::stream<test_stream> server_stream(io_context, server_ctx);
 
-    const auto cert_ptr = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
-    client_ctx.add_certificate_authority(cert_ptr.get());
+    client_stream.next_layer().connect(server_stream.next_layer());
 
-    auto client_error = errc::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
-                                  [&client_error, &io_context](const boost::system::error_code& ec) {
-                                    client_error = ec;
-                                    io_context.stop();
-                                  });
+    SECTION("no certificate validation") {
+      auto client_error = errc::make_error_code(errc::not_supported);
+      client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                    [&client_error, &io_context](const boost::system::error_code& ec) {
+                                      client_error = ec;
+                                      io_context.stop();
+                                    });
 
-    auto server_error = errc::make_error_code(errc::not_supported);
-    server_stream.async_handshake(asio_ssl::stream_base::server,
-                                  [&server_error](const boost::system::error_code& ec) {
-                                    server_error = ec;
-                                  });
-    io_context.run();
-    CHECK_FALSE(client_error);
-    CHECK_FALSE(server_error);
+      auto server_error = errc::make_error_code(errc::not_supported);
+      server_stream.async_handshake(asio_ssl::stream_base::server,
+                                    [&server_error](const boost::system::error_code& ec) {
+                                      server_error = ec;
+                                    });
+      io_context.run();
+      CHECK_FALSE(client_error);
+      CHECK_FALSE(server_error);
+    }
+
+    SECTION("no trusted certificate") {
+      client_ctx.verify_server_certificate(true);
+
+      auto client_error = errc::make_error_code(errc::not_supported);
+      client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                    [&client_error](const boost::system::error_code& ec) {
+                                      client_error = ec;
+                                    });
+
+      auto server_error = errc::make_error_code(errc::not_supported);
+      server_stream.async_handshake(asio_ssl::stream_base::server,
+                                    [&server_error](const boost::system::error_code& ec) {
+                                      server_error = ec;
+                                    });
+
+      io_context.run();
+      CHECK(client_error.category() == system_category());
+      CHECK(client_error.value() == CERT_E_UNTRUSTEDROOT);
+      CHECK_FALSE(server_error);
+    }
+
+    SECTION("trusted certificate verified") {
+      client_ctx.verify_server_certificate(true);
+
+      const auto cert_ptr = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+      client_ctx.add_certificate_authority(cert_ptr.get());
+
+      auto client_error = errc::make_error_code(errc::not_supported);
+      client_stream.async_handshake(boost::wintls::handshake_type::client,
+                                    [&client_error, &io_context](const boost::system::error_code& ec) {
+                                      client_error = ec;
+                                      io_context.stop();
+                                    });
+
+      auto server_error = errc::make_error_code(errc::not_supported);
+      server_stream.async_handshake(asio_ssl::stream_base::server,
+                                    [&server_error](const boost::system::error_code& ec) {
+                                      server_error = ec;
+                                    });
+      io_context.run();
+      CHECK_FALSE(client_error);
+      CHECK_FALSE(server_error);
+    }
   }
 }
 

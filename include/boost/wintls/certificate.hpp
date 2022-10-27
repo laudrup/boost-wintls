@@ -172,7 +172,7 @@ inline void import_private_key(const net::const_buffer& private_key, file_format
 /**
  * Delete a private key from the default cryptographic provider.
  *
- * @param name The name associated with the private key to delete.
+ * @param name The name of the container storing the private key to delete.
  *
  * @throws boost::system::system_error Thrown on failure.
  *
@@ -188,7 +188,7 @@ inline void delete_private_key(const std::string& name) {
 /**
  * Delete a private key from the default cryptographic provider.
  *
- * @param name The name associated with the private key to delete.
+ * @param name The name of the container storing the private key to delete.
  *
  * @param ec Set to indicate what error occurred, if any.
  *

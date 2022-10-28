@@ -61,9 +61,6 @@ public:
     , sspi_stream_(std::make_unique<detail::sspi_stream>(ctx)) {
   }
 
-  stream(stream&& other) = default;
-  stream& operator=(stream&& other) = delete;
-
   /** Get the executor associated with the object.
    *
    * This function may be used to obtain the executor object that the

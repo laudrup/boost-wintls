@@ -39,9 +39,6 @@ jobs:
     - name: Disable Jekyll templating
       run: touch build/doc/html/.nojekyll
     - name: Deploy documentation
-      uses: JamesIves/github-pages-deploy-action@4.4.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: build/doc/html
-        CLEAN: true
+        folder: build/doc/html

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,17 +11,19 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
-<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
-<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
 
   </head><body>
 
@@ -36,7 +38,7 @@
       </button>
       <a class="navbar-brand" href="index.html">
           boost.wintls</a>
-      <span class="navbar-text navbar-version pull-left"><b>0.9.5</b></span>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.7</b></span>
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
@@ -109,7 +111,7 @@
 </li>
       <li><a href="classes.html#_CPPv4N5boost6wintls7context7contextE6method">boost::wintls::context::context (C++ function)</a>
 </li>
-      <li><a href="classes.html#_CPPv4N5boost6wintls7context15use_certificateEPK12CERT_CONTEXT">boost::wintls::context::use_certificate (C++ function)</a>
+      <li><a href="classes.html#_CPPv4N5boost6wintls7context15use_certificateEPK12CERT_CONTEXT">boost::wintls::context::use_certificate (C++ function)</a>, <a href="classes.html#_CPPv4N5boost6wintls7context15use_certificateEPK12CERT_CONTEXTRN5boost6system10error_codeE">[1]</a>
 </li>
       <li><a href="classes.html#_CPPv4N5boost6wintls7context24use_default_certificatesEb">boost::wintls::context::use_default_certificates (C++ function)</a>
 </li>
@@ -145,17 +147,23 @@
 </li>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method6tlsv11E">boost::wintls::method::tlsv11 (C++ enumerator)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method13tlsv11_clientE">boost::wintls::method::tlsv11_client (C++ enumerator)</a>
 </li>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method13tlsv11_serverE">boost::wintls::method::tlsv11_server (C++ enumerator)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method6tlsv12E">boost::wintls::method::tlsv12 (C++ enumerator)</a>
 </li>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method13tlsv12_clientE">boost::wintls::method::tlsv12_client (C++ enumerator)</a>
 </li>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method13tlsv12_serverE">boost::wintls::method::tlsv12_server (C++ enumerator)</a>
+</li>
+      <li><a href="enumerations.html#_CPPv4N5boost6wintls6method6tlsv13E">boost::wintls::method::tlsv13 (C++ enumerator)</a>
+</li>
+      <li><a href="enumerations.html#_CPPv4N5boost6wintls6method13tlsv13_clientE">boost::wintls::method::tlsv13_client (C++ enumerator)</a>
+</li>
+      <li><a href="enumerations.html#_CPPv4N5boost6wintls6method13tlsv13_serverE">boost::wintls::method::tlsv13_server (C++ enumerator)</a>
 </li>
       <li><a href="enumerations.html#_CPPv4N5boost6wintls6method12tlsv1_clientE">boost::wintls::method::tlsv1_client (C++ enumerator)</a>
 </li>
@@ -183,6 +191,8 @@
 </li>
       <li><a href="classes.html#_CPPv4I0EN5boost6wintls6stream9read_someE6size_tRK21MutableBufferSequence">boost::wintls::stream::read_some (C++ function)</a>, <a href="classes.html#_CPPv4I0EN5boost6wintls6stream9read_someE6size_tRK21MutableBufferSequenceRN5boost6system10error_codeE">[1]</a>
 </li>
+      <li><a href="classes.html#_CPPv4N5boost6wintls6stream32set_certificate_revocation_checkEb">boost::wintls::stream::set_certificate_revocation_check (C++ function)</a>
+</li>
       <li><a href="classes.html#_CPPv4N5boost6wintls6stream19set_server_hostnameERKNSt6stringE">boost::wintls::stream::set_server_hostname (C++ function)</a>
 </li>
       <li><a href="classes.html#_CPPv4N5boost6wintls6stream8shutdownERN5boost6system10error_codeE">boost::wintls::stream::shutdown (C++ function)</a>, <a href="classes.html#_CPPv4N5boost6wintls6stream8shutdownEv">[1]</a>
@@ -205,10 +215,10 @@
   <footer class="footer">
     <div class="container">
       <p class="pull-right">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
       </p>
       <p>
-        Revised Sep 10, 2021.<br/>
+        Revised Nov 16, 2022.<br/>
         boost.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
         Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
       </p>

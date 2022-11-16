@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Functions &#8212; boost.wintls</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -12,7 +12,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Type aliases" href="type_aliases.html" />
@@ -21,10 +23,10 @@
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
-<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
-<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
 
   </head><body>
 
@@ -39,7 +41,7 @@
       </button>
       <a class="navbar-brand" href="index.html">
           boost.wintls</a>
-      <span class="navbar-text navbar-version pull-left"><b>0.9.5</b></span>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.7</b></span>
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
@@ -93,24 +95,24 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="functions">
-<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h1>
 <section id="x509-to-cert-context">
-<h2>x509_to_cert_context<a class="headerlink" href="#x509-to-cert-context" title="Permalink to this headline">¶</a></h2>
+<h2>x509_to_cert_context<a class="headerlink" href="#x509-to-cert-context" title="Permalink to this heading">¶</a></h2>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_format">
 <span id="_CPPv3N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_format"></span><span id="_CPPv2N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_format"></span><span id="boost::wintls::x509_to_cert_context__net::const_bufferCR.file_format"></span><span class="target" id="namespaceboost_1_1wintls_1ac58c6d29ca12d2c2ca3bffe203468042"></span><span class="w"> </span><a class="reference internal" href="type_aliases.html#_CPPv4N5boost6wintls16cert_context_ptrE" title="boost::wintls::cert_context_ptr"><span class="n"><span class="pre">cert_context_ptr</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">x509_to_cert_context</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">const_buffer</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">x509</span></span>, <a class="reference internal" href="enumerations.html#_CPPv4N5boost6wintls11file_formatE" title="boost::wintls::file_format"><span class="n"><span class="pre">file_format</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">format</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_format" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Convert certificate from standard X509 format to Windows <a class="reference external" href="https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-cert_context">CERT_CONTEXT</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x509</strong> – Buffer holding the X509 certificate contents.</p></li>
 <li><p><strong>format</strong> – The <a class="reference internal" href="enumerations.html#namespaceboost_1_1wintls_1a57c5c8dd7f584e63d1d47074233ce3a0"><span class="std std-ref">file_format</span></a> of the X509 contents.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Throws</dt>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">boost</span><span class="p">::</span><span class="n">system</span><span class="p">::</span><span class="n">system_error</span></span></span> – Thrown on failure. </p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A managed cert_context.</p>
 </dd>
 </dl>
@@ -121,14 +123,14 @@
 <span id="_CPPv3N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_formatRN5boost6system10error_codeE"></span><span id="_CPPv2N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_formatRN5boost6system10error_codeE"></span><span id="boost::wintls::x509_to_cert_context__net::const_bufferCR.file_format.boost::system::error_codeR"></span><span class="target" id="namespaceboost_1_1wintls_1a608971d69c45bf22de3f166414213e88"></span><span class="w"> </span><a class="reference internal" href="type_aliases.html#_CPPv4N5boost6wintls16cert_context_ptrE" title="boost::wintls::cert_context_ptr"><span class="n"><span class="pre">cert_context_ptr</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">x509_to_cert_context</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">const_buffer</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">x509</span></span>, <a class="reference internal" href="enumerations.html#_CPPv4N5boost6wintls11file_formatE" title="boost::wintls::file_format"><span class="n"><span class="pre">file_format</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">format</span></span>, <span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">error_code</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ec</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5boost6wintls20x509_to_cert_contextERKN3net12const_bufferE11file_formatRN5boost6system10error_codeE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Convert certificate from standard X509 format to Windows <a class="reference external" href="https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-cert_context">CERT_CONTEXT</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x509</strong> – Buffer holding the X509 certificate contents.</p></li>
 <li><p><strong>format</strong> – The <a class="reference internal" href="enumerations.html#namespaceboost_1_1wintls_1a57c5c8dd7f584e63d1d47074233ce3a0"><span class="std std-ref">file_format</span></a> of the X509 contents.</p></li>
 <li><p><strong>ec</strong> – Set to indicate what error occurred, if any.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A managed cert_context. </p>
 </dd>
 </dl>
@@ -136,7 +138,7 @@
 
 </section>
 <section id="import-private-key">
-<h2>import_private_key<a class="headerlink" href="#import-private-key" title="Permalink to this headline">¶</a></h2>
+<h2>import_private_key<a class="headerlink" href="#import-private-key" title="Permalink to this heading">¶</a></h2>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N5boost6wintls18import_private_keyERKN3net12const_bufferE11file_formatRKNSt6stringE">
 <span id="_CPPv3N5boost6wintls18import_private_keyERKN3net12const_bufferE11file_formatRKNSt6stringE"></span><span id="_CPPv2N5boost6wintls18import_private_keyERKN3net12const_bufferE11file_formatRKNSt6stringE"></span><span id="boost::wintls::import_private_key__net::const_bufferCR.file_format.ssCR"></span><span class="target" id="namespaceboost_1_1wintls_1adf3d10b367a550bf76c9cfce59d03dcd"></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">import_private_key</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">const_buffer</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">private_key</span></span>, <a class="reference internal" href="enumerations.html#_CPPv4N5boost6wintls11file_formatE" title="boost::wintls::file_format"><span class="n"><span class="pre">file_format</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">format</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5boost6wintls18import_private_keyERKN3net12const_bufferE11file_formatRKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
@@ -148,14 +150,14 @@
 <p>Currently only RSA keys are supported. </p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>private_key</strong> – The private key to be imported in PKCS#8 format.</p></li>
 <li><p><strong>format</strong> – The <a class="reference internal" href="enumerations.html#namespaceboost_1_1wintls_1a57c5c8dd7f584e63d1d47074233ce3a0"><span class="std std-ref">file_format</span></a> of the private_key.</p></li>
 <li><p><strong>name</strong> – The name used to associate the key.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Throws</dt>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">boost</span><span class="p">::</span><span class="n">system</span><span class="p">::</span><span class="n">system_error</span></span></span> – Thrown on failure.</p>
 </dd>
 </dl>
@@ -172,7 +174,7 @@
 <p>Currently only RSA keys are supported. </p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>private_key</strong> – The private key to be imported in PKCS#8 format.</p></li>
 <li><p><strong>format</strong> – The <a class="reference internal" href="enumerations.html#namespaceboost_1_1wintls_1a57c5c8dd7f584e63d1d47074233ce3a0"><span class="std std-ref">file_format</span></a> of the private_key.</p></li>
@@ -185,16 +187,16 @@
 
 </section>
 <section id="delete-private-key">
-<h2>delete_private_key<a class="headerlink" href="#delete-private-key" title="Permalink to this headline">¶</a></h2>
+<h2>delete_private_key<a class="headerlink" href="#delete-private-key" title="Permalink to this heading">¶</a></h2>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N5boost6wintls18delete_private_keyERKNSt6stringE">
 <span id="_CPPv3N5boost6wintls18delete_private_keyERKNSt6stringE"></span><span id="_CPPv2N5boost6wintls18delete_private_keyERKNSt6stringE"></span><span id="boost::wintls::delete_private_key__ssCR"></span><span class="target" id="namespaceboost_1_1wintls_1ae627184a1313fbcf749d114e0b620fe2"></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">delete_private_key</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5boost6wintls18delete_private_keyERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Delete a private key from the default cryptographic provider. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> – The name associated with the private key to delete.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the container storing the private key to delete.</p>
 </dd>
-<dt class="field-even">Throws</dt>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">boost</span><span class="p">::</span><span class="n">system</span><span class="p">::</span><span class="n">system_error</span></span></span> – Thrown on failure. </p>
 </dd>
 </dl>
@@ -205,9 +207,9 @@
 <span id="_CPPv3N5boost6wintls18delete_private_keyERKNSt6stringERN5boost6system10error_codeE"></span><span id="_CPPv2N5boost6wintls18delete_private_keyERKNSt6stringERN5boost6system10error_codeE"></span><span id="boost::wintls::delete_private_key__ssCR.boost::system::error_codeR"></span><span class="target" id="namespaceboost_1_1wintls_1a3580eed61b653d22f87f717c9e94bbb5"></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">delete_private_key</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span>, <span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">error_code</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ec</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5boost6wintls18delete_private_keyERKNSt6stringERN5boost6system10error_codeE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Delete a private key from the default cryptographic provider. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> – The name associated with the private key to delete.</p></li>
+<li><p><strong>name</strong> – The name of the container storing the private key to delete.</p></li>
 <li><p><strong>ec</strong> – Set to indicate what error occurred, if any. </p></li>
 </ul>
 </dd>
@@ -216,7 +218,7 @@
 
 </section>
 <section id="assign-private-key">
-<h2>assign_private_key<a class="headerlink" href="#assign-private-key" title="Permalink to this headline">¶</a></h2>
+<h2>assign_private_key<a class="headerlink" href="#assign-private-key" title="Permalink to this heading">¶</a></h2>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N5boost6wintls18assign_private_keyEPK12CERT_CONTEXTRKNSt6stringE">
 <span id="_CPPv3N5boost6wintls18assign_private_keyEPK12CERT_CONTEXTRKNSt6stringE"></span><span id="_CPPv2N5boost6wintls18assign_private_keyEPK12CERT_CONTEXTRKNSt6stringE"></span><span id="boost::wintls::assign_private_key__CERT_CONTEXTCP.ssCR"></span><span class="target" id="namespaceboost_1_1wintls_1af09fea9676ca0b57f96df497b802d593"></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">assign_private_key</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">CERT_CONTEXT</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cert</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5boost6wintls18assign_private_keyEPK12CERT_CONTEXTRKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
@@ -230,13 +232,13 @@ have a private key associated with it.</p>
 <p>No check is done to ensure the key exists. Associating a non existing or non accessible key will result in unexpected behavior when used with a <a class="reference internal" href="classes.html#classboost_1_1wintls_1_1stream"><span class="std std-ref">stream</span></a> operating as a server.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cert</strong> – The certifcate to associate with the private key.</p></li>
+<li><p><strong>cert</strong> – The certificate to associate with the private key.</p></li>
 <li><p><strong>name</strong> – The name of the private key in the default cryptographic key provider.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Throws</dt>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">boost</span><span class="p">::</span><span class="n">system</span><span class="p">::</span><span class="n">system_error</span></span></span> – Thrown on failure. </p>
 </dd>
 </dl>
@@ -255,7 +257,7 @@ have a private key associated with it.</p>
 <p>No check is done to ensure the key exists. Associating a non existing or non accessible key will result in unexpected behavior when used with a <a class="reference internal" href="classes.html#classboost_1_1wintls_1_1stream"><span class="std std-ref">stream</span></a> operating as a server.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cert</strong> – The certificate to associate with the private key.</p></li>
 <li><p><strong>name</strong> – The name of the private key in the default cryptographic key provider.</p></li>
@@ -276,10 +278,10 @@ have a private key associated with it.</p>
   <footer class="footer">
     <div class="container">
       <p class="pull-right">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
       </p>
       <p>
-        Revised Sep 10, 2021.<br/>
+        Revised Nov 16, 2022.<br/>
         boost.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
         Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
       </p>

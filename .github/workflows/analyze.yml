@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install Boost
-      uses: MarkusJx/install-boost@v2.4.0
+      uses: MarkusJx/install-boost@v2.4.1
       id: install-boost
       with:
         boost_version: 1.79.0

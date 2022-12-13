@@ -22,7 +22,13 @@ namespace boost {
 namespace wintls {
 namespace detail {
 
-using cert_store_ptr = std::unique_ptr<std::remove_pointer_t<HCERTSTORE>, void(*)(HCERTSTORE)>;
+struct cert_store_deleter {
+  void operator()(HCERTSTORE store) {
+    CertCloseStore(store, 0);
+  }
+};
+
+using cert_store_ptr = std::unique_ptr<std::remove_pointer_t<HCERTSTORE>, cert_store_deleter>;
 
 class context_certificates {
 public:
@@ -89,7 +95,7 @@ public:
                                            &unused_2)) {
       detail::throw_last_error("CryptAcquireCertificatePrivateKey");
     }
-    server_cert_ = cert_context_ptr{CertDuplicateCertificateContext(cert), &CertFreeCertificateContext};
+    server_cert_ = cert_context_ptr{CertDuplicateCertificateContext(cert)};
   }
 
   const CERT_CONTEXT* server_cert() const {
@@ -101,10 +107,7 @@ public:
 private:
   void init_cert_store() {
     if (!cert_store_) {
-      cert_store_ = cert_store_ptr{
-        CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr),
-        [](HCERTSTORE store) { CertCloseStore(store, 0); }
-      };
+      cert_store_ = cert_store_ptr{CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, nullptr)};
       if (!cert_store_) {
         throw_last_error("CertOpenStore");
       }
@@ -166,8 +169,8 @@ private:
     return policy_status.dwError;
   }
 
-  cert_store_ptr cert_store_{nullptr, [](HCERTSTORE){}};
-  cert_context_ptr server_cert_{nullptr, &CertFreeCertificateContext};
+  cert_store_ptr cert_store_{};
+  cert_context_ptr server_cert_{};
 };
 
 } // namespace detail

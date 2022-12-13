@@ -15,17 +15,13 @@
 #include <fstream>
 #include <iterator>
 
-inline boost::wintls::cert_context_ptr make_empty_cert_context_ptr() {
-  return boost::wintls::cert_context_ptr{nullptr, &CertFreeCertificateContext};
-}
-
 const std::string test_key_name_client = test_key_name + "-client";
 
 struct wintls_client_context : public boost::wintls::context {
   wintls_client_context()
     : boost::wintls::context(boost::wintls::method::system_default)
     , needs_private_key_clean_up_(false)
-    , authority_ptr_(make_empty_cert_context_ptr()) {
+    , authority_ptr_() {
   }
 
   void with_test_cert_authority() {

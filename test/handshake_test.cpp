@@ -124,7 +124,7 @@ boost::wintls::cert_context_ptr create_self_signed_cert(const std::string& subje
   if (!cert) {
     boost::wintls::detail::throw_last_error("CertCreateSelfSignCertificate");
   }
-  return boost::wintls::cert_context_ptr{cert, &CertFreeCertificateContext};
+  return boost::wintls::cert_context_ptr{cert};
 }
 
 std::string cert_container_name(const CERT_CONTEXT* cert) {

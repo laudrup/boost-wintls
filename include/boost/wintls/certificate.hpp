@@ -41,13 +41,19 @@ struct crypt_key {
   HCRYPTKEY ptr = 0;
 };
 
+struct cert_ctx_deleter {
+  void operator()(const CERT_CONTEXT* cert_ctx) {
+    CertFreeCertificateContext(cert_ctx);
+  }
+};
+
 }
 /**
  * @verbatim embed:rst:leading-asterisk
  * Custom std::unique_ptr for managing a `CERT_CONTEXT`_
  * @endverbatim
  */
-using cert_context_ptr = std::unique_ptr<const CERT_CONTEXT, decltype(&CertFreeCertificateContext)>;
+using cert_context_ptr = std::unique_ptr<const CERT_CONTEXT, detail::cert_ctx_deleter>;
 
 /**
  * @verbatim embed:rst:leading-asterisk
@@ -73,7 +79,7 @@ inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file
     detail::throw_last_error("CertCreateCertificateContext");
   }
 
-  return cert_context_ptr{cert, &CertFreeCertificateContext};
+  return cert_context_ptr{cert};
 }
 
 /**
@@ -96,7 +102,7 @@ inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file
     return x509_to_cert_context(x509, format);
   } catch (const boost::system::system_error& e) {
     ec = e.code();
-    return cert_context_ptr{nullptr, &CertFreeCertificateContext};
+    return cert_context_ptr{};
   }
 }
 

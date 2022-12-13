@@ -60,9 +60,9 @@ boost::wintls::cert_context_ptr add_cert_str_to_store(HCERTSTORE store,
     boost::wintls::detail::throw_last_error("CertAddEncodedCertificateToStore");
   }
   if (get_handle) {
-    return {cert_in_store, &CertFreeCertificateContext};
+    return boost::wintls::cert_context_ptr{cert_in_store};
   }
-  return {nullptr, [](PCCERT_CONTEXT){ return TRUE; }};
+  return boost::wintls::cert_context_ptr{};
 }
 
 // Load a PEM formatted certificate chain from the given file.
@@ -87,9 +87,7 @@ boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
   // Open a temporary store for the chain.
   // Use CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, so the context of the leaf certificate can take ownership.
   const auto chain_store = boost::wintls::detail::cert_store_ptr{
-      CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, nullptr),
-        [](HCERTSTORE store) { CertCloseStore(store, 0); }
-      };
+      CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, nullptr)};
   auto leaf_ctx = add_cert_str_to_store(chain_store.get(),
                                         net::buffer(&str[cert_begin], cert_end + end_cert_str_size - cert_begin),
                                         true);
@@ -108,7 +106,13 @@ boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
   return leaf_ctx;
 }
 
-using crl_ctx_ptr = std::unique_ptr<const CRL_CONTEXT, decltype(&CertFreeCRLContext)>;
+struct crl_ctx_deleter {
+  void operator()(const CRL_CONTEXT* crl_ctx) {
+    CertFreeCRLContext(crl_ctx);
+  }
+};
+
+using crl_ctx_ptr = std::unique_ptr<const CRL_CONTEXT, crl_ctx_deleter>;
 
 crl_ctx_ptr x509_to_crl_context(const net::const_buffer& x509) {
   const auto data = boost::wintls::detail::crypt_string_to_binary(x509);
@@ -116,7 +120,7 @@ crl_ctx_ptr x509_to_crl_context(const net::const_buffer& x509) {
   if (!crl) {
     boost::wintls::detail::throw_last_error("CertCreateCRLContext");
   }
-  return crl_ctx_ptr{crl, &CertFreeCRLContext};
+  return crl_ctx_ptr{crl};
 }
 
 crl_ctx_ptr crl_from_file(const std::string& path) {

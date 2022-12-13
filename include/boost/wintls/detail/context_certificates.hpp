@@ -14,7 +14,6 @@
 #include <boost/wintls/error.hpp>
 
 #include <cstdlib>
-#include <functional>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -23,7 +22,7 @@ namespace boost {
 namespace wintls {
 namespace detail {
 
-using cert_store_ptr = std::unique_ptr<std::remove_pointer_t<HCERTSTORE>, std::function<void(HCERTSTORE)>>;
+using cert_store_ptr = std::unique_ptr<std::remove_pointer_t<HCERTSTORE>, void(*)(HCERTSTORE)>;
 
 class context_certificates {
 public:
@@ -167,7 +166,7 @@ private:
     return policy_status.dwError;
   }
 
-  cert_store_ptr cert_store_;
+  cert_store_ptr cert_store_{nullptr, [](HCERTSTORE){}};
   cert_context_ptr server_cert_{nullptr, &CertFreeCertificateContext};
 };
 

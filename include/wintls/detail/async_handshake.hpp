@@ -81,29 +81,6 @@ struct async_handshake : net::coroutine {
           self.complete(handshake_.last_error());
           return;
         }
-
-        if (handshake_state == detail::sspi_handshake::state::done_with_data) {
-          WINTLS_ASIO_CORO_YIELD {
-            state_ = state::writing;
-            net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
-          }
-          break;
-        }
-
-        if (handshake_state == detail::sspi_handshake::state::error_with_data) {
-          WINTLS_ASIO_CORO_YIELD {
-            state_ = state::writing;
-            net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
-          }
-          if (!is_continuation()) {
-            WINTLS_ASIO_CORO_YIELD {
-              auto e = self.get_executor();
-              net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-            }
-          }
-          self.complete(handshake_.last_error());
-          return;
-        }
       }
 
       if (!is_continuation()) {
@@ -113,6 +90,7 @@ struct async_handshake : net::coroutine {
         }
       }
       assert(!handshake_.last_error());
+      handshake_.manual_auth();
       self.complete(handshake_.last_error());
     }
   }

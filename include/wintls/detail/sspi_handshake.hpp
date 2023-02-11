@@ -28,15 +28,11 @@ namespace detail {
 
 class sspi_handshake {
 public:
-  // TODO: enhancement: done_with_data and error_with_data can be removed if
-  // we move the manual validate logic out of the handshake loop.
   enum class state {
-    data_needed,      // data needs to be read from peer
-    data_available,   // data needs to be write to peer
-    done_with_data,   // handshake success, but there is leftover data to be written to peer
-    error_with_data,  // handshake error, but there is leftover data to be written to peer
-    done,             // handshake success
-    error             // handshake error
+    data_needed,           // data needs to be read from peer
+    data_available,        // data needs to be write to peer
+    done,                  // handshake success
+    error                  // handshake error
   };
 
   sspi_handshake(context& context, ctxt_handle& ctxt_handle, cred_handle& cred_handle)
@@ -129,6 +125,9 @@ public:
   }
 
   state operator()() {
+    if (last_error_ == SEC_E_OK) {
+      return state::done;
+    }
     if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE) {
       return state::error;
     }
@@ -209,13 +208,9 @@ public:
         return has_buffer_output ? state::data_available : state::data_needed;
       }
       case SEC_E_OK: {
-        // sspi handshake ok. perform manual auth here.
-        manual_auth();
-        if (handshake_type_ == handshake_type::client) {
-          if (last_error_ != SEC_E_OK) {
-            return state::error;
-          }
-        } else {
+        // sspi handshake ok. Manual authentication will be done after the handshake loop.
+
+        if (handshake_type_ == handshake_type::server) {
           // Note: we are not checking (out_flags & ASC_RET_MUTUAL_AUTH) is true,
           // but instead rely on our manual cert validation to establish trust.
           // "The AcceptSecurityContext function will return ASC_RET_MUTUAL_AUTH if a
@@ -227,7 +222,7 @@ public:
           // "If function generated an output token, the token must be sent to the client process."
           // This happens when client cert is requested.
           if (has_buffer_output) {
-            return last_error_ == SEC_E_OK ? state::done_with_data : state::error_with_data;
+            return state::data_available;
           }
         }
         return state::done;
@@ -275,7 +270,6 @@ public:
     check_revocation_ = check;
   }
 
-private:
   SECURITY_STATUS manual_auth(){
     if (!context_.verify_server_certificate_) {
       return SEC_E_OK;
@@ -285,16 +279,12 @@ private:
     if (last_error_ != SEC_E_OK) {
       return last_error_;
     }
-
     cert_context_ptr remote_cert{ctx_ptr};
-
     last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get(), server_hostname_, check_revocation_));
-    if (last_error_ != SEC_E_OK) {
-      return last_error_;
-    }
     return last_error_;
   }
 
+private:
   context& context_;
   ctxt_handle& ctxt_handle_;
   cred_handle& cred_handle_;

@@ -210,22 +210,18 @@ public:
       case SEC_E_OK: {
         // sspi handshake ok. Manual authentication will be done after the handshake loop.
 
-        if (handshake_type_ == handshake_type::server) {
-          // Note: we are not checking (out_flags & ASC_RET_MUTUAL_AUTH) is true,
-          // but instead rely on our manual cert validation to establish trust.
-          // "The AcceptSecurityContext function will return ASC_RET_MUTUAL_AUTH if a
-          // client certificate was received from the client and schannel was
-          // successfully able to map the certificate to a user account in AD"
-          // As observed in tests, this check would wrongly reject openssl client with valid certificate.
+        // Note: When we requested client auth as a server,
+        // we are not checking (out_flags & ASC_RET_MUTUAL_AUTH) is true,
+        // but instead rely on our manual cert validation to establish trust.
+        // "The AcceptSecurityContext function will return ASC_RET_MUTUAL_AUTH if a
+        // client certificate was received from the client and schannel was
+        // successfully able to map the certificate to a user account in AD"
+        // As observed in tests, this check would wrongly reject openssl client with valid certificate.
 
-          // AcceptSecurityContext documentation:
-          // "If function generated an output token, the token must be sent to the client process."
-          // This happens when client cert is requested.
-          if (has_buffer_output) {
-            return state::data_available;
-          }
-        }
-        return state::done;
+        // AcceptSecurityContext/InitializeSecurityContext documentation for return value SEC_E_OK:
+        // "If function generated an output token, the token must be sent to the client/server."
+        // This happens when client cert is requested.
+        return has_buffer_output ? state::data_available : state::done;
       }
 
       case SEC_I_INCOMPLETE_CREDENTIALS:

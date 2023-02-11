@@ -73,16 +73,11 @@ public:
       WINTLS_UNREACHABLE_RETURN(0);
     }();
 
-    auto server_cert = context_.server_cert();
-    if (handshake_type_ == handshake_type::server && server_cert != nullptr) {
-      creds.cCreds = 1;
-      creds.paCred = &server_cert;
-    }
-
     // TODO: rename server_cert field since it is also used for client cert.
     // Note: if client cert is set, sspi will auto validate server cert with it.
     // Even though verify_server_certificate_ in context is set to false.
-    if (handshake_type_ == handshake_type::client && server_cert != nullptr) {
+    auto server_cert = context_.server_cert();
+    if (server_cert != nullptr) {
       creds.cCreds = 1;
       creds.paCred = &server_cert;
     }

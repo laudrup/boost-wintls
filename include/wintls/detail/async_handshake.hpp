@@ -121,7 +121,6 @@ private:
   NextLayer& next_layer_;
   detail::sspi_handshake& handshake_;
   int entry_count_;
-  std::vector<char> input_;
   enum class state {
     idle,
     reading,

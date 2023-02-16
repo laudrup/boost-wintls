@@ -39,10 +39,11 @@ struct async_handshake : boost::asio::coroutine {
       return entry_count_ > 1;
     };
 
-    detail::sspi_handshake::state handshake_state;
+    sspi_handshake::state handshake_state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while ((handshake_state = handshake_()) != detail::sspi_handshake::state::done) {
-        if (handshake_state == detail::sspi_handshake::state::data_needed) {
+      while (true) {
+        handshake_state = handshake_();
+        if (handshake_state == sspi_handshake::state::data_needed) {
           BOOST_ASIO_CORO_YIELD {
             next_layer_.async_read_some(handshake_.in_buffer(), std::move(self));
           }
@@ -50,7 +51,7 @@ struct async_handshake : boost::asio::coroutine {
           continue;
         }
 
-        if (handshake_state == detail::sspi_handshake::state::data_available) {
+        if (handshake_state == sspi_handshake::state::data_available) {
           BOOST_ASIO_CORO_YIELD {
             net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
           }
@@ -58,33 +59,33 @@ struct async_handshake : boost::asio::coroutine {
           continue;
         }
 
-        if (handshake_state == detail::sspi_handshake::state::error) {
-          if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
-              auto e = self.get_executor();
-              net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-            }
-          }
-          self.complete(handshake_.last_error());
-          return;
+        if (handshake_state == sspi_handshake::state::error) {
+          break;
+        }
+
+        if (handshake_state == sspi_handshake::state::done) {
+          BOOST_ASSERT(!handshake_.last_error());
+          handshake_.manual_auth();
+          break;
         }
       }
 
+      // If this is the first call to this function, it would cause the completion handler
+      // (invoked by self.complete()) to be executed on the wrong executor.
+      // Ensure that doesn't happen by posting the completion handler instead of calling it directly.
       if (!is_continuation()) {
         BOOST_ASIO_CORO_YIELD {
           auto e = self.get_executor();
           net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
         }
       }
-      BOOST_ASSERT(!handshake_.last_error());
-      handshake_.manual_auth();
       self.complete(handshake_.last_error());
     }
   }
 
 private:
   NextLayer& next_layer_;
-  detail::sspi_handshake& handshake_;
+  sspi_handshake& handshake_;
   int entry_count_;
 };
 

@@ -8,6 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
 
+#include <boost/wintls/detail/post_self.hpp>
 #include <boost/wintls/detail/sspi_shutdown.hpp>
 
 #include <boost/asio/coroutine.hpp>
@@ -49,8 +50,7 @@ struct async_shutdown : boost::asio::coroutine {
       } else {
         if (!is_continuation()) {
           BOOST_ASIO_CORO_YIELD {
-            auto e = self.get_executor();
-            net::post(e, [self = std::move(self), ec, size_written]() mutable { self(ec, size_written); });
+            post_self(self, next_layer_, ec, size_written);
           }
         }
         self.complete(ec);

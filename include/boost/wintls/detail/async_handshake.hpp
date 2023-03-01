@@ -10,6 +10,7 @@
 
 #include <boost/wintls/handshake_type.hpp>
 
+#include <boost/wintls/detail/post_self.hpp>
 #include <boost/wintls/detail/sspi_handshake.hpp>
 
 #include <boost/asio/coroutine.hpp>
@@ -70,13 +71,9 @@ struct async_handshake : boost::asio::coroutine {
         }
       }
 
-      // If this is the first call to this function, it would cause the completion handler
-      // (invoked by self.complete()) to be executed on the wrong executor.
-      // Ensure that doesn't happen by posting the completion handler instead of calling it directly.
       if (!is_continuation()) {
         BOOST_ASIO_CORO_YIELD {
-          auto e = self.get_executor();
-          net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+          post_self(self, next_layer_, ec, length);
         }
       }
       self.complete(handshake_.last_error());

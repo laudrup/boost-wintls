@@ -212,7 +212,7 @@ public:
   template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler);
+        detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler, *this);
   }
 
   /** Read some data from the stream.
@@ -306,7 +306,9 @@ public:
   template <class MutableBufferSequence, class CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_read<next_layer_type, MutableBufferSequence>{next_layer_, buffers, sspi_stream_->decrypt}, handler);
+        detail::async_read<next_layer_type, MutableBufferSequence>{next_layer_, buffers, sspi_stream_->decrypt},
+        handler,
+        *this);
   }
 
   /** Write some data to the stream.
@@ -396,7 +398,9 @@ public:
   template <class ConstBufferSequence, class CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_write<next_layer_type, ConstBufferSequence>{next_layer_, buffers, sspi_stream_->encrypt}, handler);
+        detail::async_write<next_layer_type, ConstBufferSequence>{next_layer_, buffers, sspi_stream_->encrypt},
+        handler,
+        *this);
   }
 
   /** Shut down TLS on the stream.
@@ -451,7 +455,7 @@ public:
   template <class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_shutdown<next_layer_type>{next_layer_, sspi_stream_->shutdown}, handler);
+        detail::async_shutdown<next_layer_type>{next_layer_, sspi_stream_->shutdown}, handler, *this);
   }
 
 private:

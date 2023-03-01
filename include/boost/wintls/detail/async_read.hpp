@@ -8,6 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
 
+#include <boost/wintls/detail/post_self.hpp>
 #include <boost/wintls/detail/sspi_decrypt.hpp>
 
 #include <boost/asio/coroutine.hpp>
@@ -50,8 +51,7 @@ struct async_read : boost::asio::coroutine {
       if (state == detail::sspi_decrypt::state::error) {
         if (!is_continuation()) {
           BOOST_ASIO_CORO_YIELD {
-            auto e = self.get_executor();
-            net::post(e, [self = std::move(self), ec, size_read]() mutable { self(ec, size_read); });
+            post_self(self, next_layer_, ec, size_read);
           }
         }
         ec = decrypt_.last_error();

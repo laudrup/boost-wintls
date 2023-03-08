@@ -245,13 +245,13 @@ TEST_CASE("check certificate revocation (integration test)", "[.integration]") {
     // 'running()' does not mean that it is responding yet, but that we did start the process correctly
     CHECK(ocsp_responder.running());
     // It takes a few seconds for the OCSP responder to become available.
-    // Therefore, we try to verify the certificate in a loop, but for at most 30 seconds.
+    // Therefore, we try to verify the certificate in a loop, but for at most 60 seconds.
     auto res_with_responder = CRYPT_E_REVOCATION_OFFLINE;
     const auto start = std::chrono::system_clock::now();
     while (res_with_responder == CRYPT_E_REVOCATION_OFFLINE) {
       res_with_responder = ctx_certs.verify_certificate(cert_ocsp.get(), "", true);
-      if (std::chrono::system_clock::now() - start > std::chrono::seconds(30)) {
-        WARN("OCSP responder did not provide a response within 30 seconds.");
+      if (std::chrono::system_clock::now() - start > std::chrono::seconds(60)) {
+        WARN("OCSP responder did not provide a response within 60 seconds.");
         break;
       }
     }

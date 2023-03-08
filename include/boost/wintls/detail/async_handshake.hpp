@@ -10,6 +10,7 @@
 
 #include <boost/wintls/handshake_type.hpp>
 
+#include <boost/wintls/detail/post_self.hpp>
 #include <boost/wintls/detail/sspi_handshake.hpp>
 
 #include <boost/asio/coroutine.hpp>
@@ -18,17 +19,16 @@ namespace boost {
 namespace wintls {
 namespace detail {
 
-template <typename NextLayer>
+template<typename NextLayer>
 struct async_handshake : boost::asio::coroutine {
   async_handshake(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_type type)
-    : next_layer_(next_layer)
-    , handshake_(handshake)
-    , entry_count_(0)
-    , state_(state::idle) {
+      : next_layer_(next_layer)
+      , handshake_(handshake)
+      , entry_count_(0) {
     handshake_(type);
   }
 
-  template <typename Self>
+  template<typename Self>
   void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
     if (ec) {
       self.complete(ec);
@@ -40,94 +40,50 @@ struct async_handshake : boost::asio::coroutine {
       return entry_count_ > 1;
     };
 
-    switch(state_) {
-      case state::reading:
-        handshake_.size_read(length);
-        state_ = state::idle;
-        break;
-      case state::writing:
-        handshake_.size_written(length);
-        state_ = state::idle;
-        break;
-      case state::idle:
-        break;
-    }
-
-    detail::sspi_handshake::state handshake_state;
+    sspi_handshake::state handshake_state;
     BOOST_ASIO_CORO_REENTER(*this) {
-      while((handshake_state = handshake_()) != detail::sspi_handshake::state::done) {
-        if (handshake_state == detail::sspi_handshake::state::data_needed) {
+      while (true) {
+        handshake_state = handshake_();
+        if (handshake_state == sspi_handshake::state::data_needed) {
           BOOST_ASIO_CORO_YIELD {
-            state_ = state::reading;
             next_layer_.async_read_some(handshake_.in_buffer(), std::move(self));
           }
+          handshake_.size_read(length);
           continue;
         }
 
-        if (handshake_state == detail::sspi_handshake::state::data_available) {
+        if (handshake_state == sspi_handshake::state::data_available) {
           BOOST_ASIO_CORO_YIELD {
-            state_ = state::writing;
             net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
           }
+          handshake_.size_written(length);
           continue;
         }
 
-        if (handshake_state == detail::sspi_handshake::state::error) {
-          if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
-              auto e = self.get_executor();
-              net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-            }
-          }
-          self.complete(handshake_.last_error());
-          return;
-        }
-
-        if (handshake_state == detail::sspi_handshake::state::done_with_data) {
-          BOOST_ASIO_CORO_YIELD {
-            state_ = state::writing;
-            net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
-          }
+        if (handshake_state == sspi_handshake::state::error) {
           break;
         }
 
-        if (handshake_state == detail::sspi_handshake::state::error_with_data) {
-          BOOST_ASIO_CORO_YIELD {
-            state_ = state::writing;
-            net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
-          }
-          if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
-              auto e = self.get_executor();
-              net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
-            }
-          }
-          self.complete(handshake_.last_error());
-          return;
+        if (handshake_state == sspi_handshake::state::done) {
+          BOOST_ASSERT(!handshake_.last_error());
+          handshake_.manual_auth();
+          break;
         }
       }
 
       if (!is_continuation()) {
         BOOST_ASIO_CORO_YIELD {
-          auto e = self.get_executor();
-          net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
+          post_self(self, next_layer_, ec, length);
         }
       }
-      BOOST_ASSERT(!handshake_.last_error());
       self.complete(handshake_.last_error());
     }
   }
 
 private:
   NextLayer& next_layer_;
-  detail::sspi_handshake& handshake_;
+  sspi_handshake& handshake_;
   int entry_count_;
-  std::vector<char> input_;
-  enum class state {
-    idle,
-    reading,
-    writing
-  } state_;
 };
 
 } // namespace detail

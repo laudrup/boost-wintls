@@ -137,9 +137,8 @@ public:
   void handshake(handshake_type type, boost::system::error_code& ec) {
     sspi_stream_->handshake(type);
 
-    detail::sspi_handshake::state state;
-    while((state = sspi_stream_->handshake()) != detail::sspi_handshake::state::done) {
-      switch (state) {
+    while (true) {
+      switch (sspi_stream_->handshake()) {
         case detail::sspi_handshake::state::data_needed: {
           std::size_t size_read = next_layer_.read_some(sspi_stream_->handshake.in_buffer(), ec);
           if (ec) {
@@ -159,24 +158,11 @@ public:
         case detail::sspi_handshake::state::error:
           ec = sspi_stream_->handshake.last_error();
           return;
-        case detail::sspi_handshake::state::done_with_data:{
-          std::size_t size_written = net::write(next_layer_, sspi_stream_->handshake.out_buffer(), ec);
-          if (ec) {
-            return;
-          }
-          sspi_stream_->handshake.size_written(size_written);
-          return;
-        }
-        case detail::sspi_handshake::state::error_with_data:{
-          std::size_t size_written = net::write(next_layer_, sspi_stream_->handshake.out_buffer(), ec);
-          if (ec) {
-            return;
-          }
-          sspi_stream_->handshake.size_written(size_written);
-          return;
-        }
         case detail::sspi_handshake::state::done:
-          BOOST_UNREACHABLE_RETURN(0);
+          if (sspi_stream_->handshake.manual_auth() != SEC_E_OK) {
+            ec = sspi_stream_->handshake.last_error();
+          }
+          return;
       }
     }
   }
@@ -226,7 +212,7 @@ public:
   template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler);
+        detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler, *this);
   }
 
   /** Read some data from the stream.
@@ -320,7 +306,9 @@ public:
   template <class MutableBufferSequence, class CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_read<next_layer_type, MutableBufferSequence>{next_layer_, buffers, sspi_stream_->decrypt}, handler);
+        detail::async_read<next_layer_type, MutableBufferSequence>{next_layer_, buffers, sspi_stream_->decrypt},
+        handler,
+        *this);
   }
 
   /** Write some data to the stream.
@@ -410,7 +398,9 @@ public:
   template <class ConstBufferSequence, class CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
-        detail::async_write<next_layer_type, ConstBufferSequence>{next_layer_, buffers, sspi_stream_->encrypt}, handler);
+        detail::async_write<next_layer_type, ConstBufferSequence>{next_layer_, buffers, sspi_stream_->encrypt},
+        handler,
+        *this);
   }
 
   /** Shut down TLS on the stream.
@@ -465,7 +455,7 @@ public:
   template <class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_shutdown<next_layer_type>{next_layer_, sspi_stream_->shutdown}, handler);
+        detail::async_shutdown<next_layer_type>{next_layer_, sspi_stream_->shutdown}, handler, *this);
   }
 
 private:

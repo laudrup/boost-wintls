@@ -64,8 +64,9 @@ jobs:
       with:
         fetch-depth: 0
 
+    # For Boost Versions >= 1.78, the toolset parameter has to be specified to install-boost.
     - name: Add boost toolset to environment
-      if: contains(fromJson('["1.78.0", "1.79.0"]'), matrix.boost_version)
+      if: contains(fromJson('["1.78.0", "1.79.0", "1.80.0", "1.81.0"]'), matrix.boost_version)
       run: echo BOOST_TOOLSET=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "msvc") >> $GITHUB_ENV
 
     # The platform_version passed to boost-install determines the msvc toolset version for which static libs are installed.

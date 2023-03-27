@@ -136,18 +136,34 @@ public:
       return;
     }
     DWORD out_flags = 0;
-    last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+    switch (handshake_type_) {
+      case handshake_type::client:
+        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+                                                                        ctxt_handle_.get(),
+                                                                        nullptr,
+                                                                        client_context_flags,
+                                                                        0,
+                                                                        SECURITY_NATIVE_DREP,
+                                                                        nullptr,
+                                                                        0,
+                                                                        ctxt_handle_.get(),
+                                                                        buffers.desc(),
+                                                                        &out_flags,
+                                                                        nullptr);
+        break;
+      case handshake_type::server: {
+        TimeStamp expiry;
+        last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_.get(),
                                                                     ctxt_handle_.get(),
                                                                     nullptr,
-                                                                    client_context_flags,
-                                                                    0,
+                                                                    server_context_flags,
                                                                     SECURITY_NATIVE_DREP,
-                                                                    nullptr,
-                                                                    0,
                                                                     ctxt_handle_.get(),
                                                                     buffers.desc(),
                                                                     &out_flags,
-                                                                    nullptr);
+                                                                    &expiry);
+      }
+    }
     if (last_error_ != SEC_E_OK) {
       return;
     }

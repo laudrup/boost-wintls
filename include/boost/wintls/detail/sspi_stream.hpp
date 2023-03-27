@@ -11,7 +11,6 @@
 #include <boost/wintls/detail/sspi_handshake.hpp>
 #include <boost/wintls/detail/sspi_encrypt.hpp>
 #include <boost/wintls/detail/sspi_decrypt.hpp>
-#include <boost/wintls/detail/sspi_shutdown.hpp>
 #include <boost/wintls/detail/sspi_sec_handle.hpp>
 
 namespace boost {
@@ -21,10 +20,9 @@ namespace detail {
 class sspi_stream {
 public:
   sspi_stream(context& ctx)
-    : handshake(ctx, ctxt_handle_, cred_handle_)
-    , encrypt(ctxt_handle_)
-    , decrypt(ctxt_handle_)
-    , shutdown(ctxt_handle_, cred_handle_) {
+      : handshake(ctx, ctxt_handle_, cred_handle_)
+      , encrypt(ctxt_handle_)
+      , decrypt(ctxt_handle_) {
   }
 
   sspi_stream(sspi_stream&&) = delete;
@@ -38,7 +36,6 @@ public:
   sspi_handshake handshake;
   sspi_encrypt encrypt;
   sspi_decrypt decrypt;
-  sspi_shutdown shutdown;
 };
 
 } // namespace detail

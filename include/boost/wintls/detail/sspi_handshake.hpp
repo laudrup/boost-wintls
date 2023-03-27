@@ -13,6 +13,7 @@
 #include <boost/wintls/detail/context_flags.hpp>
 #include <boost/wintls/detail/handshake_input_buffers.hpp>
 #include <boost/wintls/detail/handshake_output_buffers.hpp>
+#include <boost/wintls/detail/shutdown_buffers.hpp>
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
 #include <boost/wintls/detail/sspi_sec_handle.hpp>
 
@@ -25,6 +26,11 @@
 namespace boost {
 namespace wintls {
 namespace detail {
+
+enum class handshake_mode {
+  init,    // initial handshake to establish the protocol
+  shutdown // shutdown the protocol
+};
 
 class sspi_handshake {
 public:
@@ -44,9 +50,13 @@ public:
     input_buffers_[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
   }
 
-  void operator()(handshake_type type) {
+  // Specify whether the handshake is performed as a client or as a server.
+  // This is used for the initial handshake and for the shutdown.
+  void set_type(handshake_type type) {
     handshake_type_ = type;
+  }
 
+  void init() {
     SCHANNEL_CRED creds{};
     creds.dwVersion = SCHANNEL_CRED_VERSION;
     creds.grbitEnabledProtocols = static_cast<DWORD>(context_.method_);
@@ -119,15 +129,40 @@ public:
     }
   }
 
-  state operator()() {
-    if (last_error_ == SEC_E_OK) {
-      return state::done;
+  void shutdown() {
+    shutdown_buffers buffers;
+    last_error_ = detail::sspi_functions::ApplyControlToken(ctxt_handle_.get(), buffers.desc());
+    if (last_error_ != SEC_E_OK) {
+      return;
     }
-    if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE) {
+    DWORD out_flags = 0;
+    last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+                                                                    ctxt_handle_.get(),
+                                                                    nullptr,
+                                                                    client_context_flags,
+                                                                    0,
+                                                                    SECURITY_NATIVE_DREP,
+                                                                    nullptr,
+                                                                    0,
+                                                                    ctxt_handle_.get(),
+                                                                    buffers.desc(),
+                                                                    &out_flags,
+                                                                    nullptr);
+    if (last_error_ != SEC_E_OK) {
+      return;
+    }
+    out_buffer_ = sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer};
+  }
+
+  state operator()() {
+    if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE && last_error_ != SEC_E_OK) {
       return state::error;
     }
     if (!out_buffer_.empty()) {
       return state::data_available;
+    }
+    if (last_error_ == SEC_E_OK) {
+      return state::done;
     }
     if (input_buffers_[0].cbBuffer == 0) {
       return state::data_needed;
@@ -290,8 +325,18 @@ private:
 };
 
 template<typename NextLayer>
-void handshake(NextLayer& next_layer, sspi_handshake& handshake, handshake_type type, boost::system::error_code& ec) {
-  handshake(type);
+void handshake(NextLayer& next_layer,
+               sspi_handshake& handshake,
+               handshake_mode mode,
+               boost::system::error_code& ec) {
+  switch (mode) {
+    case handshake_mode::init:
+      handshake.init();
+      break;
+    case handshake_mode::shutdown:
+      handshake.shutdown();
+      break;
+  }
   while (true) {
     switch (handshake()) {
       case detail::sspi_handshake::state::data_needed: {
@@ -314,7 +359,7 @@ void handshake(NextLayer& next_layer, sspi_handshake& handshake, handshake_type 
         ec = handshake.last_error();
         return;
       case detail::sspi_handshake::state::done:
-        if (handshake.manual_auth() != SEC_E_OK) {
+        if (mode == handshake_mode::init && handshake.manual_auth() != SEC_E_OK) {
           ec = handshake.last_error();
         }
         return;

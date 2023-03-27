@@ -13,7 +13,6 @@
 
 #include <boost/wintls/detail/async_handshake.hpp>
 #include <boost/wintls/detail/async_read.hpp>
-#include <boost/wintls/detail/async_shutdown.hpp>
 #include <boost/wintls/detail/async_write.hpp>
 #include <boost/wintls/detail/sspi_stream.hpp>
 
@@ -135,7 +134,8 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   void handshake(handshake_type type, boost::system::error_code& ec) {
-    detail::handshake(next_layer_, sspi_stream_->handshake, type, ec);
+    sspi_stream_->handshake.set_type(type);
+    detail::handshake(next_layer_, sspi_stream_->handshake, detail::handshake_mode::init, ec);
   }
 
   /** Perform TLS handshaking.
@@ -182,8 +182,11 @@ public:
    */
   template<class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
+    sspi_stream_->handshake.set_type(type);
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler, *this);
+        detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, detail::handshake_mode::init},
+        handler,
+        *this);
   }
 
   /** Read some data from the stream.
@@ -383,14 +386,7 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   void shutdown(boost::system::error_code& ec) {
-    ec = sspi_stream_->shutdown();
-    if (ec) {
-      return;
-    }
-    std::size_t size_written = net::write(next_layer_, sspi_stream_->shutdown.buffer(), ec);
-    if (!ec) {
-      sspi_stream_->shutdown.size_written(size_written);
-    }
+    detail::handshake(next_layer_, sspi_stream_->handshake, detail::handshake_mode::shutdown, ec);
   }
 
   /** Shut down TLS on the stream.
@@ -423,10 +419,14 @@ public:
    *);
    * @endcode
    */
-  template <class CompletionToken>
+  template<class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-        detail::async_shutdown<next_layer_type>{next_layer_, sspi_stream_->shutdown}, handler, *this);
+        detail::async_handshake<next_layer_type>{next_layer_,
+                                                 sspi_stream_->handshake,
+                                                 detail::handshake_mode::shutdown},
+        handler,
+        *this);
   }
 
 private:

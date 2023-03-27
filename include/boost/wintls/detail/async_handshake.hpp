@@ -21,11 +21,19 @@ namespace detail {
 
 template<typename NextLayer>
 struct async_handshake : boost::asio::coroutine {
-  async_handshake(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_type type)
+  async_handshake(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_mode mode)
       : next_layer_(next_layer)
       , handshake_(handshake)
+      , mode_(mode)
       , entry_count_(0) {
-    handshake_(type);
+    switch (mode) {
+      case handshake_mode::init:
+        handshake_.init();
+        break;
+      case handshake_mode::shutdown:
+        handshake_.shutdown();
+        break;
+    }
   }
 
   template<typename Self>
@@ -66,7 +74,9 @@ struct async_handshake : boost::asio::coroutine {
 
         if (handshake_state == sspi_handshake::state::done) {
           BOOST_ASSERT(!handshake_.last_error());
-          handshake_.manual_auth();
+          if (mode_ == handshake_mode::init) {
+            handshake_.manual_auth();
+          }
           break;
         }
       }
@@ -83,6 +93,7 @@ struct async_handshake : boost::asio::coroutine {
 private:
   NextLayer& next_layer_;
   sspi_handshake& handshake_;
+  handshake_mode mode_;
   int entry_count_;
 };
 

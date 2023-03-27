@@ -260,7 +260,7 @@ public:
     check_revocation_ = check;
   }
 
-  SECURITY_STATUS manual_auth(){
+  SECURITY_STATUS manual_auth() {
     if (!context_.verify_server_certificate_) {
       return SEC_E_OK;
     }
@@ -288,6 +288,39 @@ private:
   std::string server_hostname_;
   bool check_revocation_ = false;
 };
+
+template<typename NextLayer>
+void handshake(NextLayer& next_layer, sspi_handshake& handshake, handshake_type type, boost::system::error_code& ec) {
+  handshake(type);
+  while (true) {
+    switch (handshake()) {
+      case detail::sspi_handshake::state::data_needed: {
+        std::size_t size_read = next_layer.read_some(handshake.in_buffer(), ec);
+        if (ec) {
+          return;
+        }
+        handshake.size_read(size_read);
+        continue;
+      }
+      case detail::sspi_handshake::state::data_available: {
+        std::size_t size_written = net::write(next_layer, handshake.out_buffer(), ec);
+        if (ec) {
+          return;
+        }
+        handshake.size_written(size_written);
+        continue;
+      }
+      case detail::sspi_handshake::state::error:
+        ec = handshake.last_error();
+        return;
+      case detail::sspi_handshake::state::done:
+        if (handshake.manual_auth() != SEC_E_OK) {
+          ec = handshake.last_error();
+        }
+        return;
+    }
+  }
+}
 
 } // namespace detail
 } // namespace wintls

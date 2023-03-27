@@ -135,36 +135,7 @@ public:
    * @param ec Set to indicate what error occurred, if any.
    */
   void handshake(handshake_type type, boost::system::error_code& ec) {
-    sspi_stream_->handshake(type);
-
-    while (true) {
-      switch (sspi_stream_->handshake()) {
-        case detail::sspi_handshake::state::data_needed: {
-          std::size_t size_read = next_layer_.read_some(sspi_stream_->handshake.in_buffer(), ec);
-          if (ec) {
-            return;
-          }
-          sspi_stream_->handshake.size_read(size_read);
-          continue;
-        }
-        case detail::sspi_handshake::state::data_available: {
-          std::size_t size_written = net::write(next_layer_, sspi_stream_->handshake.out_buffer(), ec);
-          if (ec) {
-            return;
-          }
-          sspi_stream_->handshake.size_written(size_written);
-          continue;
-        }
-        case detail::sspi_handshake::state::error:
-          ec = sspi_stream_->handshake.last_error();
-          return;
-        case detail::sspi_handshake::state::done:
-          if (sspi_stream_->handshake.manual_auth() != SEC_E_OK) {
-            ec = sspi_stream_->handshake.last_error();
-          }
-          return;
-      }
-    }
+    detail::handshake(next_layer_, sspi_stream_->handshake, type, ec);
   }
 
   /** Perform TLS handshaking.
@@ -209,7 +180,7 @@ public:
    * this function. Invocation of the handler will be performed in a
    * manner equivalent to using `net::post`.
    */
-  template <class CompletionToken>
+  template<class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
     return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
         detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler, *this);

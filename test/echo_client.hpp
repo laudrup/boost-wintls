@@ -27,6 +27,14 @@ public:
     stream.shutdown();
   }
 
+  auto launch_shutdown() {
+    return std::async(std::launch::async, [&]() {
+      boost::system::error_code ec;
+      stream.shutdown(ec);
+      return ec;
+    });
+  }
+
   void read() {
     net::read_until(stream, buffer_, '\0');
   }

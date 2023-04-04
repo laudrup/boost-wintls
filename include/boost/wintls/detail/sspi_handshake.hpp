@@ -168,6 +168,12 @@ public:
       return;
     }
     out_buffer_ = sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer};
+    // Setting SEC_I_CONTINUE_NEEDED here means that we will wait for the peer to send its close notify.
+    // Not doing so may open up the possibility of a truncation attack.
+    // If the underlying protocol is self-terminated (as is http) it would be okay not to wait for the close notify.
+    // We could implement such a shutdown as a "fast/unsafe_shutdown" and not change last_error_ here for that case.
+    // Cmp. https://security.stackexchange.com/questions/82028/ssl-tls-is-a-server-always-required-to-respond-to-a-close-notify
+    last_error_ = SEC_I_CONTINUE_NEEDED;
   }
 
   state operator()() {
@@ -245,7 +251,7 @@ public:
     }
 
     bool has_buffer_output = out_buffers[0].cbBuffer != 0 && out_buffers[0].pvBuffer != nullptr;
-    if(has_buffer_output){
+    if (has_buffer_output) {
       out_buffer_ = sspi_context_buffer{out_buffers[0].pvBuffer, out_buffers[0].cbBuffer};
     }
 
@@ -268,6 +274,14 @@ public:
         // "If function generated an output token, the token must be sent to the client/server."
         // This happens when client cert is requested.
         return has_buffer_output ? state::data_available : state::done;
+      }
+
+      // If we get here during shutdown, this means we initiated the shutdown and now received the 
+      // close notify from the peer. That means that we are done.
+      // #TODO: could this happen during the initial handshake where it should be an error?
+      case SEC_I_CONTEXT_EXPIRED: {
+        last_error_ = SEC_E_OK; // #TODO: better solve this in the handshake loop?
+        return state::done;
       }
 
       case SEC_I_INCOMPLETE_CREDENTIALS:

@@ -69,24 +69,28 @@ struct async_handshake : boost::asio::coroutine {
         }
 
         if (handshake_state == sspi_handshake::state::error) {
+          ec = handshake_.last_error();
           break;
         }
 
         if (handshake_state == sspi_handshake::state::done) {
           BOOST_ASSERT(!handshake_.last_error());
           if (mode_ == handshake_mode::init) {
-            handshake_.manual_auth();
+            ec = error::make_error_code(handshake_.manual_auth());
           }
           break;
         }
       }
 
+      if (ec == net::error::eof) {
+        ec = wintls::error::stream_truncated;
+      }
       if (!is_continuation()) {
         BOOST_ASIO_CORO_YIELD {
           post_self(self, next_layer_, ec, length);
         }
       }
-      self.complete(handshake_.last_error());
+      self.complete(ec);
     }
   }
 

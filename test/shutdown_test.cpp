@@ -24,7 +24,7 @@ auto stream_truncated_error(const asio_ssl::stream<NextLayer>&) {
 
 template<typename NextLayer>
 auto stream_truncated_error(const boost::wintls::stream<NextLayer>&) {
-  return net::error::eof; // #TODO: This should be a separate error code.
+  return boost::wintls::error::stream_truncated;
 }
 
 using TestTypes = std::tuple<std::tuple<asio_ssl_client_stream, asio_ssl_server_stream>,

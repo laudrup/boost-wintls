@@ -368,32 +368,36 @@ void handshake(NextLayer& next_layer,
       break;
   }
   while (true) {
-    switch (handshake()) {
-      case detail::sspi_handshake::state::data_needed: {
-        std::size_t size_read = next_layer.read_some(handshake.in_buffer(), ec);
-        if (ec) {
-          return;
-        }
-        handshake.size_read(size_read);
-        continue;
+    auto handshake_state = handshake();
+    if (handshake_state == sspi_handshake::state::data_needed) {
+      std::size_t size_read = next_layer.read_some(handshake.in_buffer(), ec);
+      if (ec) {
+        break;
       }
-      case detail::sspi_handshake::state::data_available: {
-        std::size_t size_written = net::write(next_layer, handshake.out_buffer(), ec);
-        if (ec) {
-          return;
-        }
-        handshake.size_written(size_written);
-        continue;
-      }
-      case detail::sspi_handshake::state::error:
-        ec = handshake.last_error();
-        return;
-      case detail::sspi_handshake::state::done:
-        if (mode == handshake_mode::init && handshake.manual_auth() != SEC_E_OK) {
-          ec = handshake.last_error();
-        }
-        return;
+      handshake.size_read(size_read);
+      continue;
     }
+    if (handshake_state == sspi_handshake::state::data_available) {
+      std::size_t size_written = net::write(next_layer, handshake.out_buffer(), ec);
+      if (ec) {
+        break;
+      }
+      handshake.size_written(size_written);
+      continue;
+    }
+    if (handshake_state == sspi_handshake::state::error) {
+      ec = handshake.last_error();
+      break;
+    }
+    if (handshake_state == sspi_handshake::state::done) {
+      if (mode == handshake_mode::init && handshake.manual_auth() != SEC_E_OK) {
+        ec = handshake.last_error();
+      }
+      break;
+    }
+  }
+  if (ec == net::error::eof) {
+    ec = wintls::error::stream_truncated;
   }
 }
 

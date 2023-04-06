@@ -75,8 +75,10 @@ TEMPLATE_LIST_TEST_CASE("echo test", "", TestTypes) {
     async_echo_server<ServerStream> server(io_context);
     async_echo_client<ClientStream> client(io_context, test_data);
     client.stream.next_layer().connect(server.stream.next_layer());
-    server.run();
+    // #TODO: calling server.run() before client.run() causes io_context.run() to block indefinitely
+    //        in the shutdown handshake loop while the server waits for the client close notify.
     client.run();
+    server.run();
     io_context.run();
     CHECK(client.received_message() == test_data);
   }

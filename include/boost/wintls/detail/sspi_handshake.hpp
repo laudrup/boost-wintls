@@ -13,6 +13,7 @@
 #include <boost/wintls/detail/context_flags.hpp>
 #include <boost/wintls/detail/handshake_input_buffers.hpp>
 #include <boost/wintls/detail/handshake_output_buffers.hpp>
+#include <boost/wintls/detail/shutdown_buffers.hpp>
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
 #include <boost/wintls/detail/sspi_sec_handle.hpp>
 
@@ -26,17 +27,18 @@ namespace boost {
 namespace wintls {
 namespace detail {
 
+enum class handshake_mode {
+  init,    // initial handshake to establish the protocol
+  shutdown // shutdown the protocol
+};
+
 class sspi_handshake {
 public:
-  // TODO: enhancement: done_with_data and error_with_data can be removed if
-  // we move the manual validate logic out of the handshake loop.
   enum class state {
-    data_needed,      // data needs to be read from peer
-    data_available,   // data needs to be write to peer
-    done_with_data,   // handshake success, but there is leftover data to be written to peer
-    error_with_data,  // handshake error, but there is leftover data to be written to peer
-    done,             // handshake success
-    error             // handshake error
+    data_needed,           // data needs to be read from peer
+    data_available,        // data needs to be write to peer
+    done,                  // handshake success
+    error                  // handshake error
   };
 
   sspi_handshake(context& context, ctxt_handle& ctxt_handle, cred_handle& cred_handle)
@@ -48,9 +50,13 @@ public:
     input_buffers_[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
   }
 
-  void operator()(handshake_type type) {
+  // Specify whether the handshake is performed as a client or as a server.
+  // This is used for the initial handshake and for the shutdown.
+  void set_type(handshake_type type) {
     handshake_type_ = type;
+  }
 
+  void init() {
     SCHANNEL_CRED creds{};
     creds.dwVersion = SCHANNEL_CRED_VERSION;
     creds.grbitEnabledProtocols = static_cast<DWORD>(context_.method_);
@@ -73,16 +79,11 @@ public:
       BOOST_UNREACHABLE_RETURN(0);
     }();
 
-    auto server_cert = context_.server_cert();
-    if (handshake_type_ == handshake_type::server && server_cert != nullptr) {
-      creds.cCreds = 1;
-      creds.paCred = &server_cert;
-    }
-
     // TODO: rename server_cert field since it is also used for client cert.
     // Note: if client cert is set, sspi will auto validate server cert with it.
     // Even though verify_server_certificate_ in context is set to false.
-    if (handshake_type_ == handshake_type::client && server_cert != nullptr) {
+    auto server_cert = context_.server_cert();
+    if (server_cert != nullptr) {
       creds.cCreds = 1;
       creds.paCred = &server_cert;
     }
@@ -128,12 +129,62 @@ public:
     }
   }
 
+  void shutdown() {
+    shutdown_buffers buffers;
+    last_error_ = detail::sspi_functions::ApplyControlToken(ctxt_handle_.get(), buffers.desc());
+    if (last_error_ != SEC_E_OK) {
+      return;
+    }
+    DWORD out_flags = 0;
+    switch (handshake_type_) {
+      case handshake_type::client:
+        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+                                                                        ctxt_handle_.get(),
+                                                                        nullptr,
+                                                                        client_context_flags,
+                                                                        0,
+                                                                        SECURITY_NATIVE_DREP,
+                                                                        nullptr,
+                                                                        0,
+                                                                        ctxt_handle_.get(),
+                                                                        buffers.desc(),
+                                                                        &out_flags,
+                                                                        nullptr);
+        break;
+      case handshake_type::server: {
+        TimeStamp expiry;
+        last_error_ = detail::sspi_functions::AcceptSecurityContext(cred_handle_.get(),
+                                                                    ctxt_handle_.get(),
+                                                                    nullptr,
+                                                                    server_context_flags,
+                                                                    SECURITY_NATIVE_DREP,
+                                                                    ctxt_handle_.get(),
+                                                                    buffers.desc(),
+                                                                    &out_flags,
+                                                                    &expiry);
+      }
+    }
+    if (last_error_ != SEC_E_OK) {
+      return;
+    }
+    out_buffer_ = sspi_context_buffer{buffers[0].pvBuffer, buffers[0].cbBuffer};
+    // Setting SEC_I_CONTINUE_NEEDED here means that we will wait for the peer to send its close notify.
+    // Not doing so may open up the possibility of a truncation attack.
+    // If the underlying protocol is self-terminated (as is http) it would be okay not to wait for the close notify.
+    // We could implement such a shutdown as a "fast/unsafe_shutdown" and not change last_error_ here for that case.
+    // Cmp. https://security.stackexchange.com/questions/82028/ssl-tls-is-a-server-always-required-to-respond-to-a-close-notify
+    last_error_ = SEC_I_CONTINUE_NEEDED;
+  }
+
   state operator()() {
-    if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE) {
+    if (last_error_ != SEC_I_CONTINUE_NEEDED && last_error_ != SEC_E_INCOMPLETE_MESSAGE && last_error_ != SEC_E_OK) {
       return state::error;
     }
     if (!out_buffer_.empty()) {
       return state::data_available;
+    }
+    if (last_error_ == SEC_E_OK) {
+      return state::done;
     }
     if (input_buffers_[0].cbBuffer == 0) {
       return state::data_needed;
@@ -200,7 +251,7 @@ public:
     }
 
     bool has_buffer_output = out_buffers[0].cbBuffer != 0 && out_buffers[0].pvBuffer != nullptr;
-    if(has_buffer_output){
+    if (has_buffer_output) {
       out_buffer_ = sspi_context_buffer{out_buffers[0].pvBuffer, out_buffers[0].cbBuffer};
     }
 
@@ -209,27 +260,27 @@ public:
         return has_buffer_output ? state::data_available : state::data_needed;
       }
       case SEC_E_OK: {
-        // sspi handshake ok. perform manual auth here.
-        manual_auth();
-        if (handshake_type_ == handshake_type::client) {
-          if (last_error_ != SEC_E_OK) {
-            return state::error;
-          }
-        } else {
-          // Note: we are not checking (out_flags & ASC_RET_MUTUAL_AUTH) is true,
-          // but instead rely on our manual cert validation to establish trust.
-          // "The AcceptSecurityContext function will return ASC_RET_MUTUAL_AUTH if a
-          // client certificate was received from the client and schannel was
-          // successfully able to map the certificate to a user account in AD"
-          // As observed in tests, this check would wrongly reject openssl client with valid certificate.
+        // sspi handshake ok. Manual authentication will be done after the handshake loop.
 
-          // AcceptSecurityContext documentation:
-          // "If function generated an output token, the token must be sent to the client process."
-          // This happens when client cert is requested.
-          if (has_buffer_output) {
-            return last_error_ == SEC_E_OK ? state::done_with_data : state::error_with_data;
-          }
-        }
+        // Note: When we requested client auth as a server,
+        // we are not checking (out_flags & ASC_RET_MUTUAL_AUTH) is true,
+        // but instead rely on our manual cert validation to establish trust.
+        // "The AcceptSecurityContext function will return ASC_RET_MUTUAL_AUTH if a
+        // client certificate was received from the client and schannel was
+        // successfully able to map the certificate to a user account in AD"
+        // As observed in tests, this check would wrongly reject openssl client with valid certificate.
+
+        // AcceptSecurityContext/InitializeSecurityContext documentation for return value SEC_E_OK:
+        // "If function generated an output token, the token must be sent to the client/server."
+        // This happens when client cert is requested.
+        return has_buffer_output ? state::data_available : state::done;
+      }
+
+      // If we get here during shutdown, this means we initiated the shutdown and now received the 
+      // close notify from the peer. That means that we are done.
+      // #TODO: could this happen during the initial handshake where it should be an error?
+      case SEC_I_CONTEXT_EXPIRED: {
+        last_error_ = SEC_E_OK; // #TODO: better solve this in the handshake loop?
         return state::done;
       }
 
@@ -274,8 +325,7 @@ public:
     check_revocation_ = check;
   }
 
-private:
-  SECURITY_STATUS manual_auth(){
+  SECURITY_STATUS manual_auth() {
     if (!context_.verify_server_certificate_) {
       return SEC_E_OK;
     }
@@ -284,16 +334,12 @@ private:
     if (last_error_ != SEC_E_OK) {
       return last_error_;
     }
-
     cert_context_ptr remote_cert{ctx_ptr};
-
     last_error_ = static_cast<SECURITY_STATUS>(context_.verify_certificate(remote_cert.get(), server_hostname_, check_revocation_));
-    if (last_error_ != SEC_E_OK) {
-      return last_error_;
-    }
     return last_error_;
   }
 
+private:
   context& context_;
   ctxt_handle& ctxt_handle_;
   cred_handle& cred_handle_;
@@ -307,6 +353,53 @@ private:
   std::string server_hostname_;
   bool check_revocation_ = false;
 };
+
+template<typename NextLayer>
+void handshake(NextLayer& next_layer,
+               sspi_handshake& handshake,
+               handshake_mode mode,
+               boost::system::error_code& ec) {
+  switch (mode) {
+    case handshake_mode::init:
+      handshake.init();
+      break;
+    case handshake_mode::shutdown:
+      handshake.shutdown();
+      break;
+  }
+  while (true) {
+    auto handshake_state = handshake();
+    if (handshake_state == sspi_handshake::state::data_needed) {
+      std::size_t size_read = next_layer.read_some(handshake.in_buffer(), ec);
+      if (ec) {
+        break;
+      }
+      handshake.size_read(size_read);
+      continue;
+    }
+    if (handshake_state == sspi_handshake::state::data_available) {
+      std::size_t size_written = net::write(next_layer, handshake.out_buffer(), ec);
+      if (ec) {
+        break;
+      }
+      handshake.size_written(size_written);
+      continue;
+    }
+    if (handshake_state == sspi_handshake::state::error) {
+      ec = handshake.last_error();
+      break;
+    }
+    if (handshake_state == sspi_handshake::state::done) {
+      if (mode == handshake_mode::init && handshake.manual_auth() != SEC_E_OK) {
+        ec = handshake.last_error();
+      }
+      break;
+    }
+  }
+  if (ec == net::error::eof) {
+    ec = wintls::error::stream_truncated;
+  }
+}
 
 } // namespace detail
 } // namespace wintls

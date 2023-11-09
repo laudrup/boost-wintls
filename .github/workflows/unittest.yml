@@ -98,7 +98,7 @@ jobs:
 
     - name: Install Boost
       if: steps.cache-boost.outputs.cache-hit != 'true'
-      uses: MarkusJx/install-boost@v2.4.1
+      uses: MarkusJx/install-boost@v2.4.4
       with:
         boost_version: ${{matrix.boost_version}}
         toolset: ${{env.BOOST_TOOLSET}}

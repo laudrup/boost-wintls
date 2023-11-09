@@ -25,7 +25,7 @@ jobs:
         platform_version: 2022
 
     - name: Install packages
-      run: cinst openssl opencppcoverage
+      run: choco install openssl opencppcoverage
 
     - name: Configure
       env:

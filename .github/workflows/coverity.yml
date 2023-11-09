@@ -28,7 +28,7 @@ jobs:
         TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
 
     - name: Install packages
-      run: cinst openssl curl
+      run: choco install openssl curl
 
     - name: Install Boost
       uses: MarkusJx/install-boost@v2.4.1

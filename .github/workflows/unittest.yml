@@ -107,7 +107,7 @@ jobs:
         arch: null
 
     - name: Install packages
-      run: cinst openssl
+      run: choco install openssl
 
     - name: Create build directory
       run: mkdir build

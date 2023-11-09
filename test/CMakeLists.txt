@@ -61,6 +61,14 @@ target_link_libraries(unittest PRIVATE
   boost-wintls
 )
 
+if(MSVC AND ${Boost_VERSION} VERSION_LESS "1.79" AND ${OPENSSL_VERSION} VERSION_GREATER_EQUAL "3.0")
+  # A bit of a hack. Older Boost.Asio versions use OpenSSL functions
+  # deprecated in version 3.0 so disable warnings on use of deprecated
+  # functions on MSVC where OpenSSL headers are not included as system
+  # headers.
+  target_compile_options(unittest PRIVATE /wd4996)
+endif()
+
 include(CTest)
 include(Catch)
 catch_discover_tests(unittest TEST_SPEC "*")

@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Usage &#8212; boost.wintls</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
-    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css?v=284a2d1d" />
+    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css?v=32acb9a4" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
@@ -41,7 +38,7 @@
       </button>
       <a class="navbar-brand" href="index.html">
           boost.wintls</a>
-      <span class="navbar-text navbar-version pull-left"><b>0.9.7</b></span>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.8</b></span>
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
@@ -95,22 +92,22 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h1>
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h1>
 <p>This library implements a stream similar to
 <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/ssl__stream.html">boost::asio::ssl::stream</a>. Basic knowledge of <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> is
 expected as this documentation mainly deals with the specifics of this
 library.</p>
 <section id="setting-up-a-context">
-<h2>Setting up a context<a class="headerlink" href="#setting-up-a-context" title="Permalink to this heading">¶</a></h2>
+<h2>Setting up a context<a class="headerlink" href="#setting-up-a-context" title="Link to this heading">¶</a></h2>
 <section id="client-usage">
-<h3>Client usage<a class="headerlink" href="#client-usage" title="Permalink to this heading">¶</a></h3>
+<h3>Client usage<a class="headerlink" href="#client-usage" title="Link to this heading">¶</a></h3>
 <p>A <a class="reference internal" href="classes.html#_CPPv4N5boost6wintls7contextE" title="boost::wintls::context"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">context</span></code></a> is required for
 holding certificates and for setting options like which TLS versions
 to support.</p>
 <p>To construct a context using the operating system default methods:</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/wintls.hpp&gt;</span><span class="cp"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/wintls.hpp&gt;</span>
 
-<span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="nf">ctx</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">);</span><span class="w"></span>
+<span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="nf">ctx</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>While that is all which is required to construct a context for
@@ -122,16 +119,16 @@ certificates with <a class="reference internal" href="classes.html#_CPPv4N5boost
 <p>For example, initializing a context which will use the certificates
 provided by the operating system and verify the server certificate,
 would look something like:</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/wintls.hpp&gt;</span><span class="cp"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/wintls.hpp&gt;</span>
 
-<span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="nf">ctx</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">);</span><span class="w"></span>
-<span class="n">ctx</span><span class="p">.</span><span class="n">use_default_certificates</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span><span class="w"></span>
-<span class="n">ctx</span><span class="p">.</span><span class="n">verify_server_certificate</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span><span class="w"></span>
+<span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="nf">ctx</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">);</span>
+<span class="n">ctx</span><span class="p">.</span><span class="n">use_default_certificates</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">ctx</span><span class="p">.</span><span class="n">verify_server_certificate</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
 <section id="server-usage">
-<h3>Server usage<a class="headerlink" href="#server-usage" title="Permalink to this heading">¶</a></h3>
+<h3>Server usage<a class="headerlink" href="#server-usage" title="Link to this heading">¶</a></h3>
 <p>When creating a context for server usage, a certificate is required as
 well as private key. Unlike <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> Windows has the concept of a
 certificate with an associated private key that must be available to
@@ -143,10 +140,10 @@ demonstrated in the <a class="reference internal" href="examples.html#examples">
 </section>
 </section>
 <section id="initializing-a-stream">
-<h2>Initializing a stream<a class="headerlink" href="#initializing-a-stream" title="Permalink to this heading">¶</a></h2>
+<h2>Initializing a stream<a class="headerlink" href="#initializing-a-stream" title="Link to this heading">¶</a></h2>
 <p>Assuming an underlying TCP stream, once the context has been setup
 a <a class="reference internal" href="classes.html#_CPPv4I0EN5boost6wintls6streamE" title="boost::wintls::stream"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">stream</span></code></a> can be constructed like:</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">boost</span><span class="o">::</span><span class="n">wintl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="w"> </span><span class="n">my_stream</span><span class="p">(</span><span class="n">my_io_service</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">boost</span><span class="o">::</span><span class="n">wintl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="w"> </span><span class="n">my_stream</span><span class="p">(</span><span class="n">my_io_service</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>In the case of a TCP stream, the underlying stream needs to be
@@ -154,7 +151,7 @@ connected before it can be used. To access the underlying stream use
 the <a class="reference internal" href="classes.html#_CPPv4NK5boost6wintls6stream10next_layerEv" title="boost::wintls::stream::next_layer"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">stream::next_layer()</span></code></a> member function.</p>
 </section>
 <section id="handshaking">
-<h2>Handshaking<a class="headerlink" href="#handshaking" title="Permalink to this heading">¶</a></h2>
+<h2>Handshaking<a class="headerlink" href="#handshaking" title="Link to this heading">¶</a></h2>
 <p>Before a TLS stream can be used, a handshake needs to be performed,
 either as a server or a client. Similar to the rest of the
 <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> functions both a synchronous and asynchronous version
@@ -164,15 +161,15 @@ include the hostname of the server in the handshake with
 <a class="reference internal" href="classes.html#_CPPv4N5boost6wintls6stream19set_server_hostnameERKNSt6stringE" title="boost::wintls::stream::set_server_hostname"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">stream::set_server_hostname()</span></code></a>.</p>
 <p>Performing a synchronous handshake as a client might look
 like:</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">strean</span><span class="p">.</span><span class="n">set_server_hostname</span><span class="p">(</span><span class="s">&quot;wintls.dev&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="n">stream</span><span class="p">.</span><span class="n">handshake</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">client</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">strean</span><span class="p">.</span><span class="n">set_server_hostname</span><span class="p">(</span><span class="s">&quot;wintls.dev&quot;</span><span class="p">);</span>
+<span class="n">stream</span><span class="p">.</span><span class="n">handshake</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">client</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Similar to the <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> functions, this library provides
 overloads for accepting a <a class="reference external" href="https://www.boost.org/doc/libs/release/libs/system/doc/html/system.html">boost::system</a>::error_codes.</p>
 </section>
 <section id="using-the-stream">
-<h2>Using the stream<a class="headerlink" href="#using-the-stream" title="Permalink to this heading">¶</a></h2>
+<h2>Using the stream<a class="headerlink" href="#using-the-stream" title="Link to this heading">¶</a></h2>
 <p>Once the stream has been constructed and a successful handshake has
 been done it can be used with all the usual operations provided by the
 <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> library.</p>
@@ -192,10 +189,10 @@ library can be used.</p>
   <footer class="footer">
     <div class="container">
       <p class="pull-right">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br/>
       </p>
       <p>
-        Revised Nov 16, 2022.<br/>
+        Revised Nov 10, 2023.<br/>
         boost.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
         Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
       </p>

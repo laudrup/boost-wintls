@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Type aliases &#8212; boost.wintls</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
-    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css?v=284a2d1d" />
+    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css?v=32acb9a4" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Functions" href="functions.html" />
@@ -40,7 +37,7 @@
       </button>
       <a class="navbar-brand" href="index.html">
           boost.wintls</a>
-      <span class="navbar-text navbar-version pull-left"><b>0.9.7</b></span>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.8</b></span>
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
@@ -94,14 +91,13 @@
     <div class="body col-md-12 content" role="main">
       
   <section id="type-aliases">
-<h1>Type aliases<a class="headerlink" href="#type-aliases" title="Permalink to this heading">¶</a></h1>
+<h1>Type aliases<a class="headerlink" href="#type-aliases" title="Link to this heading">¶</a></h1>
 <section id="cert-context-ptr">
-<h2>cert_context_ptr<a class="headerlink" href="#cert-context-ptr" title="Permalink to this heading">¶</a></h2>
+<h2>cert_context_ptr<a class="headerlink" href="#cert-context-ptr" title="Link to this heading">¶</a></h2>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N5boost6wintls16cert_context_ptrE">
-<span id="_CPPv3N5boost6wintls16cert_context_ptrE"></span><span id="_CPPv2N5boost6wintls16cert_context_ptrE"></span><span class="target" id="namespaceboost_1_1wintls_1a200c19246951544b2b5803b42176107f"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cert_context_ptr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">CERT_CONTEXT</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">decltype</span></span><span class="p"><span class="pre">(</span></span><span class="o"><span class="pre">&amp;</span></span><span class="n"><span class="pre">CertFreeCertificateContext</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N5boost6wintls16cert_context_ptrE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p><p>Custom std::unique_ptr for managing a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-cert_context">CERT_CONTEXT</a></p>
- </p>
+<span id="_CPPv3N5boost6wintls16cert_context_ptrE"></span><span id="_CPPv2N5boost6wintls16cert_context_ptrE"></span><span class="target" id="namespaceboost_1_1wintls_1ae5e0809ca9be9907e5ac490d5377bf88"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">boost</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">wintls</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cert_context_ptr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">CERT_CONTEXT</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">cert_ctx_deleter</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N5boost6wintls16cert_context_ptrE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Custom std::unique_ptr for managing a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-cert_context">CERT_CONTEXT</a></p>
 </dd></dl>
 
 </section>
@@ -115,10 +111,10 @@
   <footer class="footer">
     <div class="container">
       <p class="pull-right">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br/>
       </p>
       <p>
-        Revised Nov 16, 2022.<br/>
+        Revised Nov 10, 2023.<br/>
         boost.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
         Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
       </p>

@@ -110,6 +110,14 @@ jobs:
         platform_version: ${{env.BOOST_PLATFORM_VERSION}}
         arch: null
 
+    - name: Increase size of pagefile
+      if: matrix.generator == 'MinGW Makefiles'
+      uses: al-cheb/configure-pagefile-action@v1.2
+      with:
+        minimum-size: 16GB
+        maximum-size: 16GB
+        disk-root: "C:"
+
     - name: Install packages
       run: choco install openssl
 

@@ -8,13 +8,25 @@
 #ifndef BOOST_WINTLS_DETAIL_CONFIG_HPP
 #define BOOST_WINTLS_DETAIL_CONFIG_HPP
 
-#include <boost/config.hpp>
+//#define WINTLS_USE_STANDALONE_ASIO
 
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <system_error>
+#include <asio.hpp>
+#define WINTLS_ASIO_CORO_YIELD ASIO_CORO_YIELD
+#define WINTLS_ASIO_CORO_REENTER ASIO_CORO_REENTER
+#else
+#include <boost/config.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
+#define WINTLS_ASIO_CORO_YIELD BOOST_ASIO_CORO_YIELD
+#define WINTLS_ASIO_CORO_REENTER BOOST_ASIO_CORO_REENTER
+#endif
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
@@ -26,8 +38,19 @@
 
 namespace boost {
 namespace wintls {
+#ifdef WINTLS_USE_STANDALONE_ASIO
+namespace net = asio;
+using system_error = std::system_error;
+using error_code = std::error_code;
 
+constexpr auto system_category = std::system_category;
+#else
 namespace net = boost::asio;
+using system_error = boost::system::system_error;
+using error_code = boost::system::error_code;
+
+constexpr auto system_category = boost::system::system_category;
+#endif
 
 } // namespace wintls
 } // namespace boost

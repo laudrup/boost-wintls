@@ -8,6 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_ENCRYPT_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_ENCRYPT_HPP
 
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/encrypt_buffers.hpp>
 #include <boost/wintls/detail/sspi_sec_handle.hpp>
 
@@ -23,7 +24,7 @@ public:
   }
 
   template <typename ConstBufferSequence>
-  std::size_t operator()(const ConstBufferSequence& buf, boost::system::error_code& ec) {
+  std::size_t operator()(const ConstBufferSequence& buf, wintls::error_code& ec) {
     SECURITY_STATUS sc = SEC_E_OK;
 
     std::size_t size_encrypted = buffers(buf, sc);

@@ -8,6 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_DECRYPT_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_DECRYPT_HPP
 
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/decrypt_buffers.hpp>
 #include <boost/wintls/detail/decrypted_data_buffer.hpp>
@@ -94,7 +95,7 @@ public:
   std::size_t size_decrypted;
   net::mutable_buffer input_buffer;
 
-  boost::system::error_code last_error() const {
+  wintls::error_code last_error() const {
     return error::make_error_code(last_error_);
   }
 

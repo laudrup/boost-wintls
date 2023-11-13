@@ -11,9 +11,18 @@
 #include <boost/wintls/error.hpp>
 #include <boost/wintls/file_format.hpp>
 
+
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/win32_crypto.hpp>
 
 #include <memory>
+#include <cassert>
+
+#if defined(NDEBUG)
+#define WINTLS_VERIFY_MSG(expr, msg) ((void)(expr))
+#else
+#define WINTLS_VERIFY_MSG(expr, msg) assert((expr) && (msg))
+#endif
 
 namespace boost {
 namespace wintls {
@@ -66,12 +75,12 @@ using cert_context_ptr = std::unique_ptr<const CERT_CONTEXT, detail::cert_ctx_de
  *
  * @return A managed cert_context.
  *
- * @throws boost::system::system_error Thrown on failure.
+ * @throws wintls::system_error Thrown on failure.
  *
  */
 inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file_format format) {
   // TODO: Support DER format
-  BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
+  WINTLS_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
 
   auto data = detail::crypt_string_to_binary(x509);
   auto cert = CertCreateCertificateContext(X509_ASN_ENCODING, data.data(), static_cast<DWORD>(data.size()));
@@ -96,11 +105,11 @@ inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file
  * @return A managed cert_context.
  *
  */
-inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file_format format, boost::system::error_code& ec) {
+inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file_format format, wintls::error_code& ec) {
   ec = {};
   try {
     return x509_to_cert_context(x509, format);
-  } catch (const boost::system::system_error& e) {
+  } catch (const wintls::system_error& e) {
     ec = e.code();
     return cert_context_ptr{};
   }
@@ -120,18 +129,18 @@ inline cert_context_ptr x509_to_cert_context(const net::const_buffer& x509, file
  *
  * @param name The name used to associate the key.
  *
- * @throws boost::system::system_error Thrown on failure.
+ * @throws wintls::system_error Thrown on failure.
  *
  * @note Currently only RSA keys are supported.
  */
 inline void import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name) {
   // TODO: Handle ASN.1 DER format
-  BOOST_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
+  WINTLS_VERIFY_MSG(format == file_format::pem, "Only PEM format currently implemented");
   auto data = detail::crypt_decode_object_ex(net::buffer(detail::crypt_string_to_binary(private_key)), PKCS_PRIVATE_KEY_INFO);
   auto private_key_info = reinterpret_cast<CRYPT_PRIVATE_KEY_INFO*>(data.data());
 
   // TODO: Set proper error code instead of asserting
-  BOOST_VERIFY_MSG(strcmp(private_key_info->Algorithm.pszObjId, szOID_RSA_RSA) == 0, "Only RSA keys supported");
+  WINTLS_VERIFY_MSG(strcmp(private_key_info->Algorithm.pszObjId, szOID_RSA_RSA) == 0, "Only RSA keys supported");
   auto rsa_private_key = detail::crypt_decode_object_ex(net::buffer(private_key_info->PrivateKey.pbData,
                                                                     private_key_info->PrivateKey.cbData),
                                                         PKCS_RSA_PRIVATE_KEY);
@@ -166,11 +175,11 @@ inline void import_private_key(const net::const_buffer& private_key, file_format
  *
  * @note Currently only RSA keys are supported.
  */
-inline void import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name, boost::system::error_code& ec) {
+inline void import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name, wintls::error_code& ec) {
   ec = {};
   try {
     import_private_key(private_key, format, name);
-  } catch (const boost::system::system_error& e) {
+  } catch (const wintls::system_error& e) {
     ec = e.code();
   }
 }
@@ -180,14 +189,14 @@ inline void import_private_key(const net::const_buffer& private_key, file_format
  *
  * @param name The name of the container storing the private key to delete.
  *
- * @throws boost::system::system_error Thrown on failure.
+ * @throws wintls::system_error Thrown on failure.
  *
  */
 inline void delete_private_key(const std::string& name) {
   HCRYPTKEY ptr = 0;
   if (!CryptAcquireContextA(&ptr, name.c_str(), nullptr, PROV_RSA_FULL, CRYPT_DELETEKEYSET)) {
 
-    throw boost::system::system_error(static_cast<int>(GetLastError()), boost::system::system_category());
+    throw wintls::system_error(static_cast<int>(GetLastError()), wintls::system_category());
   }
 }
 
@@ -199,11 +208,11 @@ inline void delete_private_key(const std::string& name) {
  * @param ec Set to indicate what error occurred, if any.
  *
  */
-inline void delete_private_key(const std::string& name, boost::system::error_code& ec) {
+inline void delete_private_key(const std::string& name, wintls::error_code& ec) {
   ec = {};
   try {
     delete_private_key(name);
-  } catch (const boost::system::system_error& e) {
+  } catch (const wintls::system_error& e) {
     ec = e.code();
   }
 }
@@ -228,14 +237,14 @@ inline void delete_private_key(const std::string& name, boost::system::error_cod
  *
  * @param name The name of the private key in the default cryptographic key provider.
  *
- * @throws boost::system::system_error Thrown on failure.
+ * @throws wintls::system_error Thrown on failure.
  */
 inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name) {
   // TODO: Move to utility function
   const auto size = name.size() + 1;
   auto wname = std::make_unique<WCHAR[]>(size);
   const auto size_converted = mbstowcs(wname.get(), name.c_str(), size);
-  BOOST_VERIFY_MSG(size_converted == name.size(), "mbstowcs");
+  WINTLS_VERIFY_MSG(size_converted == name.size(), "mbstowcs");
 
   CRYPT_KEY_PROV_INFO keyProvInfo{};
   keyProvInfo.pwszContainerName = wname.get();
@@ -271,11 +280,11 @@ inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name
  *
  * @param ec Set to indicate what error occurred, if any.
  */
-inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name, boost::system::error_code& ec) {
+inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name, wintls::error_code& ec) {
   ec = {};
   try {
     assign_private_key(cert, name);
-  } catch (const boost::system::system_error& e) {
+  } catch (const wintls::system_error& e) {
     ec = e.code();
   }
 }

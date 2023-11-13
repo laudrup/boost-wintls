@@ -22,6 +22,12 @@
 #include <memory>
 #include <string>
 
+#if defined(NDEBUG)
+#define WINTLS_ASSERT_MSG(expr, msg) ((void)(expr))
+#else
+#define WINTLS_ASSERT_MSG(expr, msg) assert((expr) && (msg))
+#endif
+
 namespace boost {
 namespace wintls {
 namespace detail {
@@ -70,7 +76,7 @@ public:
         case handshake_type::server:
           return SECPKG_CRED_INBOUND;
       }
-      BOOST_UNREACHABLE_RETURN(0);
+      std::abort(); // unreachable here
     }();
 
     auto server_cert = context_.server_cert();
@@ -189,10 +195,10 @@ public:
       input_buffers_[0].cbBuffer = extra_size;
       in_buffer_ = net::buffer(input_data_) + extra_size;
 
-      BOOST_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
+      WINTLS_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
       return state::data_needed;
     } else if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
-      BOOST_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
+      WINTLS_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
       return state::data_needed;
     } else {
       input_buffers_[0].cbBuffer = 0;
@@ -234,10 +240,10 @@ public:
       }
 
       case SEC_I_INCOMPLETE_CREDENTIALS:
-        BOOST_ASSERT_MSG(false, "client authentication not implemented");
+        WINTLS_ASSERT_MSG(false, "client authentication not implemented");
 
       case SEC_I_RENEGOTIATE:
-        BOOST_ASSERT_MSG(false, "renegotiation not implemented");
+        WINTLS_ASSERT_MSG(false, "renegotiation not implemented");
 
       default:
         return state::error;
@@ -245,7 +251,8 @@ public:
   }
 
   void size_written(std::size_t size) {
-    BOOST_VERIFY(size == out_buffer_.size());
+    (void)(size);
+    assert(size == out_buffer_.size());
     out_buffer_ = sspi_context_buffer{};
   }
 
@@ -262,7 +269,7 @@ public:
     return in_buffer_;
   }
 
-  boost::system::error_code last_error() const {
+  wintls::error_code last_error() const {
     return error::make_error_code(last_error_);
   }
 

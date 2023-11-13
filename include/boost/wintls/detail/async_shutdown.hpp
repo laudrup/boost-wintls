@@ -8,16 +8,21 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
 
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_shutdown.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/coroutine.hpp>
+#else
 #include <boost/asio/coroutine.hpp>
+#endif
 
 namespace boost {
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
-struct async_shutdown : boost::asio::coroutine {
+struct async_shutdown : net::coroutine {
   async_shutdown(NextLayer& next_layer, detail::sspi_shutdown& shutdown)
     : next_layer_(next_layer)
     , shutdown_(shutdown)
@@ -25,7 +30,7 @@ struct async_shutdown : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t size_written = 0) {
+  void operator()(Self& self, wintls::error_code ec = {}, std::size_t size_written = 0) {
     if (ec) {
       self.complete(ec);
       return;
@@ -38,9 +43,9 @@ struct async_shutdown : boost::asio::coroutine {
 
     ec = shutdown_();
 
-    BOOST_ASIO_CORO_REENTER(*this) {
+    WINTLS_ASIO_CORO_REENTER(*this) {
       if (!ec) {
-        BOOST_ASIO_CORO_YIELD {
+        WINTLS_ASIO_CORO_YIELD {
           net::async_write(next_layer_, shutdown_.buffer(), std::move(self));
         }
         shutdown_.size_written(size_written);
@@ -48,7 +53,7 @@ struct async_shutdown : boost::asio::coroutine {
         return;
       } else {
         if (!is_continuation()) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             auto e = self.get_executor();
             net::post(e, [self = std::move(self), ec, size_written]() mutable { self(ec, size_written); });
           }

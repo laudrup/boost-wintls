@@ -10,16 +10,21 @@
 
 #include <boost/wintls/handshake_type.hpp>
 
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_handshake.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/coroutine.hpp>
+#else
 #include <boost/asio/coroutine.hpp>
+#endif
 
 namespace boost {
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer>
-struct async_handshake : boost::asio::coroutine {
+struct async_handshake : net::coroutine {
   async_handshake(NextLayer& next_layer, detail::sspi_handshake& handshake, handshake_type type)
     : next_layer_(next_layer)
     , handshake_(handshake)
@@ -29,7 +34,7 @@ struct async_handshake : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
+  void operator()(Self& self, wintls::error_code ec = {}, std::size_t length = 0) {
     if (ec) {
       self.complete(ec);
       return;
@@ -54,10 +59,10 @@ struct async_handshake : boost::asio::coroutine {
     }
 
     detail::sspi_handshake::state handshake_state;
-    BOOST_ASIO_CORO_REENTER(*this) {
+    WINTLS_ASIO_CORO_REENTER(*this) {
       while((handshake_state = handshake_()) != detail::sspi_handshake::state::done) {
         if (handshake_state == detail::sspi_handshake::state::data_needed) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             state_ = state::reading;
             next_layer_.async_read_some(handshake_.in_buffer(), std::move(self));
           }
@@ -65,7 +70,7 @@ struct async_handshake : boost::asio::coroutine {
         }
 
         if (handshake_state == detail::sspi_handshake::state::data_available) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             state_ = state::writing;
             net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
           }
@@ -74,7 +79,7 @@ struct async_handshake : boost::asio::coroutine {
 
         if (handshake_state == detail::sspi_handshake::state::error) {
           if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
+            WINTLS_ASIO_CORO_YIELD {
               auto e = self.get_executor();
               net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
             }
@@ -84,7 +89,7 @@ struct async_handshake : boost::asio::coroutine {
         }
 
         if (handshake_state == detail::sspi_handshake::state::done_with_data) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             state_ = state::writing;
             net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
           }
@@ -92,12 +97,12 @@ struct async_handshake : boost::asio::coroutine {
         }
 
         if (handshake_state == detail::sspi_handshake::state::error_with_data) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             state_ = state::writing;
             net::async_write(next_layer_, handshake_.out_buffer(), std::move(self));
           }
           if (!is_continuation()) {
-            BOOST_ASIO_CORO_YIELD {
+            WINTLS_ASIO_CORO_YIELD {
               auto e = self.get_executor();
               net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
             }
@@ -108,12 +113,12 @@ struct async_handshake : boost::asio::coroutine {
       }
 
       if (!is_continuation()) {
-        BOOST_ASIO_CORO_YIELD {
+        WINTLS_ASIO_CORO_YIELD {
           auto e = self.get_executor();
           net::post(e, [self = std::move(self), ec, length]() mutable { self(ec, length); });
         }
       }
-      BOOST_ASSERT(!handshake_.last_error());
+      assert(!handshake_.last_error());
       self.complete(handshake_.last_error());
     }
   }

@@ -40,7 +40,7 @@ public:
    *
    * @param cert The certficate to add to the certificate store
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws wintls::system_error Thrown on failure.
    */
   void add_certificate_authority(const CERT_CONTEXT* cert) {
     ctx_certs_.add_certificate_authority(cert);
@@ -55,10 +55,10 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  void add_certificate_authority(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
+  void add_certificate_authority(const CERT_CONTEXT* cert, wintls::error_code& ec) {
     try {
       ctx_certs_.add_certificate_authority(cert);
-    } catch (const boost::system::system_error& e) {
+    } catch (const wintls::system_error& e) {
       ec = e.code();
     }
   }
@@ -106,7 +106,7 @@ public:
    * is imported from a public certificate @ref assign_private_key can
    * be used for that.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws wintls::system_error Thrown on failure.
    */
   void use_certificate(const CERT_CONTEXT* cert) {
     ctx_certs_.use_certificate(cert);
@@ -127,10 +127,10 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  void use_certificate(const CERT_CONTEXT* cert, boost::system::error_code& ec) {
+  void use_certificate(const CERT_CONTEXT* cert, wintls::error_code& ec) {
     try {
       ctx_certs_.use_certificate(cert);
-    } catch (const boost::system::system_error& e) {
+    } catch (const wintls::system_error& e) {
       ec = e.code();
     }
   }

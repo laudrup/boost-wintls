@@ -8,18 +8,22 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_WRITE_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_WRITE_HPP
 
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_encrypt.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/coroutine.hpp>
+#else
 #include <boost/asio/coroutine.hpp>
+#endif
 
-#include <boost/core/ignore_unused.hpp>
 
 namespace boost {
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer, typename ConstBufferSequence>
-struct async_write : boost::asio::coroutine {
+struct async_write : net::coroutine {
   async_write(NextLayer& next_layer, const ConstBufferSequence& buffer, detail::sspi_encrypt& encrypt)
     : next_layer_(next_layer)
     , buffer_(buffer)
@@ -27,16 +31,16 @@ struct async_write : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t length = 0) {
-    boost::ignore_unused(length);
-    BOOST_ASIO_CORO_REENTER(*this) {
+  void operator()(Self& self, wintls::error_code ec = {}, std::size_t length = 0) {
+    (void)(length);
+    WINTLS_ASIO_CORO_REENTER(*this) {
       bytes_consumed_ = encrypt_(buffer_, ec);
       if (ec) {
         self.complete(ec, 0);
         return;
       }
 
-      BOOST_ASIO_CORO_YIELD {
+      WINTLS_ASIO_CORO_YIELD {
         net::async_write(next_layer_, encrypt_.buffers, std::move(self));
       }
       self.complete(ec, bytes_consumed_);

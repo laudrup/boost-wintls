@@ -8,16 +8,21 @@
 #ifndef BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
 #define BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
 
+#include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_decrypt.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/coroutine.hpp>
+#else
 #include <boost/asio/coroutine.hpp>
+#endif
 
 namespace boost {
 namespace wintls {
 namespace detail {
 
 template <typename NextLayer, typename MutableBufferSequence>
-struct async_read : boost::asio::coroutine {
+struct async_read : net::coroutine {
   async_read(NextLayer& next_layer, const MutableBufferSequence& buffers, detail::sspi_decrypt& decrypt)
     : next_layer_(next_layer)
     , buffers_(buffers)
@@ -26,7 +31,7 @@ struct async_read : boost::asio::coroutine {
   }
 
   template <typename Self>
-  void operator()(Self& self, boost::system::error_code ec = {}, std::size_t size_read = 0) {
+  void operator()(Self& self, wintls::error_code ec = {}, std::size_t size_read = 0) {
     if (ec) {
       self.complete(ec, size_read);
       return;
@@ -38,9 +43,9 @@ struct async_read : boost::asio::coroutine {
     };
 
     detail::sspi_decrypt::state state;
-    BOOST_ASIO_CORO_REENTER(*this) {
+    WINTLS_ASIO_CORO_REENTER(*this) {
       while((state = decrypt_(buffers_)) == detail::sspi_decrypt::state::data_needed) {
-        BOOST_ASIO_CORO_YIELD {
+        WINTLS_ASIO_CORO_YIELD {
           next_layer_.async_read_some(decrypt_.input_buffer, std::move(self));
         }
         decrypt_.size_read(size_read);
@@ -49,7 +54,7 @@ struct async_read : boost::asio::coroutine {
 
       if (state == detail::sspi_decrypt::state::error) {
         if (!is_continuation()) {
-          BOOST_ASIO_CORO_YIELD {
+          WINTLS_ASIO_CORO_YIELD {
             auto e = self.get_executor();
             net::post(e, [self = std::move(self), ec, size_read]() mutable { self(ec, size_read); });
           }
@@ -59,7 +64,7 @@ struct async_read : boost::asio::coroutine {
         return;
       }
 
-      self.complete(boost::system::error_code{}, decrypt_.size_decrypted);
+      self.complete(wintls::error_code{}, decrypt_.size_decrypted);
     }
   }
 

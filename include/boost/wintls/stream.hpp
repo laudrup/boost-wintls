@@ -17,9 +17,13 @@
 #include <boost/wintls/detail/async_write.hpp>
 #include <boost/wintls/detail/sspi_stream.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/compose.hpp>
+#include <asio/io_context.hpp>
+#else
 #include <boost/asio/compose.hpp>
 #include <boost/asio/io_context.hpp>
-#include <boost/system/error_code.hpp>
+#endif
 
 #include <memory>
 
@@ -134,7 +138,7 @@ public:
    * or server.
    * @param ec Set to indicate what error occurred, if any.
    */
-  void handshake(handshake_type type, boost::system::error_code& ec) {
+  void handshake(handshake_type type, wintls::error_code& ec) {
     sspi_stream_->handshake(type);
 
     detail::sspi_handshake::state state;
@@ -176,7 +180,7 @@ public:
           return;
         }
         case detail::sspi_handshake::state::done:
-          BOOST_UNREACHABLE_RETURN(0);
+          std::abort(); // unreachable here
       }
     }
   }
@@ -190,10 +194,10 @@ public:
    * @param type The @ref handshake_type to be performed, i.e. client
    * or server.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws wintls::system_error Thrown on failure.
    */
   void handshake(handshake_type type) {
-    boost::system::error_code ec{};
+    wintls::error_code ec{};
     handshake(type, ec);
     if (ec) {
       detail::throw_error(ec);
@@ -214,7 +218,7 @@ public:
    * signature:
    * @code
    * void handler(
-   *     boost::system::error_code // Result of operation.
+   *     wintls::error_code // Result of operation.
    * );
    * @endcode
    *
@@ -225,7 +229,7 @@ public:
    */
   template <class CompletionToken>
   auto async_handshake(handshake_type type, CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
+    return net::async_compose<CompletionToken, void(wintls::error_code)>(
         detail::async_handshake<next_layer_type>{next_layer_, sspi_stream_->handshake, type}, handler);
   }
 
@@ -246,7 +250,7 @@ public:
    * the blocking operation completes.
    */
   template <class MutableBufferSequence>
-  size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
+  size_t read_some(const MutableBufferSequence& buffers, wintls::error_code& ec) {
     detail::sspi_decrypt::state state;
     while((state = sspi_stream_->decrypt(buffers)) == detail::sspi_decrypt::state::data_needed) {
       std::size_t size_read = next_layer_.read_some(sspi_stream_->decrypt.input_buffer, ec);
@@ -275,7 +279,7 @@ public:
    *
    * @returns The number of bytes read.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws wintls::system_error Thrown on failure.
    *
    * @note The `read_some` operation may not read all of the requested
    * number of bytes. Consider using the `net::read` function if you
@@ -284,7 +288,7 @@ public:
    */
   template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers) {
-    boost::system::error_code ec{};
+    wintls::error_code ec{};
     auto read = read_some(buffers, ec);
     if (ec) {
       detail::throw_error(ec);
@@ -308,7 +312,7 @@ public:
    * equivalent function signature of the handler must be:
    * @code
    * void handler(
-   *     const boost::system::error_code& error, // Result of operation.
+   *     const wintls::error_code& error, // Result of operation.
    *     std::size_t bytes_transferred           // Number of bytes read.
    * ); @endcode
    *
@@ -319,7 +323,7 @@ public:
    */
   template <class MutableBufferSequence, class CompletionToken>
   auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+    return net::async_compose<CompletionToken, void(wintls::error_code, std::size_t)>(
         detail::async_read<next_layer_type, MutableBufferSequence>{next_layer_, buffers, sspi_stream_->decrypt}, handler);
   }
 
@@ -340,7 +344,7 @@ public:
    * completes.
    */
   template <class ConstBufferSequence>
-  std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+  std::size_t write_some(const ConstBufferSequence& buffers, wintls::error_code& ec) {
     std::size_t bytes_consumed = sspi_stream_->encrypt(buffers, ec);
     if (ec) {
       return 0;
@@ -364,7 +368,7 @@ public:
    *
    * @returns The number of bytes written.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws wintls::system_error Thrown on failure.
    *
    * @note The `write_some` operation may not transmit all of the data
    * to the peer. Consider using the `net::write` function if you need
@@ -373,7 +377,7 @@ public:
    */
   template <class ConstBufferSequence>
   std::size_t write_some(const ConstBufferSequence& buffers) {
-    boost::system::error_code ec{};
+    wintls::error_code ec{};
     auto wrote = write_some(buffers, ec);
     if (ec) {
       detail::throw_error(ec);
@@ -397,7 +401,7 @@ public:
    * equivalent function signature of the handler must be:
    * @code
    * void handler(
-   *     const boost::system::error_code& error, // Result of operation.
+   *     const wintls::error_code& error, // Result of operation.
    *     std::size_t bytes_transferred           // Number of bytes written.
    * );
    * @endcode
@@ -409,7 +413,7 @@ public:
    */
   template <class ConstBufferSequence, class CompletionToken>
   auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, std::size_t)>(
+    return net::async_compose<CompletionToken, void(wintls::error_code, std::size_t)>(
         detail::async_write<next_layer_type, ConstBufferSequence>{next_layer_, buffers, sspi_stream_->encrypt}, handler);
   }
 
@@ -421,7 +425,7 @@ public:
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  void shutdown(boost::system::error_code& ec) {
+  void shutdown(wintls::error_code& ec) {
     ec = sspi_stream_->shutdown();
     if (ec) {
       return;
@@ -438,10 +442,10 @@ public:
    * function call will block until TLS has been shut down or an error
    * occurs.
    *
-   * @throws boost::system::system_error Thrown on failure.
+   * @throws wintls::system_error Thrown on failure.
    */
   void shutdown() {
-    boost::system::error_code ec{};
+    wintls::error_code ec{};
     shutdown(ec);
     if (ec) {
       detail::throw_error(ec);
@@ -458,13 +462,13 @@ public:
    * required. The equivalent function signature of the handler must
    * be:
    * @code void handler(
-   *     const boost::system::error_code& error // Result of operation.
+   *     const wintls::error_code& error // Result of operation.
    *);
    * @endcode
    */
   template <class CompletionToken>
   auto async_shutdown(CompletionToken&& handler) {
-    return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
+    return net::async_compose<CompletionToken, void(wintls::error_code)>(
         detail::async_shutdown<next_layer_type>{next_layer_, sspi_stream_->shutdown}, handler);
   }
 

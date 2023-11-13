@@ -15,7 +15,7 @@
 #include <boost/wintls/detail/sspi_context_buffer.hpp>
 #include <boost/wintls/detail/sspi_sec_handle.hpp>
 
-#include <boost/assert.hpp>
+#include <cassert>
 
 namespace boost {
 namespace wintls {
@@ -28,7 +28,7 @@ public:
     , cred_handle_(cred_handle) {
   }
 
-  boost::system::error_code operator()() {
+  wintls::error_code operator()() {
     shutdown_buffers buffers;
 
     SECURITY_STATUS sc = detail::sspi_functions::ApplyControlToken(ctxt_handle_.get(), buffers.desc());
@@ -62,7 +62,8 @@ public:
   }
 
   void size_written(std::size_t size) {
-    BOOST_VERIFY(size == buffer_.size());
+    (void)(size);
+    assert(size == buffer_.size());
     buffer_ = sspi_context_buffer{};
   }
 

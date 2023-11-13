@@ -10,7 +10,11 @@
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/buffer.hpp>
+#else
 #include <boost/asio/buffer.hpp>
+#endif
 
 #include <array>
 

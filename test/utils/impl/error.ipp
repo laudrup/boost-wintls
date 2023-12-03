@@ -10,25 +10,23 @@
 #ifndef BOOST_BEAST_TEST_IMPL_ERROR_IPP
 #define BOOST_BEAST_TEST_IMPL_ERROR_IPP
 
-#include <boost/beast/_experimental/test/error.hpp>
+#include "error.hpp"
 
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
-
-namespace detail {
 
 class error_codes : public error_category
 {
 public:
-    BOOST_BEAST_DECL
+    inline
     const char*
     name() const noexcept override
     {
         return "boost.beast.test";
     }
 
-    BOOST_BEAST_DECL
+    inline
     std::string
     message(int ev) const override
     {
@@ -40,7 +38,7 @@ public:
         }
     }
 
-    BOOST_BEAST_DECL
+    inline
     error_condition
     default_error_condition(int ev) const noexcept override
     {
@@ -48,18 +46,17 @@ public:
     }
 };
 
-} // detail
-
+inline
 error_code
-make_error_code(error e) noexcept
+make_error_code(boost::wintls::test::error e) noexcept
 {
-    static detail::error_codes const cat{};
+    static boost::wintls::test::error_codes const cat{};
     return error_code{static_cast<
         std::underlying_type<error>::type>(e), cat};
 }
 
 } // test
-} // beast
+} // wintls
 } // boost
 
 #endif

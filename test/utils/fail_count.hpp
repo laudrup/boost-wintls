@@ -10,12 +10,12 @@
 #ifndef BOOST_BEAST_TEST_FAIL_COUNT_HPP
 #define BOOST_BEAST_TEST_FAIL_COUNT_HPP
 
-#include <boost/beast/core/detail/config.hpp>
-#include <boost/beast/_experimental/test/error.hpp>
+#include "config.hpp"
+#include "error.hpp"
 #include <cstdlib>
 
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
 
 /** A countdown to simulated failure
@@ -42,29 +42,27 @@ public:
         @param n The 0-based index of the operation to fail on or after
         @param ev An optional error code to use when generating a simulated failure
     */
-    BOOST_BEAST_DECL
+    inline
     explicit
     fail_count(
         std::size_t n,
         error_code ev = error::test_failure);
 
     /// Throw an exception on the Nth failure
-    BOOST_BEAST_DECL
+    inline
     void
     fail();
 
     /// Set an error code on the Nth failure
-    BOOST_BEAST_DECL
+    inline
     bool
     fail(error_code& ec);
 };
 
 } // test
-} // beast
+} // wintls
 } // boost
 
-#ifdef BOOST_BEAST_HEADER_ONLY
-#include <boost/beast/_experimental/test/impl/fail_count.ipp>
-#endif
+#include "impl/fail_count.ipp"
 
 #endif

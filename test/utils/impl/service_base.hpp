@@ -10,11 +10,9 @@
 #ifndef BOOST_BEAST_DETAIL_SERVICE_BASE_HPP
 #define BOOST_BEAST_DETAIL_SERVICE_BASE_HPP
 
-#include <boost/asio/execution_context.hpp>
-
 namespace boost {
-namespace beast {
-namespace detail {
+namespace wintls {
+namespace test {
 
 template<class T>
 struct service_base : net::execution_context::service
@@ -31,8 +29,8 @@ struct service_base : net::execution_context::service
 template<class T>
 net::execution_context::id const service_base<T>::id;
 
-} // detail
-} // beast
+} // test
+} // wintls
 } // boost
 
 #endif

@@ -10,33 +10,21 @@
 #ifndef BOOST_BEAST_DETAIL_ALLOCATOR_HPP
 #define BOOST_BEAST_DETAIL_ALLOCATOR_HPP
 
-#include <boost/config.hpp>
-#ifdef BOOST_NO_CXX11_ALLOCATOR
-#include <boost/container/allocator_traits.hpp>
-#else
 #include <memory>
-#endif
 
 namespace boost {
-namespace beast {
-namespace detail {
+namespace wintls {
+namespace test {
 
 // This is a workaround for allocator_traits
 // implementations which falsely claim C++11
 // compatibility.
-
-#ifdef BOOST_NO_CXX11_ALLOCATOR
-template<class Alloc>
-using allocator_traits = boost::container::allocator_traits<Alloc>;
-
-#else
 template<class Alloc>
 using allocator_traits = std::allocator_traits<Alloc>;
 
-#endif
 
-} // detail
-} // beast
+} // test
+} // wintls
 } // boost
 
 #endif

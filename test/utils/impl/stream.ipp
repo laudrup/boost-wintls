@@ -10,15 +10,12 @@
 #ifndef BOOST_BEAST_TEST_IMPL_STREAM_IPP
 #define BOOST_BEAST_TEST_IMPL_STREAM_IPP
 
-#include <boost/beast/_experimental/test/stream.hpp>
-#include <boost/beast/core/bind_handler.hpp>
-#include <boost/beast/core/buffer_traits.hpp>
-#include <boost/make_shared.hpp>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
 
 //------------------------------------------------------------------------------
@@ -26,8 +23,8 @@ namespace test {
 stream::
 service::
 service(net::execution_context& ctx)
-    : beast::detail::service_base<service>(ctx)
-    , sp_(boost::make_shared<service_impl>())
+    : service_base<service>(ctx)
+    , sp_(std::make_shared<service_impl>())
 {
 }
 
@@ -53,10 +50,10 @@ service::
 make_impl(
     net::io_context& ctx,
     test::fail_count* fc) ->
-    boost::shared_ptr<state>
+    std::shared_ptr<state>
 {
     auto& svc = net::use_service<service>(ctx);
-    auto sp = boost::make_shared<state>(ctx, svc.sp_, fc);
+    auto sp = std::make_shared<state>(ctx, svc.sp_, fc);
     std::lock_guard<std::mutex> g(svc.sp_->m_);
     svc.sp_->v_.push_back(sp.get());
     return sp;
@@ -77,7 +74,7 @@ remove(state& impl)
 //------------------------------------------------------------------------------
 
 void stream::initiate_read(
-    boost::shared_ptr<state> const& in_,
+    std::shared_ptr<state> const& in_,
     std::unique_ptr<stream::read_op_base>&& op,
     std::size_t buf_size)
 {
@@ -85,8 +82,7 @@ void stream::initiate_read(
 
     ++in_->nread;
     if(in_->op != nullptr)
-        BOOST_THROW_EXCEPTION(
-            std::logic_error{"in_->op != nullptr"});
+        throw std::logic_error{"in_->op != nullptr"};
 
     // test failure
     error_code ec;
@@ -98,7 +94,7 @@ void stream::initiate_read(
     }
 
     // A request to read 0 bytes from a stream is a no-op.
-    if(buf_size == 0 || buffer_bytes(in_->b.data()) > 0)
+    if(buf_size == 0 || in_->b.data().size() > 0)
     {
         lock.unlock();
         (*op)(ec);
@@ -121,7 +117,7 @@ stream::
 state::
 state(
     net::io_context& ioc_,
-    boost::weak_ptr<service_impl> wp_,
+    std::weak_ptr<service_impl> wp_,
     fail_count* fc_)
     : ioc(ioc_)
     , wp(std::move(wp_))
@@ -147,7 +143,7 @@ remove() noexcept
 
     // If this goes off, it means the lifetime of a test::stream object
     // extended beyond the lifetime of the associated execution context.
-    BOOST_ASSERT(sp);
+    assert(sp);
 
     sp->remove(*this);
 }
@@ -259,8 +255,8 @@ void
 stream::
 connect(stream& remote)
 {
-    BOOST_ASSERT(! out_.lock());
-    BOOST_ASSERT(! remote.out_.lock());
+    assert(! out_.lock());
+    assert(! remote.out_.lock());
     std::lock(in_->m, remote.in_->m);
     std::lock_guard<std::mutex> guard1{in_->m, std::adopt_lock};
     std::lock_guard<std::mutex> guard2{remote.in_->m, std::adopt_lock};
@@ -275,7 +271,7 @@ stream::
 str() const
 {
     auto const bs = in_->b.data();
-    if(buffer_bytes(bs) == 0)
+    if(bs.size() == 0)
         return {};
     net::const_buffer const b = *net::buffer_sequence_begin(bs);
     return {static_cast<char const*>(b.data()), b.size()};
@@ -339,7 +335,7 @@ void
 teardown(
     role_type,
     stream& s,
-    boost::system::error_code& ec)
+    error_code& ec)
 {
     if( s.in_->fc &&
         s.in_->fc->fail(ec))
@@ -371,7 +367,7 @@ connect(stream& s1, stream& s2)
 }
 
 } // test
-} // beast
+} // wintls
 } // boost
 
 #endif

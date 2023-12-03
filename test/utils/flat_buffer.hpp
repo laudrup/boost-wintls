@@ -10,16 +10,16 @@
 #ifndef BOOST_BEAST_FLAT_BUFFER_HPP
 #define BOOST_BEAST_FLAT_BUFFER_HPP
 
-#include <boost/beast/core/detail/config.hpp>
-#include <boost/beast/core/detail/allocator.hpp>
-#include <boost/asio/buffer.hpp>
-#include <boost/core/empty_value.hpp>
+#include "empty_value.hpp"
+#include "allocator.hpp"
+#include "config.hpp"
 #include <limits>
 #include <memory>
 #include <type_traits>
 
 namespace boost {
-namespace beast {
+namespace wintls {
+namespace test {
 
 /** A dynamic buffer providing buffer sequences of length one.
 
@@ -56,24 +56,22 @@ namespace beast {
 */
 template<class Allocator>
 class basic_flat_buffer
-#if ! BOOST_BEAST_DOXYGEN
-    : private boost::empty_value<
-        typename detail::allocator_traits<Allocator>::
+    : private boost::wintls::test::empty_value<
+        typename boost::wintls::test::allocator_traits<Allocator>::
             template rebind_alloc<char>>
-#endif
 {
     template<class OtherAlloc>
     friend class basic_flat_buffer;
 
     using base_alloc_type = typename
-        detail::allocator_traits<Allocator>::
+        boost::wintls::test::allocator_traits<Allocator>::
             template rebind_alloc<char>;
 
     static bool constexpr default_nothrow =
         std::is_nothrow_default_constructible<Allocator>::value;
 
     using alloc_traits =
-        beast::detail::allocator_traits<base_alloc_type>;
+        boost::wintls::test::allocator_traits<base_alloc_type>;
 
     using pocma = typename
         alloc_traits::propagate_on_container_move_assignment;
@@ -525,9 +523,10 @@ private:
 using flat_buffer =
     basic_flat_buffer<std::allocator<char>>;
 
-} // beast
+} // test
+} // wintls
 } // boost
 
-#include <boost/beast/core/impl/flat_buffer.hpp>
+#include "impl/flat_buffer.hpp"
 
 #endif

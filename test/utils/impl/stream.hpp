@@ -7,19 +7,17 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_TEST_IMPL_STREAM_HPP
-#define BOOST_BEAST_TEST_IMPL_STREAM_HPP
+#ifndef BOOST_WINTLS_TEST_IMPL_STREAM_HPP
+#define BOOST_WINTLS_TEST_IMPL_STREAM_HPP
 
-#include <boost/beast/core/bind_handler.hpp>
-#include <boost/beast/core/buffer_traits.hpp>
-#include <boost/beast/core/detail/service_base.hpp>
-#include <boost/beast/core/detail/is_invocable.hpp>
+#include "service_base.hpp"
+#include "is_invocable.hpp"
 #include <mutex>
 #include <stdexcept>
 #include <vector>
 
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
 
 //------------------------------------------------------------------------------
@@ -29,32 +27,32 @@ struct stream::service_impl
     std::mutex m_;
     std::vector<state*> v_;
 
-    BOOST_BEAST_DECL
+    inline
     void
     remove(state& impl);
 };
 
 class stream::service
-    : public beast::detail::service_base<service>
+    : public service_base<service>
 {
-    boost::shared_ptr<service_impl> sp_;
+    std::shared_ptr<service_impl> sp_;
 
-    BOOST_BEAST_DECL
+    inline
     void
     shutdown() override;
 
 public:
-    BOOST_BEAST_DECL
+    inline
     explicit
     service(net::execution_context& ctx);
 
-    BOOST_BEAST_DECL
+    inline
     static
     auto
     make_impl(
         net::io_context& ctx,
         test::fail_count* fc) ->
-            boost::shared_ptr<state>;
+            std::shared_ptr<state>;
 };
 
 //------------------------------------------------------------------------------
@@ -70,7 +68,7 @@ class stream::read_op : public stream::read_op_base
     struct lambda
     {
         Handler h_;
-        boost::weak_ptr<state> wp_;
+        std::weak_ptr<state> wp_;
         Buffers b_;
         net::executor_work_guard<ex2_type> wg2_;
 
@@ -80,7 +78,7 @@ class stream::read_op : public stream::read_op_base
         template<class Handler_>
         lambda(
             Handler_&& h,
-            boost::shared_ptr<state> const& s,
+            std::shared_ptr<state> const& s,
             Buffers const& b)
             : h_(std::forward<Handler_>(h))
             , wp_(s)
@@ -93,6 +91,8 @@ class stream::read_op : public stream::read_op_base
         void
         operator()(error_code ec)
         {
+            using net::buffer_size;
+
             std::size_t bytes_transferred = 0;
             auto sp = wp_.lock();
             if(! sp)
@@ -100,7 +100,7 @@ class stream::read_op : public stream::read_op_base
             if(! ec)
             {
                 std::lock_guard<std::mutex> lock(sp->m);
-                BOOST_ASSERT(! sp->op);
+                assert(! sp->op);
                 if(sp->b.size() > 0)
                 {
                     bytes_transferred =
@@ -109,7 +109,7 @@ class stream::read_op : public stream::read_op_base
                     sp->b.consume(bytes_transferred);
                     sp->nread_bytes += bytes_transferred;
                 }
-                else if (buffer_bytes(b_) > 0)
+                else if (buffer_size(b_) > 0)
                 {
                     ec = net::error::eof;
                 }
@@ -117,7 +117,7 @@ class stream::read_op : public stream::read_op_base
 
             auto alloc = net::get_associated_allocator(h_);
             wg2_.get_executor().dispatch(
-                beast::bind_front_handler(std::move(h_),
+                std::bind(std::move(h_),
                     ec, bytes_transferred), alloc);
             wg2_.reset();
         }
@@ -130,7 +130,7 @@ public:
     template<class Handler_>
     read_op(
         Handler_&& h,
-        boost::shared_ptr<state> const& s,
+        std::shared_ptr<state> const& s,
         Buffers const& b)
         : fn_(std::forward<Handler_>(h), s, b)
         , wg1_(s->ioc.get_executor())
@@ -143,7 +143,7 @@ public:
 
         auto alloc = net::get_associated_allocator(fn_.h_);
         wg1_.get_executor().post(
-            beast::bind_front_handler(std::move(fn_), ec), alloc);
+            std::bind(std::move(fn_), ec), alloc);
         wg1_.reset();
     }
 };
@@ -156,7 +156,7 @@ struct stream::run_read_op
     void
     operator()(
         ReadHandler&& h,
-        boost::shared_ptr<state> const& in,
+        std::shared_ptr<state> const& in,
         MutableBufferSequence const& buffers)
     {
         // If you get an error on the following line it means
@@ -164,7 +164,7 @@ struct stream::run_read_op
         // requirements for the handler.
 
         static_assert(
-            beast::detail::is_invocable<ReadHandler,
+            boost::wintls::test::is_invocable<ReadHandler,
                 void(error_code, std::size_t)>::value,
             "ReadHandler type requirements not met");
 
@@ -177,7 +177,7 @@ struct stream::run_read_op
                     std::move(h),
                     in,
                     buffers)},
-            buffer_bytes(buffers));
+            buffers.size());
     }
 };
 
@@ -189,16 +189,15 @@ struct stream::run_write_op
     void
     operator()(
         WriteHandler&& h,
-        boost::shared_ptr<state> in_,
-        boost::weak_ptr<state> out_,
+        std::shared_ptr<state> in_,
+        std::weak_ptr<state> out_,
         ConstBufferSequence const& buffers)
     {
         // If you get an error on the following line it means
         // that your handler does not meet the documented type
         // requirements for the handler.
-
         static_assert(
-            beast::detail::is_invocable<WriteHandler,
+            boost::wintls::test::is_invocable<WriteHandler,
                 void(error_code, std::size_t)>::value,
             "WriteHandler type requirements not met");
 
@@ -207,7 +206,7 @@ struct stream::run_write_op
         {
             net::post(
                 in_->ioc.get_executor(),
-                beast::bind_front_handler(std::move(h), ec, n));
+                std::bind(std::move(h), ec, n));
         };
 
         // test failure
@@ -217,7 +216,7 @@ struct stream::run_write_op
             return upcall(ec, n);
 
         // A request to write 0 bytes to a stream is a no-op.
-        if(buffer_bytes(buffers) == 0)
+        if(net::buffer_size(buffers) == 0)
             return upcall(ec, n);
 
         // connection closed
@@ -227,7 +226,7 @@ struct stream::run_write_op
 
         // copy buffers
         n = std::min<std::size_t>(
-            buffer_bytes(buffers), in_->write_max);
+            net::buffer_size(buffers), in_->write_max);
         {
             std::lock_guard<std::mutex> lock(out->m);
             n = net::buffer_copy(out->b.prepare(n), buffers);
@@ -235,7 +234,7 @@ struct stream::run_write_op
             out->nwrite_bytes += n;
             out->notify_read();
         }
-        BOOST_ASSERT(! ec);
+        assert(! ec);
         upcall(ec, n);
     }
 };
@@ -253,7 +252,7 @@ read_some(MutableBufferSequence const& buffers)
     error_code ec;
     auto const n = read_some(buffers, ec);
     if(ec)
-        BOOST_THROW_EXCEPTION(system_error{ec});
+        throw system_error{ec};
     return n;
 }
 
@@ -274,14 +273,14 @@ read_some(MutableBufferSequence const& buffers,
         return 0;
 
     // A request to read 0 bytes from a stream is a no-op.
-    if(buffer_bytes(buffers) == 0)
+    if(buffers.size() == 0)
     {
         ec = {};
         return 0;
     }
 
     std::unique_lock<std::mutex> lock{in_->m};
-    BOOST_ASSERT(! in_->op);
+    assert(! in_->op);
     in_->cv.wait(lock,
         [&]()
         {
@@ -301,13 +300,13 @@ read_some(MutableBufferSequence const& buffers,
     }
 
     // deliver error
-    BOOST_ASSERT(in_->code != status::ok);
+    assert(in_->code != status::ok);
     ec = net::error::eof;
     return 0;
 }
 
 template<class MutableBufferSequence, class ReadHandler>
-BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
+auto
 stream::
 async_read_some(
     MutableBufferSequence const& buffers,
@@ -338,7 +337,7 @@ write_some(ConstBufferSequence const& buffers)
     auto const bytes_transferred =
         write_some(buffers, ec);
     if(ec)
-        BOOST_THROW_EXCEPTION(system_error{ec});
+        throw system_error{ec};
     return bytes_transferred;
 }
 
@@ -359,7 +358,7 @@ write_some(
         return 0;
 
     // A request to write 0 bytes to a stream is a no-op.
-    if(buffer_bytes(buffers) == 0)
+    if(net::buffer_size(buffers) == 0)
     {
         ec = {};
         return 0;
@@ -375,7 +374,7 @@ write_some(
 
     // copy buffers
     auto n = std::min<std::size_t>(
-        buffer_bytes(buffers), in_->write_max);
+        net::buffer_size(buffers), in_->write_max);
     {
         std::lock_guard<std::mutex> lock(out->m);
         n = net::buffer_copy(out->b.prepare(n), buffers);
@@ -387,7 +386,7 @@ write_some(
 }
 
 template<class ConstBufferSequence, class WriteHandler>
-BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
+auto
 stream::
 async_write_some(
     ConstBufferSequence const& buffers,
@@ -421,7 +420,7 @@ async_teardown(
         s.in_->fc->fail(ec))
         return net::post(
             s.get_executor(),
-            beast::bind_front_handler(
+            std::bind(
                 std::move(handler), ec));
     s.close();
     if( s.in_->fc &&
@@ -432,7 +431,7 @@ async_teardown(
 
     net::post(
         s.get_executor(),
-        beast::bind_front_handler(
+        std::bind(
             std::move(handler), ec));
 }
 
@@ -450,7 +449,7 @@ connect(stream& to, Arg1&& arg1, ArgN&&... argn)
 }
 
 } // test
-} // beast
+} // wintls
 } // boost
 
 #endif

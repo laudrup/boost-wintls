@@ -14,8 +14,8 @@
 #include <utility>
 
 namespace boost {
-namespace beast {
-namespace detail {
+namespace wintls {
+namespace test {
 
 template<class R, class C, class ...A>
 auto
@@ -51,8 +51,8 @@ struct is_invocable<C, R(A...)>
 };
 /** @} */
 
-} // detail
-} // beast
+} // test
+} // wintls
 } // boost
 
 #endif

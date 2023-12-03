@@ -10,29 +10,53 @@
 #ifndef BOOST_BEAST_TEST_STREAM_HPP
 #define BOOST_BEAST_TEST_STREAM_HPP
 
-#include <boost/beast/core/detail/config.hpp>
-#include <boost/beast/core/bind_handler.hpp>
-#include <boost/beast/core/flat_buffer.hpp>
-#include <boost/beast/core/role.hpp>
-#include <boost/beast/core/string.hpp>
-#include <boost/beast/_experimental/test/fail_count.hpp>
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <system_error>
+#include <asio.hpp>
+#else
+#include <boost/config.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/asio.hpp>
 #include <boost/asio/async_result.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
-#include <boost/assert.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/throw_exception.hpp>
+#endif
+#include "role.hpp"
+#include "flat_buffer.hpp"
+#include "fail_count.hpp"
 #include <condition_variable>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <utility>
 
-#if ! BOOST_BEAST_DOXYGEN
+#if __cplusplus >= 201703L || (defined _MSVC_LANG && _MSVC_LANG >= 201703L)
+#include <string_view>
+using string_view = std::string_view;
+#else
+#include <boost/utility/string_view.hpp>
+using string_view = boost::string_view;
+#endif
+
+#ifdef WINTLS_USE_STANDALONE_ASIO
+namespace net = asio;
+using system_error = std::system_error;
+using error_code = std::error_code;
+
+namespace asio {
+namespace ssl {
+template<typename> class stream;
+} // ssl
+} // asio
+#else
+namespace net = boost::asio;
+using system_error = boost::system::system_error;
+using error_code = boost::system::error_code;
+
 namespace boost {
 namespace asio {
 namespace ssl {
@@ -43,7 +67,7 @@ template<typename> class stream;
 #endif
 
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
 
 /** A two-way socket useful for unit testing
@@ -110,8 +134,8 @@ class stream
 {
     struct state;
 
-    boost::shared_ptr<state> in_;
-    boost::weak_ptr<state> out_;
+    std::shared_ptr<state> in_;
+    std::weak_ptr<state> out_;
 
     enum class status
     {
@@ -133,7 +157,7 @@ class stream
         friend class stream;
 
         net::io_context& ioc;
-        boost::weak_ptr<service_impl> wp;
+        std::weak_ptr<service_impl> wp;
         std::mutex m;
         flat_buffer b;
         std::condition_variable cv;
@@ -149,25 +173,25 @@ class stream
         std::size_t write_max =
             (std::numeric_limits<std::size_t>::max)();
 
-        BOOST_BEAST_DECL
+        inline
         state(
             net::io_context& ioc_,
-            boost::weak_ptr<service_impl> wp_,
+            std::weak_ptr<service_impl> wp_,
             fail_count* fc_);
 
 
-        BOOST_BEAST_DECL
+        inline
         ~state();
 
-        BOOST_BEAST_DECL
+        inline
         void
         remove() noexcept;
 
-        BOOST_BEAST_DECL
+        inline
         void
         notify_read();
 
-        BOOST_BEAST_DECL
+        inline
         void
         cancel_read();
     };
@@ -178,19 +202,18 @@ class stream
     struct run_read_op;
     struct run_write_op;
 
-    BOOST_BEAST_DECL
+    inline
     static
     void
     initiate_read(
-        boost::shared_ptr<state> const& in,
+        std::shared_ptr<state> const& in,
         std::unique_ptr<read_op_base>&& op,
         std::size_t buf_size);
 
-#if ! BOOST_BEAST_DOXYGEN
     // boost::asio::ssl::stream needs these
     // DEPRECATED
     template<class>
-    friend class boost::asio::ssl::stream;
+    friend class net::ssl::stream;
     // DEPRECATED
     using lowest_layer_type = stream;
     // DEPRECATED
@@ -205,7 +228,6 @@ class stream
     {
         return *this;
     }
-#endif
 
 public:
     using buffer_type = flat_buffer;
@@ -220,7 +242,7 @@ public:
         the peer will see the error `net::error::connection_reset`
         when performing any reads or writes.
     */
-    BOOST_BEAST_DECL
+    inline
     ~stream();
 
     /** Move Constructor
@@ -228,7 +250,7 @@ public:
         Moving the stream while asynchronous operations are pending
         results in undefined behavior.
     */
-    BOOST_BEAST_DECL
+    inline
     stream(stream&& other);
 
     /** Move Assignment
@@ -236,7 +258,7 @@ public:
         Moving the stream while asynchronous operations are pending
         results in undefined behavior.
     */
-    BOOST_BEAST_DECL
+    inline
     stream&
     operator=(stream&& other);
 
@@ -247,7 +269,7 @@ public:
         @param ioc The `io_context` object that the stream will use to
         dispatch handlers for any asynchronous operations.
     */
-    BOOST_BEAST_DECL
+    inline
     explicit
     stream(net::io_context& ioc);
 
@@ -263,7 +285,7 @@ public:
         fail count.  When the fail count reaches its internal limit,
         a simulated failure error will be raised.
     */
-    BOOST_BEAST_DECL
+    inline
     stream(
         net::io_context& ioc,
         fail_count& fc);
@@ -278,7 +300,7 @@ public:
         @param s A string which will be appended to the input area, not
         including the null terminator.
     */
-    BOOST_BEAST_DECL
+    inline
     stream(
         net::io_context& ioc,
         string_view s);
@@ -298,14 +320,14 @@ public:
         @param s A string which will be appended to the input area, not
         including the null terminator.
     */
-    BOOST_BEAST_DECL
+    inline
     stream(
         net::io_context& ioc,
         fail_count& fc,
         string_view s);
 
     /// Establish a connection
-    BOOST_BEAST_DECL
+    inline
     void
     connect(stream& remote);
 
@@ -342,17 +364,17 @@ public:
     }
 
     /// Returns a string view representing the pending input data
-    BOOST_BEAST_DECL
+    inline
     string_view
     str() const;
 
     /// Appends a string to the pending input data
-    BOOST_BEAST_DECL
+    inline
     void
     append(string_view s);
 
     /// Clear the pending input area
-    BOOST_BEAST_DECL
+    inline
     void
     clear();
 
@@ -389,7 +411,7 @@ public:
         The other end of the connection will see
         `error::eof` after reading all the remaining data.
     */
-    BOOST_BEAST_DECL
+    inline
     void
     close();
 
@@ -398,7 +420,7 @@ public:
         This end of the connection will see
         `error::eof` after reading all the remaining data.
     */
-    BOOST_BEAST_DECL
+    inline
     void
     close_remote();
 
@@ -477,8 +499,8 @@ public:
     */
     template<
         class MutableBufferSequence,
-        BOOST_BEAST_ASYNC_TPARAM2 ReadHandler>
-    BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
+        class ReadHandler>
+    auto
     async_read_some(
         MutableBufferSequence const& buffers,
         ReadHandler&& handler);
@@ -555,75 +577,55 @@ public:
     */
     template<
         class ConstBufferSequence,
-        BOOST_BEAST_ASYNC_TPARAM2 WriteHandler>
-    BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
+        class WriteHandler>
+    auto
     async_write_some(
         ConstBufferSequence const& buffers,
         WriteHandler&& handler);
 
-#if ! BOOST_BEAST_DOXYGEN
     friend
-    BOOST_BEAST_DECL
+    inline
     void
     teardown(
         role_type,
         stream& s,
-        boost::system::error_code& ec);
+        error_code& ec);
 
     template<class TeardownHandler>
     friend
-    BOOST_BEAST_DECL
+    inline
     void
     async_teardown(
         role_type role,
         stream& s,
         TeardownHandler&& handler);
-#endif
 };
 
-#if ! BOOST_BEAST_DOXYGEN
 inline
 void
 beast_close_socket(stream& s)
 {
     s.close();
 }
-#endif
 
-#if BOOST_BEAST_DOXYGEN
-/** Return a new stream connected to the given stream
 
-    @param to The stream to connect to.
-
-    @param args Optional arguments forwarded to the new stream's constructor.
-
-    @return The new, connected stream.
-*/
-template<class... Args>
-stream
-connect(stream& to, Args&&... args);
-
-#else
-BOOST_BEAST_DECL
+inline
 stream
 connect(stream& to);
 
-BOOST_BEAST_DECL
+inline
 void
 connect(stream& s1, stream& s2);
 
 template<class Arg1, class... ArgN>
 stream
 connect(stream& to, Arg1&& arg1, ArgN&&... argn);
-#endif
 
 } // test
-} // beast
+} // wintls
 } // boost
 
-#include <boost/beast/_experimental/test/impl/stream.hpp>
-#ifdef BOOST_BEAST_HEADER_ONLY
-#include <boost/beast/_experimental/test/impl/stream.ipp>
-#endif
+#include "impl/stream.hpp"
+#include "impl/stream.ipp"
 
 #endif

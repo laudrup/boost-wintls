@@ -10,10 +10,9 @@
 #ifndef BOOST_BEAST_ROLE_HPP
 #define BOOST_BEAST_ROLE_HPP
 
-#include <boost/beast/core/detail/config.hpp>
-
 namespace boost {
-namespace beast {
+namespace wintls {
+namespace test {
 
 /** The role of local or remote peer.
 
@@ -21,7 +20,7 @@ namespace beast {
     behavior of teardown.
     The teardown behavior also depends on the type of the stream
     being torn down.
-    
+
     The default implementation of teardown for regular
     TCP/IP sockets is as follows:
 
@@ -44,7 +43,8 @@ enum class role_type
     server
 };
 
-} // beast
+} // test
+} // wintls
 } // boost
 
 #endif

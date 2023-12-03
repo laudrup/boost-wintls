@@ -10,14 +10,12 @@
 #ifndef BOOST_BEAST_IMPL_FLAT_BUFFER_HPP
 #define BOOST_BEAST_IMPL_FLAT_BUFFER_HPP
 
-#include <boost/core/exchange.hpp>
-#include <boost/assert.hpp>
-#include <boost/throw_exception.hpp>
 #include <memory>
 #include <stdexcept>
 
 namespace boost {
-namespace beast {
+namespace wintls {
+namespace test {
 
 /*  Layout:
 
@@ -65,8 +63,8 @@ basic_flat_buffer(
 template<class Allocator>
 basic_flat_buffer<Allocator>::
 basic_flat_buffer(Allocator const& alloc) noexcept
-    : boost::empty_value<base_alloc_type>(
-        boost::empty_init_t{}, alloc)
+    : empty_value<base_alloc_type>(
+        empty_init_t{}, alloc)
     , begin_(nullptr)
     , in_(nullptr)
     , out_(nullptr)
@@ -82,8 +80,8 @@ basic_flat_buffer<Allocator>::
 basic_flat_buffer(
     std::size_t limit,
     Allocator const& alloc) noexcept
-    : boost::empty_value<base_alloc_type>(
-        boost::empty_init_t{}, alloc)
+    : empty_value<base_alloc_type>(
+        empty_init_t{}, alloc)
     , begin_(nullptr)
     , in_(nullptr)
     , out_(nullptr)
@@ -96,13 +94,13 @@ basic_flat_buffer(
 template<class Allocator>
 basic_flat_buffer<Allocator>::
 basic_flat_buffer(basic_flat_buffer&& other) noexcept
-    : boost::empty_value<base_alloc_type>(
-        boost::empty_init_t{}, std::move(other.get()))
-    , begin_(boost::exchange(other.begin_, nullptr))
-    , in_(boost::exchange(other.in_, nullptr))
-    , out_(boost::exchange(other.out_, nullptr))
-    , last_(boost::exchange(other.last_, nullptr))
-    , end_(boost::exchange(other.end_, nullptr))
+    : empty_value<base_alloc_type>(
+        empty_init_t{}, std::move(other.get()))
+    , begin_(std::exchange(other.begin_, nullptr))
+    , in_(std::exchange(other.in_, nullptr))
+    , out_(std::exchange(other.out_, nullptr))
+    , last_(std::exchange(other.last_, nullptr))
+    , end_(std::exchange(other.end_, nullptr))
     , max_(other.max_)
 {
 }
@@ -112,8 +110,8 @@ basic_flat_buffer<Allocator>::
 basic_flat_buffer(
     basic_flat_buffer&& other,
     Allocator const& alloc)
-    : boost::empty_value<base_alloc_type>(
-        boost::empty_init_t{}, alloc)
+    : empty_value<base_alloc_type>(
+        empty_init_t{}, alloc)
 {
     if(this->get() != other.get())
     {
@@ -135,7 +133,7 @@ basic_flat_buffer(
     last_ = other.out_; // invalidate
     end_ = other.end_;
     max_ = other.max_;
-    BOOST_ASSERT(
+    assert(
         alloc_traits::max_size(this->get()) ==
         alloc_traits::max_size(other.get()));
     other.begin_ = nullptr;
@@ -148,7 +146,7 @@ basic_flat_buffer(
 template<class Allocator>
 basic_flat_buffer<Allocator>::
 basic_flat_buffer(basic_flat_buffer const& other)
-    : boost::empty_value<base_alloc_type>(boost::empty_init_t{},
+    : empty_value<base_alloc_type>(empty_init_t{},
         alloc_traits::select_on_container_copy_construction(
             other.get()))
     , begin_(nullptr)
@@ -166,8 +164,8 @@ basic_flat_buffer<Allocator>::
 basic_flat_buffer(
     basic_flat_buffer const& other,
     Allocator const& alloc)
-    : boost::empty_value<base_alloc_type>(
-        boost::empty_init_t{}, alloc)
+    : empty_value<base_alloc_type>(
+        empty_init_t{}, alloc)
     , begin_(nullptr)
     , in_(nullptr)
     , out_(nullptr)
@@ -200,8 +198,8 @@ basic_flat_buffer<Allocator>::
 basic_flat_buffer(
     basic_flat_buffer<OtherAlloc> const& other,
     Allocator const& alloc)
-    : boost::empty_value<base_alloc_type>(
-        boost::empty_init_t{}, alloc)
+    : empty_value<base_alloc_type>(
+        empty_init_t{}, alloc)
     , begin_(nullptr)
     , in_(nullptr)
     , out_(nullptr)
@@ -270,8 +268,8 @@ shrink_to_fit()
     char* p;
     if(len > 0)
     {
-        BOOST_ASSERT(begin_);
-        BOOST_ASSERT(in_);
+        assert(begin_);
+        assert(in_);
         p = alloc(len);
         std::memcpy(p, in_, len);
     }
@@ -308,8 +306,8 @@ prepare(std::size_t n) ->
 {
     auto const len = size();
     if(len > max_ || n > (max_ - len))
-        BOOST_THROW_EXCEPTION(std::length_error{
-            "basic_flat_buffer too long"});
+        throw std::length_error{
+            "basic_flat_buffer too long"};
     if(n <= dist(out_, end_))
     {
         // existing capacity is sufficient
@@ -322,8 +320,8 @@ prepare(std::size_t n) ->
         // existing capacity is sufficient
         if(len > 0)
         {
-            BOOST_ASSERT(begin_);
-            BOOST_ASSERT(in_);
+            assert(begin_);
+            assert(in_);
             std::memmove(begin_, in_, len);
         }
         in_ = begin_;
@@ -338,8 +336,8 @@ prepare(std::size_t n) ->
     auto const p = alloc(new_size);
     if(begin_)
     {
-        BOOST_ASSERT(p);
-        BOOST_ASSERT(in_);
+        assert(p);
+        assert(in_);
         std::memcpy(p, in_, len);
         alloc_traits::deallocate(
             this->get(), begin_, capacity());
@@ -402,7 +400,7 @@ copy_from(
     last_ = begin_ + n;
     if(begin_)
     {
-        BOOST_ASSERT(other.begin_);
+        assert(other.begin_);
         std::memcpy(begin_, other.in_, n);
     }
 }
@@ -496,7 +494,7 @@ void
 basic_flat_buffer<Allocator>::
 swap(basic_flat_buffer& other, std::false_type)
 {
-    BOOST_ASSERT(this->get() == other.get());
+    assert(this->get() == other.get());
     using std::swap;
     swap(max_, other.max_);
     swap(begin_, other.begin_);
@@ -522,12 +520,13 @@ basic_flat_buffer<Allocator>::
 alloc(std::size_t n)
 {
     if(n > alloc_traits::max_size(this->get()))
-        BOOST_THROW_EXCEPTION(std::length_error(
-            "A basic_flat_buffer exceeded the allocator's maximum size"));
+        throw std::length_error(
+            "A basic_flat_buffer exceeded the allocator's maximum size");
     return alloc_traits::allocate(this->get(), n);
 }
 
-} // beast
+} // test
+} // wintls
 } // boost
 
 #endif

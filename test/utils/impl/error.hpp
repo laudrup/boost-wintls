@@ -10,31 +10,40 @@
 #ifndef BOOST_BEAST_TEST_IMPL_ERROR_HPP
 #define BOOST_BEAST_TEST_IMPL_ERROR_HPP
 
-#include <boost/beast/core/error.hpp>
-#include <boost/beast/core/string.hpp>
 #include <type_traits>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+namespace std {
+template<>
+struct is_error_code_enum<
+    boost::wintls::test::error>
+        : std::true_type
+{
+};
+} // std
+#else
 namespace boost {
 namespace system {
 template<>
 struct is_error_code_enum<
-    boost::beast::test::error>
+    boost::wintls::test::error>
         : std::true_type
 {
 };
 } // system
 } // boost
+#endif
 
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
 
-BOOST_BEAST_DECL
+inline
 error_code
 make_error_code(error e) noexcept;
 
 } // test
-} // beast
+} // wintls
 } // boost
 
 #endif

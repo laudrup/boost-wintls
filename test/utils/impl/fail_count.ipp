@@ -10,11 +10,8 @@
 #ifndef BOOST_BEAST_TEST_IMPL_FAIL_COUNT_IPP
 #define BOOST_BEAST_TEST_IMPL_FAIL_COUNT_IPP
 
-#include <boost/beast/_experimental/test/fail_count.hpp>
-#include <boost/throw_exception.hpp>
-
 namespace boost {
-namespace beast {
+namespace wintls {
 namespace test {
 
 fail_count::
@@ -33,7 +30,7 @@ fail()
     if(i_ < n_)
         ++i_;
     if(i_ == n_)
-        BOOST_THROW_EXCEPTION(system_error{ec_});
+        throw system_error{ec_};
 }
 
 bool
@@ -52,7 +49,7 @@ fail(error_code& ec)
 }
 
 } // test
-} // beast
+} // wintls
 } // boost
 
 #endif

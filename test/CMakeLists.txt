@@ -29,6 +29,7 @@ set(test_sources
   tls_record.cpp
   error_test.cpp
   handshake_test.cpp
+  ocsp_responder.cpp
   certificate_test.cpp
   sspi_buffer_sequence_test.cpp
   stream_test.cpp

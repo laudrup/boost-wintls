@@ -27,7 +27,7 @@ public:
 
   virtual void do_handshake() {
     stream.async_handshake(Stream::handshake_type::server,
-                           [this](const boost::system::error_code& ec) {
+                           [this](const error_code& ec) {
                              REQUIRE_FALSE(ec);
                              do_read();
                            });
@@ -35,7 +35,7 @@ public:
 
   virtual void do_read() {
     net::async_read_until(stream, recv_buffer_, '\0',
-                          [this](const boost::system::error_code& ec, std::size_t) {
+                          [this](const error_code& ec, std::size_t) {
                             REQUIRE_FALSE(ec);
                             do_write();
                           });
@@ -43,19 +43,19 @@ public:
 
   virtual void do_write() {
     net::async_write(stream, recv_buffer_,
-                     [this](const boost::system::error_code& ec, std::size_t) {
+                     [this](const error_code& ec, std::size_t) {
                        REQUIRE_FALSE(ec);
                        do_shutdown();
                      });
   }
 
   virtual void do_shutdown() {
-    stream.async_shutdown([](const boost::system::error_code& ec) {
+    stream.async_shutdown([](const error_code& ec) {
       REQUIRE_FALSE(ec);
     });
   }
 
-  boost::asio::streambuf recv_buffer_;
+  net::streambuf recv_buffer_;
 };
 
 #endif // BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP

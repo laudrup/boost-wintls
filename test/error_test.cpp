@@ -15,20 +15,24 @@ TEST_CASE("SECURITY_STATUS error code") {
   auto sc = static_cast<SECURITY_STATUS>(0x80090326);
   auto ec = boost::wintls::error::make_error_code(sc);
   CHECK(ec.value() == sc);
-  CHECK(ec.message() == "The message received was unexpected or badly formatted");
+  // Boost will trim line breaks as well as periods from the original error message.
+  std::string msg = "The message received was unexpected or badly formatted";
+  CHECK((ec.message() == msg || ec.message() == msg + "."));
 }
 
 TEST_CASE("throw last error") {
-  boost::system::system_error error{boost::system::error_code{}};
+  system_error error{error_code{}};
   REQUIRE_FALSE(error.code());
 
   ::SetLastError(0x00000053);
   try {
     boost::wintls::detail::throw_last_error("YetAnotherUglyWindowsAPIFunctionEx3");
-  } catch (const boost::system::system_error& ex) {
+  } catch (const system_error& ex) {
     error = ex;
   }
   CHECK(error.code().value() == 0x00000053);
-  CHECK(error.code().message() == "Fail on INT 24");
+  // Boost will trim line breaks as well as periods from the original error message.
+  std::string msg = "Fail on INT 24";
+  CHECK((error.code().message() == msg || error.code().message() == msg + "."));
   CHECK_THAT(error.what(), Catch::Contains("YetAnotherUglyWindowsAPIFunctionEx3: Fail on INT 24"));
 }

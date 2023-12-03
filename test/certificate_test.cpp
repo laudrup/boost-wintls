@@ -37,7 +37,11 @@ bool container_exists(const std::string& name) {
     if (last_error == static_cast<DWORD>(NTE_BAD_KEYSET)) {
       return false;
     }
+#ifdef WINTLS_USE_STANDALONE_ASIO
+    throw std::system_error(static_cast<int>(last_error), std::system_category());
+#else
     throw boost::system::system_error(static_cast<int>(last_error), boost::system::system_category());
+#endif
   }
   CryptReleaseContext(ptr, 0);
   return true;
@@ -143,7 +147,7 @@ TEST_CASE("certificate conversion") {
   SECTION("invalid cert bytes") {
     const std::vector<char> cert_bytes;
     CHECK_THROWS(boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem));
-    auto error = boost::system::errc::make_error_code(boost::system::errc::success);
+    error_code error = {};
     const auto cert = boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem, error);
     CHECK(error);
     CHECK_FALSE(cert);
@@ -157,7 +161,7 @@ TEST_CASE("import private key") {
   boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, name);
   CHECK(container_exists(name));
 
-  boost::system::error_code ec;
+  error_code ec;
   boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, name, ec);
   CHECK(ec.value() == NTE_EXISTS);
 
@@ -241,9 +245,9 @@ TEST_CASE("check certificate revocation (integration test)", "[.integration]") {
     }
 
     // success case: cert_ocsp is fine
-    auto ocsp_responder = start_ocsp_responder();
+    ocsp_responder responder{};
     // 'running()' does not mean that it is responding yet, but that we did start the process correctly
-    CHECK(ocsp_responder.running());
+    CHECK(responder.running());
     // It takes a few seconds for the OCSP responder to become available.
     // Therefore, we try to verify the certificate in a loop, but for at most 30 seconds.
     auto res_with_responder = CRYPT_E_REVOCATION_OFFLINE;

@@ -32,7 +32,7 @@ public:
 private:
   void do_handshake() {
     stream.async_handshake(Stream::handshake_type::client,
-                           [this](const boost::system::error_code& ec) {
+                           [this](const error_code& ec) {
                              REQUIRE_FALSE(ec);
                              do_write();
                            });
@@ -40,7 +40,7 @@ private:
 
   void do_write() {
     net::async_write(stream, net::buffer(message_),
-                     [this](const boost::system::error_code& ec, std::size_t) {
+                     [this](const error_code& ec, std::size_t) {
                        REQUIRE_FALSE(ec);
                        do_read();
                      });
@@ -48,14 +48,14 @@ private:
 
   void do_read() {
     net::async_read_until(stream, recv_buffer_, '\0',
-                          [this](const boost::system::error_code& ec, std::size_t) {
+                          [this](const error_code& ec, std::size_t) {
                             REQUIRE_FALSE(ec);
                             do_shutdown();
                           });
   }
 
   void do_shutdown() {
-    stream.async_shutdown([](const boost::system::error_code& ec) {
+    stream.async_shutdown([](const error_code& ec) {
       REQUIRE_FALSE(ec);
     });
   }

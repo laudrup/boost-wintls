@@ -21,17 +21,17 @@ public:
     : Stream(context) {
   }
 
-  std::future<boost::system::error_code> handshake() {
+  std::future<error_code> handshake() {
     return std::async(std::launch::async, [this]() {
-      boost::system::error_code ec{};
+      error_code ec{};
       stream.handshake(Stream::handshake_type::server, ec);
       return ec;
     });
   }
 
-  std::future<boost::system::error_code> shutdown() {
+  std::future<error_code> shutdown() {
     return std::async(std::launch::async, [this]() {
-      boost::system::error_code ec{};
+      error_code ec{};
       stream.shutdown(ec);
       return ec;
     });

@@ -14,8 +14,12 @@
 #include <boost/make_shared.hpp>
 #endif
 
-#include <boost/beast/_experimental/test/stream.hpp>
+#include "utils/stream.hpp"
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/ssl.hpp>
+#else
 #include <boost/asio/ssl.hpp>
+#endif
 
 #include <catch2/catch.hpp>
 
@@ -26,8 +30,8 @@
 
 namespace Catch {
 template<>
-struct StringMaker<boost::system::error_code> {
-  static std::string convert(const boost::system::error_code& ec) {
+struct StringMaker<error_code> {
+  static std::string convert(const error_code& ec) {
     std::ostringstream oss;
     oss << ec.message() << " (0x" << std::hex << ec.value() << ")";
     return oss.str();
@@ -44,7 +48,11 @@ inline std::vector<unsigned char> bytes_from_file(const std::string& path) {
 }
 
 namespace net = boost::wintls::net;
+#ifdef WINTLS_USE_STANDALONE_ASIO
+namespace asio_ssl = asio::ssl;
+#else
 namespace asio_ssl = boost::asio::ssl;
-using test_stream = boost::beast::test::stream;
+#endif
+using test_stream = boost::wintls::test::stream;
 
 #endif // BOOST_WINTLS_UNITTEST_HPP

@@ -30,7 +30,7 @@ struct asio_ssl_client_context : public asio_ssl::context {
   }
 
   void enable_server_verify() {
-    set_verify_mode(boost::asio::ssl::verify_peer);
+    set_verify_mode(net::ssl::verify_peer);
   }
 
 private:

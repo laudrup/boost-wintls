@@ -17,7 +17,11 @@
 #include <boost/wintls.hpp>
 #include <boost/wintls/detail/config.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio/io_context.hpp>
+#else
 #include <boost/asio/io_context.hpp>
+#endif
 
 #include <array>
 #include <thread>
@@ -34,7 +38,7 @@ public:
 };
 
 TEST_CASE("moved stream") {
-  boost::asio::io_context ioc;
+  net::io_context ioc;
 
   wintls_server_context server_ctx;
   boost::wintls::stream<test_stream> moved_server_stream(ioc, server_ctx);
@@ -46,11 +50,11 @@ TEST_CASE("moved stream") {
 
   client_stream.next_layer().connect(server_stream.next_layer());
 
-  boost::system::error_code client_ec{};
-  boost::system::error_code server_ec{};
+  error_code client_ec{};
+  error_code server_ec{};
 
   server_stream.async_handshake(boost::wintls::handshake_type::server,
-                                [&server_ec, &server_stream](const boost::system::error_code& ec) {
+                                [&server_ec, &server_stream](const error_code& ec) {
                                   server_ec = ec;
                                   if (ec) {
                                     server_stream.next_layer().close();
@@ -58,7 +62,7 @@ TEST_CASE("moved stream") {
                                 });
 
   client_stream.async_handshake(boost::wintls::handshake_type::client,
-                                [&client_ec, &client_stream](const boost::system::error_code& ec) {
+                                [&client_ec, &client_stream](const error_code& ec) {
                                   client_ec = ec;
                                   if (ec) {
                                     client_stream.next_layer().close();
@@ -71,11 +75,11 @@ TEST_CASE("moved stream") {
 
 TEST_CASE("handshake not done") {
   boost::wintls::context ctx{boost::wintls::method::system_default};
-  boost::asio::io_context ioc;
+  net::io_context ioc;
   std::array<char, 4> buf{};
 
-  boost::wintls::stream<boost::asio::ip::tcp::socket> stream(ioc, ctx);
-  boost::system::error_code ec{};
+  boost::wintls::stream<net::ip::tcp::socket> stream(ioc, ctx);
+  error_code ec{};
 
   SECTION("write fails") {
     boost::wintls::net::write(stream, boost::wintls::net::buffer(buf), ec);
@@ -84,7 +88,7 @@ TEST_CASE("handshake not done") {
 
   SECTION("async_write fails") {
     boost::wintls::net::async_write(stream, boost::wintls::net::buffer(buf),
-                                    [&ec](const boost::system::error_code& error, std::size_t) {
+                                    [&ec](const error_code& error, std::size_t) {
                                       ec = error;
                                     });
     ioc.run_one();
@@ -98,7 +102,7 @@ TEST_CASE("handshake not done") {
 
   SECTION("async_read fails") {
     boost::wintls::net::async_read(stream, boost::wintls::net::buffer(buf),
-                                   [&ec](const boost::system::error_code& error, std::size_t) {
+                                   [&ec](const error_code& error, std::size_t) {
                                       ec = error;
                                     });
     ioc.run_one();
@@ -110,10 +114,10 @@ TEST_CASE("underlying stream errors") {
   SECTION("sync test") {
     net::io_context io_context;
     echo_server<asio_ssl_server_stream> server(io_context);
-    boost::system::error_code client_ec{};
+    error_code client_ec{};
 
     SECTION("handshake error") {
-      boost::beast::test::fail_count fc(4);
+      boost::wintls::test::fail_count fc(4);
       wintls_client_stream client(io_context, fc);
 
       client.stream.next_layer().connect(server.stream.next_layer());
@@ -125,7 +129,7 @@ TEST_CASE("underlying stream errors") {
     }
 
     SECTION("failing read/write") {
-      boost::beast::test::fail_count fc(5);
+      boost::wintls::test::fail_count fc(5);
       wintls_client_stream client(io_context, fc);
 
       client.stream.next_layer().connect(server.stream.next_layer());
@@ -151,17 +155,17 @@ TEST_CASE("underlying stream errors") {
 
   SECTION("async test") {
     net::io_context io_context;
-    boost::system::error_code client_ec{};
+    error_code client_ec{};
 
     test_server server(io_context);
 
     SECTION("handshake error") {
-      boost::beast::test::fail_count fc(4);
+      boost::wintls::test::fail_count fc(4);
       wintls_client_stream client(io_context, fc);
       client.stream.next_layer().connect(server.stream.next_layer());
       server.run();
       client.stream.async_handshake(wintls_client_stream::handshake_type::client,
-                                    [&client_ec](const boost::system::error_code& ec) {
+                                    [&client_ec](const error_code& ec) {
                                       client_ec = ec;
                                     });
       io_context.run();
@@ -169,17 +173,17 @@ TEST_CASE("underlying stream errors") {
     }
 
     SECTION("failing read/write") {
-      boost::beast::test::fail_count fc(5);
+      boost::wintls::test::fail_count fc(5);
       wintls_client_stream client(io_context, fc);
       client.stream.next_layer().connect(server.stream.next_layer());
-      boost::asio::streambuf buffer;
+      net::streambuf buffer;
       server.run();
 
       SECTION("read error") {
         client.stream.async_handshake(wintls_client_stream::handshake_type::client,
-                                      [&client_ec, &client, &buffer](const boost::system::error_code& ec) {
+                                      [&client_ec, &client, &buffer](const error_code& ec) {
                                         REQUIRE_FALSE(ec);
-                                        net::async_read(client.stream, buffer, [&client_ec](const boost::system::error_code& error, std::size_t) {
+                                        net::async_read(client.stream, buffer, [&client_ec](const error_code& error, std::size_t) {
                                           client_ec = error;
                                         });
                                       });
@@ -189,9 +193,9 @@ TEST_CASE("underlying stream errors") {
 
       SECTION("write error") {
         client.stream.async_handshake(wintls_client_stream::handshake_type::client,
-                                      [&client_ec, &client, &buffer](const boost::system::error_code& ec) {
+                                      [&client_ec, &client, &buffer](const error_code& ec) {
                                         REQUIRE_FALSE(ec);
-                                        net::async_write(client.stream, buffer, [&client_ec](const boost::system::error_code& error, std::size_t) {
+                                        net::async_write(client.stream, buffer, [&client_ec](const error_code& error, std::size_t) {
                                           client_ec = error;
                                         });
                                       });

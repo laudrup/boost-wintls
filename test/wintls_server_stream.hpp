@@ -19,7 +19,7 @@ struct wintls_server_context : public boost::wintls::context {
     : boost::wintls::context(boost::wintls::method::system_default)
     , needs_private_key_clean_up_(false) {
       // delete key in case last test run has dangling key.
-      boost::system::error_code dummy;
+      error_code dummy;
       boost::wintls::delete_private_key(test_key_name_server, dummy);
 
       auto cert_ptr = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);

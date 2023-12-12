@@ -9,13 +9,8 @@
 #define BOOST_WINTLS_DETAIL_ASYNC_READ_HPP
 
 #include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/coroutine.hpp>
 #include <boost/wintls/detail/sspi_decrypt.hpp>
-
-#ifdef WINTLS_USE_STANDALONE_ASIO
-#include <asio/coroutine.hpp>
-#else
-#include <boost/asio/coroutine.hpp>
-#endif
 
 namespace boost {
 namespace wintls {

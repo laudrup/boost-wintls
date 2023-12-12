@@ -11,13 +11,8 @@
 #include <boost/wintls/handshake_type.hpp>
 
 #include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/coroutine.hpp>
 #include <boost/wintls/detail/sspi_handshake.hpp>
-
-#ifdef WINTLS_USE_STANDALONE_ASIO
-#include <asio/coroutine.hpp>
-#else
-#include <boost/asio/coroutine.hpp>
-#endif
 
 namespace boost {
 namespace wintls {

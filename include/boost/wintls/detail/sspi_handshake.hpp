@@ -8,6 +8,7 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_HANDSHAKE_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_HANDSHAKE_HPP
 
+#include <boost/wintls/detail/assert.hpp>
 #include <boost/wintls/detail/config.hpp>
 #include <boost/wintls/detail/sspi_functions.hpp>
 #include <boost/wintls/detail/context_flags.hpp>
@@ -21,12 +22,6 @@
 #include <array>
 #include <memory>
 #include <string>
-
-#if defined(NDEBUG)
-#define WINTLS_ASSERT_MSG(expr, msg) ((void)(expr))
-#else
-#define WINTLS_ASSERT_MSG(expr, msg) assert((expr) && (msg))
-#endif
 
 namespace boost {
 namespace wintls {
@@ -76,7 +71,7 @@ public:
         case handshake_type::server:
           return SECPKG_CRED_INBOUND;
       }
-      std::abort(); // unreachable here
+      WINTLS_UNREACHABLE_RETURN(0);
     }();
 
     auto server_cert = context_.server_cert();

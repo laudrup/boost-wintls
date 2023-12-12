@@ -9,13 +9,8 @@
 #define BOOST_WINTLS_DETAIL_ASYNC_SHUTDOWN_HPP
 
 #include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/coroutine.hpp>
 #include <boost/wintls/detail/sspi_shutdown.hpp>
-
-#ifdef WINTLS_USE_STANDALONE_ASIO
-#include <asio/coroutine.hpp>
-#else
-#include <boost/asio/coroutine.hpp>
-#endif
 
 namespace boost {
 namespace wintls {

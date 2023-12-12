@@ -11,6 +11,7 @@
 #include <boost/wintls/error.hpp>
 #include <boost/wintls/handshake_type.hpp>
 
+#include <boost/wintls/detail/assert.hpp>
 #include <boost/wintls/detail/async_handshake.hpp>
 #include <boost/wintls/detail/async_read.hpp>
 #include <boost/wintls/detail/async_shutdown.hpp>
@@ -180,7 +181,7 @@ public:
           return;
         }
         case detail::sspi_handshake::state::done:
-          std::abort(); // unreachable here
+          WINTLS_UNREACHABLE_RETURN(0);
       }
     }
   }

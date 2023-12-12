@@ -11,18 +11,11 @@
 #include <boost/wintls/error.hpp>
 #include <boost/wintls/file_format.hpp>
 
-
 #include <boost/wintls/detail/config.hpp>
+#include <boost/wintls/detail/assert.hpp>
 #include <boost/wintls/detail/win32_crypto.hpp>
 
 #include <memory>
-#include <cassert>
-
-#if defined(NDEBUG)
-#define WINTLS_VERIFY_MSG(expr, msg) ((void)(expr))
-#else
-#define WINTLS_VERIFY_MSG(expr, msg) assert((expr) && (msg))
-#endif
 
 namespace boost {
 namespace wintls {

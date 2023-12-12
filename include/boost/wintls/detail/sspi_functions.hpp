@@ -8,13 +8,8 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_FUNCTIONS_HPP
 
+#include <boost/wintls/detail/assert.hpp>
 #include <boost/wintls/detail/sspi_types.hpp>
-
-#if defined(NDEBUG)
-#define WINTLS_ASSERT_MSG(expr, msg) ((void)(expr))
-#else
-#define WINTLS_ASSERT_MSG(expr, msg) assert((expr) && (msg))
-#endif
 
 namespace boost {
 namespace wintls {

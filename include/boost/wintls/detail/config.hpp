@@ -17,15 +17,11 @@
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <system_error>
 #include <asio.hpp>
-#define WINTLS_ASIO_CORO_YIELD ASIO_CORO_YIELD
-#define WINTLS_ASIO_CORO_REENTER ASIO_CORO_REENTER
 #else
 #include <boost/config.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
-#define WINTLS_ASIO_CORO_YIELD BOOST_ASIO_CORO_YIELD
-#define WINTLS_ASIO_CORO_REENTER BOOST_ASIO_CORO_REENTER
 #endif
 #ifdef __clang__
 #pragma clang diagnostic pop

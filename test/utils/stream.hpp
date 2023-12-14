@@ -38,8 +38,8 @@
 #include <string_view>
 using string_view = std::string_view;
 #else
-#include <boost/utility/string_view.hpp>
-using string_view = boost::string_view;
+#include "impl/string_view.hpp"
+using string_view = nonstd::string_view;
 #endif
 
 #ifdef WINTLS_USE_STANDALONE_ASIO

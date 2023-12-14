@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) 2021 Kasper Laudrup (laudrup at stacktrace dot dk)
 // Copyright (c) 2023 windowsair
 //
@@ -6,36 +6,36 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-// Boost.Process misses an algorithm include in Boost 1.77,
-// see https://github.com/boostorg/process/issues/213.
-#include <algorithm>
-#include <boost/process.hpp>
+#include "utils/subprocess.h"
 
 #include "ocsp_responder.hpp"
 
 struct ocsp_responder::ocsp_responder_impl {
-  boost::process::child child;
+  struct subprocess_s child;
 };
 
 // Start an OCSP responder at http://localhost:5000 that can provide OCSP responses for
 // test certificates signed by test_certificates/ca_intermediate.crt.
 ocsp_responder::ocsp_responder() {
-  auto path = boost::process::search_path("openssl.exe");
-  auto args = boost::process::args({"ocsp",
-                                    "-CApath", TEST_CERTIFICATES_PATH,
-                                    "-index", TEST_CERTIFICATES_PATH "certindex",
-                                    "-port", "5000",
-                                    "-nmin", "1",
-                                    "-rkey", TEST_CERTIFICATES_PATH "ocsp_signer_ca_intermediate.key",
-                                    "-rsigner", TEST_CERTIFICATES_PATH "ocsp_signer_ca_intermediate.crt",
-                                    "-CA", TEST_CERTIFICATES_PATH "ca_intermediate.crt"});
+  const char *command_line[] = {"openssl.exe",
+                                "ocsp",
+                                "-CApath", TEST_CERTIFICATES_PATH,
+                                "-index", TEST_CERTIFICATES_PATH "certindex",
+                                "-port", "5000",
+                                "-nmin", "1",
+                                "-rkey", TEST_CERTIFICATES_PATH "ocsp_signer_ca_intermediate.key",
+                                "-rsigner", TEST_CERTIFICATES_PATH "ocsp_signer_ca_intermediate.crt",
+                                "-CA", TEST_CERTIFICATES_PATH "ca_intermediate.crt",
+                                NULL};
 
   impl_ = std::make_unique<ocsp_responder::ocsp_responder_impl>();
-  impl_->child = boost::process::child(path, args, boost::process::std_out > boost::process::null);
+  subprocess_create(command_line, subprocess_option_inherit_environment, &impl_->child);
 }
 
-ocsp_responder::~ocsp_responder() = default;
+ocsp_responder::~ocsp_responder() {
+  subprocess_terminate(&impl_->child);
+}
 
 bool ocsp_responder::running() {
-  return impl_->child.running();
+  return subprocess_alive(&impl_->child) != 0;
 }

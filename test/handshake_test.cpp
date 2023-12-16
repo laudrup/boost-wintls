@@ -67,7 +67,7 @@ std::ostream& operator<<(std::ostream& os, const method meth) {
     case method::tlsv13_server:
       return os << "tlsv13_server";
   }
-  BOOST_UNREACHABLE_RETURN(0);
+  WINTLS_UNREACHABLE_RETURN(0);
 }
 
 } // namespace wintls

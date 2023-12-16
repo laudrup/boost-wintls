@@ -5,6 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include <boost/wintls/detail/assert.hpp>
 #include "tls_record.hpp"
 
 namespace {
@@ -22,14 +23,14 @@ std::uint32_t net_to_host(std::uint32_t value) {
 
 template <typename SizeType>
 SizeType read_value(net::const_buffer& buffer) {
-  BOOST_ASSERT(buffer.size() >= sizeof(SizeType));
+  assert(buffer.size() >= sizeof(SizeType));
   SizeType ret = *reinterpret_cast<const SizeType*>(buffer.data());
   buffer += sizeof(SizeType);
   return net_to_host(ret);
 }
 
 std::uint32_t read_three_byte_value(net::const_buffer& buffer) {
-  BOOST_ASSERT(buffer.size() >= 3);
+  assert(buffer.size() >= 3);
   std::array<char, 4> value{};
   std::copy_n(reinterpret_cast<const char*>(buffer.data()), 3, value.begin() + 1);
   buffer += 3;
@@ -47,7 +48,7 @@ tls_record::message_type read_message(tls_record::record_type type, net::const_b
     case tls_record::record_type::application_data:
       return tls_application_data{};
   }
-  BOOST_UNREACHABLE_RETURN(0);
+  WINTLS_UNREACHABLE_RETURN(0);
 }
 
 tls_handshake::message_type read_message(tls_handshake::handshake_type t, net::const_buffer&) {
@@ -73,7 +74,7 @@ tls_handshake::message_type read_message(tls_handshake::handshake_type t, net::c
     case tls_handshake::handshake_type::finished:
       return tls_handshake::finished{};
   }
-  BOOST_UNREACHABLE_RETURN(0);
+  WINTLS_UNREACHABLE_RETURN(0);
 }
 
 } // namespace

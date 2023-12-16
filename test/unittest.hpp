@@ -9,11 +9,6 @@
 
 #include <boost/wintls/detail/config.hpp>
 
-// Workaround missing include in boost 1.76 and 1.77 in beast::test::stream
-#if (BOOST_VERSION / 100 % 1000) == 77 || (BOOST_VERSION / 100 % 1000) == 76
-#include <boost/make_shared.hpp>
-#endif
-
 #include "utils/stream.hpp"
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/ssl.hpp>

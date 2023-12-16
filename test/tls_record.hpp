@@ -9,7 +9,13 @@
 
 #include "unittest.hpp"
 
-#include <boost/variant.hpp>
+#if __cplusplus >= 201703L || (defined _MSVC_LANG && _MSVC_LANG >= 201703L)
+#include <variant>
+namespace variant = std;
+#else
+#include "utils/impl/variant.hpp"
+namespace variant = nonstd;
+#endif
 
 #include <cstdint>
 
@@ -83,16 +89,16 @@ struct tls_handshake {
     // TODO: Implement
   };
 
-  using message_type = boost::variant<hello_request,
-                                      client_hello,
-                                      server_hello,
-                                      certificate,
-                                      server_key_exchange,
-                                      certificate_request,
-                                      server_done,
-                                      certificate_verify,
-                                      client_key_exchange,
-                                      finished>;
+  using message_type = variant::variant<hello_request,
+                                        client_hello,
+                                        server_hello,
+                                        certificate,
+                                        server_key_exchange,
+                                        certificate_request,
+                                        server_done,
+                                        certificate_verify,
+                                        client_key_exchange,
+                                        finished>;
 
   tls_handshake(net::const_buffer data);
 
@@ -113,10 +119,10 @@ struct tls_record {
     application_data = 0x17
   };
 
-  using message_type = boost::variant<tls_change_cipher_spec,
-                                      tls_alert,
-                                      tls_handshake,
-                                      tls_application_data>;
+  using message_type = variant::variant<tls_change_cipher_spec,
+                                        tls_alert,
+                                        tls_handshake,
+                                        tls_application_data>;
   tls_record(net::const_buffer data);
 
   record_type type;

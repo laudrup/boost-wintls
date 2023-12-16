@@ -568,7 +568,7 @@ TEST_CASE("failing handshakes") {
                                   [&buffer, &server_stream](const error_code&, std::size_t length) {
                                     tls_record rec(net::buffer(buffer, length));
                                     REQUIRE(rec.type == tls_record::record_type::handshake);
-                                    auto handshake = boost::get<tls_handshake>(rec.message);
+                                    auto handshake = variant::get<tls_handshake>(rec.message);
                                     REQUIRE(handshake.type == tls_handshake::handshake_type::client_hello);
                                     // Echoing the client_hello message back should cause the handshake to fail
                                     net::write(server_stream, net::buffer(buffer));

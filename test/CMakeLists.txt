@@ -1,6 +1,8 @@
 Include(FetchContent)
 
-find_package(Boost COMPONENTS filesystem)
+if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
+  find_package(Boost COMPONENTS filesystem)
+endif()
 find_package(OpenSSL COMPONENTS SSL Crypto)
 find_package(Threads)
 
@@ -58,9 +60,14 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::Crypto
   Threads::Threads
   Catch2::Catch2
-  Boost::filesystem
   boost-wintls
 )
+
+if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
+  target_link_libraries(unittest PRIVATE
+    Boost::filesystem
+  )
+endif()
 
 include(CTest)
 include(Catch)

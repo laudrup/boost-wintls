@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+include(FetchContent)
 include(VersionFromGit)
 
 version_from_git()
@@ -25,6 +26,7 @@ endif()
 
 message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
 
+option(ENABLE_WINTLS_STANDALONE_ASIO "Enable Standalone WINTLS" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ${WIN32})
 option(ENABLE_EXAMPLES "Enable Examples Builds" ${WIN32})
 option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ${UNIX})
@@ -33,11 +35,35 @@ option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 add_library(${PROJECT_NAME} INTERFACE)
 
+if(ENABLE_WINTLS_STANDALONE_ASIO)
+  FetchContent_Declare(
+    asio
+    GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+    GIT_TAG        asio-1-28-0
+  )
+
+  FetchContent_GetProperties(asio)
+  if(NOT asio_POPULATED)
+    FetchContent_Populate(asio)
+  endif()
+endif()
+
 target_include_directories(${PROJECT_NAME}
   INTERFACE
   $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+if(ENABLE_WINTLS_STANDALONE_ASIO)
+  target_include_directories(${PROJECT_NAME}
+    INTERFACE
+    ${asio_SOURCE_DIR}/asio/include
+  )
+  target_compile_definitions(${PROJECT_NAME}
+    INTERFACE
+    WINTLS_USE_STANDALONE_ASIO
+  )
+endif()
 
 if(WIN32)
   set(Boost_USE_STATIC_LIBS ON)
@@ -123,11 +149,13 @@ if(WIN32)
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
 endif()
 
-find_package(Boost REQUIRED)
+if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
+  find_package(Boost REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE
-  Boost::headers
-)
+  target_link_libraries(${PROJECT_NAME} INTERFACE
+    Boost::headers
+  )
+endif()
 
 if(MINGW)
   target_link_libraries(${PROJECT_NAME} INTERFACE

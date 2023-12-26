@@ -49,8 +49,6 @@ Currently tested compilers are:
 - Clang
 - MinGW64 (GCC)
 
-Only 64 bit builds have been tested.
-
 ## Building
 
 Boost.Wintls is header-only. To use it just add the necessary `#include` line

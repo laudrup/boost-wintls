@@ -64,7 +64,7 @@ Assuming an underlying TCP stream, once the context has been setup
 a :class:`stream` can be constructed like:
 ::
 
-   boost::wintl::stream<ip::tcp::socket> my_stream(my_io_service, ctx);
+   boost::wintls::stream<ip::tcp::socket> my_stream(my_io_service, ctx);
 
 In the case of a TCP stream, the underlying stream needs to be
 connected before it can be used. To access the underlying stream use

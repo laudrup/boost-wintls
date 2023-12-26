@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        boost_version: ["1.75.0", "1.76.0", "1.77.0", "1.78.0", "1.79.0", "1.80.0", "1.81.0", "1.82.0", "1.83.0"]
+        boost_version: ["1.80.0", "1.81.0", "1.82.0", "1.83.0"]
         os: [windows-2019, windows-2022]
         toolset: [v141, v142, v143, ClangCL]
         build_type: [Debug, Release]
@@ -27,11 +27,6 @@ jobs:
           - { os: windows-2022, generator: "Visual Studio 16 2019" }
           - { toolset: ClangCL, build_type: Release }
           # The following combinations are not available through install-boost
-          - { boost_version: "1.75.0", toolset: v143 }
-          - { boost_version: "1.76.0", toolset: v143 }
-          - { boost_version: "1.77.0", toolset: v143 }
-          - { boost_version: "1.78.0", toolset: v141 }
-          - { boost_version: "1.79.0", toolset: v141 }
           - { boost_version: "1.80.0", toolset: v141 }
           - { boost_version: "1.81.0", toolset: v141 }
           - { boost_version: "1.82.0", toolset: v141 }
@@ -67,7 +62,6 @@ jobs:
         fetch-depth: 0
 
     - name: Add boost toolset to environment
-      if: contains(fromJson('["1.78.0", "1.79.0", "1.80.0", "1.81.0", "1.82.0", "1.83.0"]'), matrix.boost_version)
       run: echo BOOST_TOOLSET=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "msvc") >> $GITHUB_ENV
 
     # The platform_version passed to boost-install determines the msvc toolset version for which static libs are installed.

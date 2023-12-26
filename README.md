@@ -39,7 +39,7 @@ on Microsoft Windows although it is intended to be used alongside the
 existing Boost.Asio.SSL implementation.
 
 [Boost](https://www.boost.org) is required. Currently tested with
-Boost 1.75 to 1.83 but most newer versions ought to work.
+Boost 1.80 to 1.83 but most newer versions ought to work.
 
 A working C++ compiler supporting the C++14 standard is required.
 Currently tested compilers are:

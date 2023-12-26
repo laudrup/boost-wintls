@@ -19,6 +19,12 @@ elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
   message(STATUS "Building for 32 bit platform")
 endif()
 
+if(NOT "${CMAKE_CXX_STANDARD}")
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
+
 option(ENABLE_TESTING "Enable Test Builds" ${WIN32})
 option(ENABLE_EXAMPLES "Enable Examples Builds" ${WIN32})
 option(ENABLE_DOCUMENTATION "Enable Documentation Builds" ${UNIX})
@@ -32,8 +38,6 @@ target_include_directories(${PROJECT_NAME}
   $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_14)
 
 if(WIN32)
   set(Boost_USE_STATIC_LIBS ON)

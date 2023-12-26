@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   unittest:
-    name: "${{matrix.generator}} ${{matrix.toolset}} Boost ${{matrix.boost_version}} ${{matrix.build_type}} ${{matrix.name_args}}"
+    name: "${{matrix.generator}} ${{matrix.toolset}} Boost ${{matrix.boost_version}} ${{matrix.build_type}} C++${{matrix.standard}} ${{matrix.name_args}}"
     runs-on: ${{matrix.os}}
     defaults:
       run:
@@ -16,6 +16,7 @@ jobs:
         os: [windows-2019, windows-2022]
         toolset: [v141, v142, v143, ClangCL]
         build_type: [Debug, Release]
+        standard: [14, 17, 20]
         generator: ["Visual Studio 16 2019", "Visual Studio 17 2022"]
         config_args: [""]
         build_args: [""]
@@ -123,6 +124,7 @@ jobs:
       run: |
         cmake -T "${{matrix.toolset}}" \
               -G "${{matrix.generator}}" \
+              -DCMAKE_CXX_STANDARD=${{matrix.standard}} \
               ${{matrix.config_args}} \
               ${BOOST_COMPILER_ARG} \
               "${GITHUB_WORKSPACE}"

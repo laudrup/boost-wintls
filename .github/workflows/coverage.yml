@@ -40,6 +40,8 @@ jobs:
       shell: bash
       run: exec "${PROGRAMFILES}"/opencppcoverage/opencppcoverage --cover_children --sources="${GITHUB_WORKSPACE}"\\include --modules=unittest.exe --export_type=cobertura:cobertura.xml -- ctest
       working-directory: build/
+      env:
+        CTEST_OUTPUT_ON_FAILURE: True
 
     - name: Upload code coverage
       uses: codecov/codecov-action@v3

@@ -144,3 +144,7 @@ jobs:
       run: ctest ${TEST_CONFIG_ARG} -V
       env:
         CTEST_OUTPUT_ON_FAILURE: True
+
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3

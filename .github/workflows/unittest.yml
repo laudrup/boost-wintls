@@ -113,8 +113,8 @@ jobs:
         maximum-size: 16GB
         disk-root: "C:"
 
-    - name: Install packages
-      run: choco install openssl
+    # - name: Install packages
+    #   run: choco install openssl
 
     - name: Create build directory
       run: mkdir build

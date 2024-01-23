@@ -25,9 +25,6 @@ jobs:
         toolset: msvc
         platform_version: 2022
 
-    - name: Install packages
-      run: choco install openssl
-
     - name: Configure
       env:
         BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}

@@ -14,7 +14,7 @@ jobs:
       matrix:
         boost_version: ["1.80.0", "1.81.0", "1.82.0", "1.83.0"]
         os: [windows-2019, windows-2022]
-        toolset: [v141, v142, v143, ClangCL]
+        toolset: [v142, v143, ClangCL]
         build_type: [Debug, Release]
         standard: [14, 17, 20]
         generator: ["Visual Studio 16 2019", "Visual Studio 17 2022"]
@@ -23,15 +23,9 @@ jobs:
         name_args: [""]
         exclude:
           - { os: windows-2019, toolset: v143 }
-          - { os: windows-2022, toolset: v141 }
           - { os: windows-2019, generator: "Visual Studio 17 2022" }
           - { os: windows-2022, generator: "Visual Studio 16 2019" }
           - { toolset: ClangCL, build_type: Release }
-          # The following combinations are not available through install-boost
-          - { boost_version: "1.80.0", toolset: v141 }
-          - { boost_version: "1.81.0", toolset: v141 }
-          - { boost_version: "1.82.0", toolset: v141 }
-          - { boost_version: "1.83.0", toolset: v141 }
         include:
           - boost_version: "1.83.0"
             os: windows-2022
@@ -68,7 +62,7 @@ jobs:
     # The platform_version passed to boost-install determines the msvc toolset version for which static libs are installed.
     - name: Add boost platform version to environment
       run: |
-        declare -A toolset_to_platform_version=( [mingw]="2019" [v141]="2016" [v142]="2019" [v143]="2022" [ClangCL]="2019" )
+        declare -A toolset_to_platform_version=( [mingw]="2019" [v142]="2019" [v143]="2022" [ClangCL]="2019" )
         key=$([[ "${{matrix.generator}}" == "MinGW Makefiles" ]] && echo "mingw" || echo "${{matrix.toolset}}")
         echo BOOST_PLATFORM_VERSION="${toolset_to_platform_version[$key]}" >> $GITHUB_ENV
 

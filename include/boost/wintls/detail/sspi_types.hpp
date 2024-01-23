@@ -8,8 +8,6 @@
 #ifndef BOOST_WINTLS_DETAIL_SSPI_TYPES_HPP
 #define BOOST_WINTLS_DETAIL_SSPI_TYPES_HPP
 
-#include <boost/wintls/detail/win_types.hpp>
-
 #ifndef SECURITY_WIN32
 #define SECURITY_WIN32
 #define BOOST_WINTLS_SECURITY_WIN32_DEFINED

@@ -52,7 +52,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -84,7 +84,7 @@ jobs:
 
     - name: Cache Boost installation
       id: cache-boost
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{env.BOOST_INSTALL_PATH}}
         key: ${{matrix.boost_version}}${{env.BOOST_TOOLSET}}${{env.BOOST_PLATFORM_VERSION}}

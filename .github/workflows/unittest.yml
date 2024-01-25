@@ -3,7 +3,7 @@ name: unittest
 on: [push, pull_request]
 
 jobs:
-  unittest:
+  unittest-boost-asio:
     name: "${{matrix.generator}} ${{matrix.toolset}} Boost ${{matrix.boost_version}} ${{matrix.build_type}} C++${{matrix.standard}} ${{matrix.name_args}}"
     runs-on: ${{matrix.os}}
     defaults:
@@ -133,6 +133,53 @@ jobs:
     - name: Run tests
       working-directory: build
       run: ctest ${TEST_CONFIG_ARG} -V
+      env:
+        CTEST_OUTPUT_ON_FAILURE: True
+
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
+
+  unittest-standalone-asio:
+    name: "Asio ${{matrix.build_type}} C++${{matrix.standard}}"
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022]
+        build_type: [Debug, Release]
+        standard: [14, 17, 20]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Create build directory
+      run: mkdir build
+
+    - name: Configure
+      working-directory: build
+      run: |
+        cmake -DCMAKE_CXX_STANDARD=${{matrix.standard}} \
+              -DENABLE_WINTLS_STANDALONE_ASIO=ON \
+              -DENABLE_EXAMPLES=OFF \
+              "${GITHUB_WORKSPACE}"
+
+    - name: Build
+      working-directory: build
+      run: |
+        cmake --build . \
+        -j \
+        --config ${{matrix.build_type}}
+
+    - name: Run tests
+      working-directory: build
+      run: ctest -C ${{matrix.build_type}}
       env:
         CTEST_OUTPUT_ON_FAILURE: True
 

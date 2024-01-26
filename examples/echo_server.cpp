@@ -9,13 +9,23 @@
 
 #include <boost/wintls.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio.hpp>
+#else
 #include <boost/asio.hpp>
+#endif
 
 #include <cstdlib>
 #include <functional>
 #include <iostream>
 
-using boost::asio::ip::tcp;
+#ifdef WINTLS_USE_STANDALONE_ASIO
+namespace net = asio;
+#else
+namespace net = boost::asio;
+#endif
+
+using net::ip::tcp;
 
 class session : public std::enable_shared_from_this<session> {
 public:
@@ -31,7 +41,7 @@ private:
   void do_handshake() {
     auto self(shared_from_this());
     stream_.async_handshake(boost::wintls::handshake_type::server,
-                            [this, self](const boost::system::error_code& ec) {
+                            [this, self](const boost::wintls::error_code& ec) {
       if (!ec) {
         do_read();
       } else {
@@ -42,8 +52,8 @@ private:
 
   void do_read() {
     auto self(shared_from_this());
-    stream_.async_read_some(boost::asio::buffer(data_),
-                            [this, self](const boost::system::error_code& ec, std::size_t length) {
+    stream_.async_read_some(net::buffer(data_),
+                            [this, self](const boost::wintls::error_code& ec, std::size_t length) {
       if (!ec) {
         do_write(length);
       } else {
@@ -56,8 +66,8 @@ private:
 
   void do_write(std::size_t length) {
     auto self(shared_from_this());
-    boost::asio::async_write(stream_, boost::asio::buffer(data_, length),
-                             [this, self](const boost::system::error_code& ec, std::size_t /*length*/) {
+    net::async_write(stream_, net::buffer(data_, length),
+                             [this, self](const boost::wintls::error_code& ec, std::size_t /*length*/) {
       if (!ec) {
         do_read();
       } else {
@@ -72,18 +82,18 @@ private:
 
 class server {
 public:
-  server(boost::asio::io_context& io_context, unsigned short port)
+  server(net::io_context& io_context, unsigned short port)
     : acceptor_(io_context, tcp::endpoint(tcp::v4(), port))
     , context_(boost::wintls::method::system_default)
     , private_key_name_("wintls-echo-server-example") {
 
     // Convert X509 PEM bytes to Windows CERT_CONTEXT
-    auto certificate = boost::wintls::x509_to_cert_context(boost::asio::buffer(x509_certificate),
+    auto certificate = boost::wintls::x509_to_cert_context(net::buffer(x509_certificate),
                                                            boost::wintls::file_format::pem);
 
     // Import RSA private key into the default cryptographic provider
-    boost::system::error_code ec;
-    boost::wintls::import_private_key(boost::asio::buffer(rsa_key),
+    boost::wintls::error_code ec;
+    boost::wintls::import_private_key(net::buffer(rsa_key),
                                       boost::wintls::file_format::pem,
                                       private_key_name_,
                                       ec);
@@ -91,7 +101,7 @@ public:
     // If the key already exists, assume it's the one already imported
     // and ignore that error
     if (ec && ec.value() != NTE_EXISTS) {
-      throw boost::system::system_error(ec);
+      throw boost::wintls::system_error(ec);
     }
 
     // Use the imported private key for the certificate
@@ -107,13 +117,13 @@ public:
     // Remove the imported private key. Most real applications
     // probably only want to import the key once and most likely not
     // in the server code. This is just for demonstration purposesq.
-    boost::system::error_code ec;
+    boost::wintls::error_code ec;
     boost::wintls::delete_private_key(private_key_name_, ec);
   }
 
 private:
   void do_accept() {
-    acceptor_.async_accept([this](const boost::system::error_code& ec, tcp::socket socket) {
+    acceptor_.async_accept([this](const boost::wintls::error_code& ec, tcp::socket socket) {
       if (!ec) {
         std::make_shared<session>(boost::wintls::stream<tcp::socket>(std::move(socket), context_))->start();
       } else {
@@ -136,7 +146,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    boost::asio::io_context io_context;
+    net::io_context io_context;
     server s(io_context, static_cast<std::uint16_t>(std::atoi(argv[1])));
 
     io_context.run();

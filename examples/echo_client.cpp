@@ -9,20 +9,30 @@
 
 #include <boost/wintls.hpp>
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
+#include <asio.hpp>
+#else
 #include <boost/asio.hpp>
+#endif
 
 #include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <iostream>
 
-using boost::asio::ip::tcp;
+#ifdef WINTLS_USE_STANDALONE_ASIO
+namespace net = asio;
+#else
+namespace net = boost::asio;
+#endif
+
+using net::ip::tcp;
 
 constexpr std::size_t max_length = 1024;
 
 class client {
 public:
-  client(boost::asio::io_context& io_context,
+  client(net::io_context& io_context,
          boost::wintls::context& context,
          const tcp::resolver::results_type& endpoints)
       : stream_(io_context, context) {
@@ -31,8 +41,8 @@ public:
 
 private:
   void connect(const tcp::resolver::results_type& endpoints) {
-    boost::asio::async_connect(
-        stream_.next_layer(), endpoints, [this](const boost::system::error_code& error,
+    net::async_connect(
+        stream_.next_layer(), endpoints, [this](const boost::wintls::error_code& error,
                                                 const tcp::endpoint& /*endpoint*/) {
           if (!error) {
             handshake();
@@ -44,7 +54,7 @@ private:
 
   void handshake() {
     stream_.async_handshake(boost::wintls::handshake_type::client,
-                            [this](const boost::system::error_code& error) {
+                            [this](const boost::wintls::error_code& error) {
       if (!error) {
         send_request();
       } else {
@@ -58,9 +68,9 @@ private:
     std::cin.getline(request_, max_length);
     size_t request_length = std::strlen(request_);
 
-    boost::asio::async_write(
-        stream_, boost::asio::buffer(request_, request_length),
-        [this](const boost::system::error_code& error, std::size_t length) {
+    net::async_write(
+        stream_, net::buffer(request_, request_length),
+        [this](const boost::wintls::error_code& error, std::size_t length) {
           if (!error) {
             receive_response(length);
           } else {
@@ -70,14 +80,14 @@ private:
   }
 
   void receive_response(std::size_t size) {
-    boost::asio::async_read(
-        stream_, boost::asio::buffer(reply_, size),
-        [this](const boost::system::error_code& ec, std::size_t length) {
+    net::async_read(
+        stream_, net::buffer(reply_, size),
+        [this](const boost::wintls::error_code& ec, std::size_t length) {
           if (!ec) {
             std::cout << "Reply: ";
             std::cout.write(reply_, static_cast<std::streamsize>(length));
             std::cout << "\n";
-            stream_.async_shutdown([](const boost::system::error_code& error) {
+            stream_.async_shutdown([](const boost::wintls::error_code& error) {
               if(error) {
                 std::cerr << "Shutdown failed: " << error.message() << "\n";
               }
@@ -100,7 +110,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    boost::asio::io_context io_context;
+    net::io_context io_context;
 
     tcp::resolver resolver(io_context);
     auto endpoints = resolver.resolve(argv[1], argv[2]);
@@ -108,7 +118,7 @@ int main(int argc, char* argv[]) {
     boost::wintls::context ctx(boost::wintls::method::system_default);
 
     // Convert X509 PEM bytes to Windows CERT_CONTEXT
-    auto certificate = boost::wintls::x509_to_cert_context(boost::asio::buffer(x509_certificate),
+    auto certificate = boost::wintls::x509_to_cert_context(net::buffer(x509_certificate),
                                                            boost::wintls::file_format::pem);
 
     // Add certifcate as a trusted certifcate authority and verify it on handshake

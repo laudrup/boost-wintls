@@ -141,7 +141,7 @@ jobs:
       uses: mxschmitt/action-tmate@v3
 
   unittest-standalone-asio:
-    name: "Asio ${{matrix.build_type}} C++${{matrix.standard}}"
+    name: "${{matrix.asio_version}} ${{matrix.build_type}} C++${{matrix.standard}}"
     runs-on: ${{matrix.os}}
     defaults:
       run:
@@ -149,6 +149,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        asio_version: ["asio-1-28-0", "asio-1-29-0"]
         os: [windows-2022]
         build_type: [Debug, Release]
         standard: [14, 17, 20]
@@ -159,6 +160,14 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Checkout Asio
+      uses: actions/checkout@v4
+      with:
+        repository: chriskohlhoff/asio
+        ref: ${{matrix.asio_version}}
+        fetch-depth: 0
+        path: asio
+
     - name: Create build directory
       run: mkdir build
 
@@ -168,6 +177,7 @@ jobs:
         cmake -DCMAKE_CXX_STANDARD=${{matrix.standard}} \
               -DENABLE_WINTLS_STANDALONE_ASIO=ON \
               -DENABLE_EXAMPLES=OFF \
+              -DAsio_ROOT="${GITHUB_WORKSPACE}/asio" \
               "${GITHUB_WORKSPACE}"
 
     - name: Build

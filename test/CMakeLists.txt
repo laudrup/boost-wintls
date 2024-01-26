@@ -63,9 +63,23 @@ target_link_libraries(unittest PRIVATE
   boost-wintls
 )
 
-if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
+if(${CMAKE_CXX_STANDARD} LESS 17 AND ENABLE_WINTLS_STANDALONE_ASIO)
+  FetchContent_Declare(
+    string-view-lite
+    GIT_REPOSITORY https://github.com/martinmoene/string-view-lite.git
+    GIT_TAG        v1.7.0
+  )
+  FetchContent_MakeAvailable(string-view-lite)
+
+  FetchContent_Declare(
+    variant-lite
+    GIT_REPOSITORY https://github.com/martinmoene/variant-lite.git
+    GIT_TAG        v2.0.0
+  )
+  FetchContent_MakeAvailable(variant-lite)
   target_link_libraries(unittest PRIVATE
-    Boost::filesystem
+    string-view-lite
+    variant-lite
   )
 endif()
 

@@ -37,8 +37,11 @@
 #if __cplusplus >= 201703L || (defined _MSVC_LANG && _MSVC_LANG >= 201703L)
 #include <string_view>
 using string_view = std::string_view;
+#elif !defined(WINTLS_USE_STANDALONE_ASIO)
+#include <boost/utility/string_view.hpp>
+using string_view = boost::string_view;
 #else
-#include "impl/string_view.hpp"
+#include <nonstd/string_view.hpp>
 using string_view = nonstd::string_view;
 #endif
 

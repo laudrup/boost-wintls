@@ -12,8 +12,11 @@
 #if __cplusplus >= 201703L || (defined _MSVC_LANG && _MSVC_LANG >= 201703L)
 #include <variant>
 namespace variant = std;
+#elif !defined(WINTLS_USE_STANDALONE_ASIO)
+#include <boost/variant.hpp>
+namespace variant = boost;
 #else
-#include "utils/impl/variant.hpp"
+#include <nonstd/variant.hpp>
 namespace variant = nonstd;
 #endif
 

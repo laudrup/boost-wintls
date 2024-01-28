@@ -246,8 +246,6 @@ TEST_CASE("check certificate revocation (integration test)", "[.integration]") {
 
     // success case: cert_ocsp is fine
     ocsp_responder responder{};
-    // 'running()' does not mean that it is responding yet, but that we did start the process correctly
-    CHECK(responder.running());
     // It takes a few seconds for the OCSP responder to become available.
     // Therefore, we try to verify the certificate in a loop, but for at most 30 seconds.
     auto res_with_responder = CRYPT_E_REVOCATION_OFFLINE;

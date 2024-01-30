@@ -8,8 +8,6 @@
 #ifndef BOOST_WINTLS_DETAIL_CONFIG_HPP
 #define BOOST_WINTLS_DETAIL_CONFIG_HPP
 
-//#define WINTLS_USE_STANDALONE_ASIO
-
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"

@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_FLAT_BUFFER_HPP
-#define BOOST_BEAST_FLAT_BUFFER_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_FLAT_BUFFER_HPP
+#define BOOST_WINTLS_TEST_STREAM_FLAT_BUFFER_HPP
 
 #include "empty_value.hpp"
 #include "allocator.hpp"
@@ -523,9 +523,9 @@ private:
 using flat_buffer =
     basic_flat_buffer<std::allocator<char>>;
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #include "impl/flat_buffer.hpp"
 

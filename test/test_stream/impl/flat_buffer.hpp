@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_IMPL_FLAT_BUFFER_HPP
-#define BOOST_BEAST_IMPL_FLAT_BUFFER_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_IMPL_FLAT_BUFFER_HPP
+#define BOOST_WINTLS_TEST_STREAM_IMPL_FLAT_BUFFER_HPP
 
 #include <memory>
 #include <stdexcept>
@@ -525,8 +525,8 @@ alloc(std::size_t n)
     return alloc_traits::allocate(this->get(), n);
 }
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

@@ -5,14 +5,15 @@ Copyright 2018 Glen Joseph Fernandes
 Distributed under the Boost Software License, Version 1.0.
 (http://www.boost.org/LICENSE_1_0.txt)
 */
-#ifndef BOOST_CORE_EMPTY_VALUE_HPP
-#define BOOST_CORE_EMPTY_VALUE_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_EMPTY_VALUE_HPP
+#define BOOST_WINTLS_TEST_STREAM_EMPTY_VALUE_HPP
 
 #include <utility>
 
 namespace boost {
 namespace wintls {
 namespace test {
+
 template<class T>
 struct use_empty_value_base {
     enum {
@@ -75,12 +76,12 @@ public:
     }
 };
 
-} /* empty_ */
+} // namespace empty_
 
 using empty_::empty_value;
 
-} /* test */
-} /* wintls */
-} /* boost */
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

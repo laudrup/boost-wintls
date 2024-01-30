@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_ROLE_HPP
-#define BOOST_BEAST_ROLE_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_ROLE_HPP
+#define BOOST_WINTLS_TEST_STREAM_ROLE_HPP
 
 namespace boost {
 namespace wintls {
@@ -43,8 +43,8 @@ enum class role_type
     server
 };
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_TEST_FAIL_COUNT_HPP
-#define BOOST_BEAST_TEST_FAIL_COUNT_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_FAIL_COUNT_HPP
+#define BOOST_WINTLS_TEST_STREAM_FAIL_COUNT_HPP
 
 #include "config.hpp"
 #include "error.hpp"
@@ -59,9 +59,9 @@ public:
     fail(error_code& ec);
 };
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #include "impl/fail_count.ipp"
 

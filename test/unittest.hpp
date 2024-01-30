@@ -9,7 +9,8 @@
 
 #include <boost/wintls/detail/config.hpp>
 
-#include "utils/stream.hpp"
+#include "test_stream/stream.hpp"
+
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/ssl.hpp>
 #else

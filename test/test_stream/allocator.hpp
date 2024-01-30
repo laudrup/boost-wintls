@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_DETAIL_ALLOCATOR_HPP
-#define BOOST_BEAST_DETAIL_ALLOCATOR_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_ALLOCATOR_HPP
+#define BOOST_WINTLS_TEST_STREAM_ALLOCATOR_HPP
 
 #include <memory>
 
@@ -22,9 +22,8 @@ namespace test {
 template<class Alloc>
 using allocator_traits = std::allocator_traits<Alloc>;
 
-
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

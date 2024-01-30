@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_TEST_IMPL_ERROR_IPP
-#define BOOST_BEAST_TEST_IMPL_ERROR_IPP
+#ifndef BOOST_WINTLS_TEST_STREAM_IMPL_ERROR_IPP
+#define BOOST_WINTLS_TEST_STREAM_IMPL_ERROR_IPP
 
 #include "error.hpp"
 
@@ -55,8 +55,8 @@ make_error_code(boost::wintls::test::error e) noexcept
         std::underlying_type<error>::type>(e), cat};
 }
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

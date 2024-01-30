@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_IMPL_STREAM_HPP
-#define BOOST_WINTLS_TEST_IMPL_STREAM_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_IMPL_STREAM_HPP
+#define BOOST_WINTLS_TEST_STREAM_IMPL_STREAM_HPP
 
 #include "service_base.hpp"
 #include "is_invocable.hpp"
@@ -448,8 +448,8 @@ connect(stream& to, Arg1&& arg1, ArgN&&... argn)
     return from;
 }
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

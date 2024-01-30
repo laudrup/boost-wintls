@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_DETAIL_SERVICE_BASE_HPP
-#define BOOST_BEAST_DETAIL_SERVICE_BASE_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_IMPL_SERVICE_BASE_HPP
+#define BOOST_WINTLS_TEST_STREAM_IMPL_SERVICE_BASE_HPP
 
 namespace boost {
 namespace wintls {
@@ -29,8 +29,8 @@ struct service_base : net::execution_context::service
 template<class T>
 net::execution_context::id const service_base<T>::id;
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

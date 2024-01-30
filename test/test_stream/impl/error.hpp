@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_TEST_IMPL_ERROR_HPP
-#define BOOST_BEAST_TEST_IMPL_ERROR_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_IMPL_ERROR_HPP
+#define BOOST_WINTLS_TEST_STREAM_IMPL_ERROR_HPP
 
 #include <type_traits>
 
@@ -42,8 +42,8 @@ inline
 error_code
 make_error_code(error e) noexcept;
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #endif

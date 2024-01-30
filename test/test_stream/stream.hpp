@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_BEAST_TEST_STREAM_HPP
-#define BOOST_BEAST_TEST_STREAM_HPP
+#ifndef BOOST_WINTLS_TEST_STREAM_STREAM_HPP
+#define BOOST_WINTLS_TEST_STREAM_STREAM_HPP
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <system_error>
@@ -624,9 +624,9 @@ template<class Arg1, class... ArgN>
 stream
 connect(stream& to, Arg1&& arg1, ArgN&&... argn);
 
-} // test
-} // wintls
-} // boost
+} // namespace test
+} // namespace wintls
+} // namespace boost
 
 #include "impl/stream.hpp"
 #include "impl/stream.ipp"

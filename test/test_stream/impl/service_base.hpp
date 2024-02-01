@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_STREAM_IMPL_SERVICE_BASE_HPP
-#define BOOST_WINTLS_TEST_STREAM_IMPL_SERVICE_BASE_HPP
+#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_SERVICE_BASE_HPP
+#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_SERVICE_BASE_HPP
 
 namespace boost {
 namespace wintls {
@@ -33,4 +33,4 @@ net::execution_context::id const service_base<T>::id;
 } // namespace wintls
 } // namespace boost
 
-#endif
+#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_SERVICE_BASE_HPP

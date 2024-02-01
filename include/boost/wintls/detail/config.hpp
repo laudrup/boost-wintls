@@ -11,24 +11,24 @@
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
-#endif
+#endif // __clang__
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <system_error>
 #include <asio.hpp>
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 #include <boost/config.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 #ifdef __clang__
 #pragma clang diagnostic pop
-#endif
+#endif // __clang__
 
-#if !defined(__MINGW32__)
+#ifndef __MINGW32__
 #pragma comment(lib, "crypt32")
 #pragma comment(lib, "secur32")
-#endif // __MINGW32__
+#endif // !__MINGW32__
 
 namespace boost {
 namespace wintls {
@@ -38,13 +38,13 @@ using system_error = std::system_error;
 using error_code = std::error_code;
 
 constexpr auto system_category = std::system_category;
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 namespace net = boost::asio;
 using system_error = boost::system::system_error;
 using error_code = boost::system::error_code;
 
 constexpr auto system_category = boost::system::system_category;
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 } // namespace wintls
 } // namespace boost

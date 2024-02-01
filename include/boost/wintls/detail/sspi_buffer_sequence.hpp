@@ -12,9 +12,9 @@
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/buffer.hpp>
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 #include <boost/asio/buffer.hpp>
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 #include <array>
 

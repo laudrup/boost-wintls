@@ -4,8 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef ASIO_SSL_CLIENT_STREAM_HPP
-#define ASIO_SSL_CLIENT_STREAM_HPP
+#ifndef BOOST_WINTLS_TEST_ASIO_SSL_CLIENT_STREAM_HPP
+#define BOOST_WINTLS_TEST_ASIO_SSL_CLIENT_STREAM_HPP
 
 #include "unittest.hpp"
 #include "certificate.hpp"
@@ -51,4 +51,4 @@ struct asio_ssl_client_stream {
   asio_ssl::stream<test_stream&> stream;
 };
 
-#endif // ASIO_SSL_CLIENT_STREAM_HPP
+#endif // BOOST_WINTLS_TEST_ASIO_SSL_CLIENT_STREAM_HPP

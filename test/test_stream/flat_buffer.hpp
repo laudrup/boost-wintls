@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_STREAM_FLAT_BUFFER_HPP
-#define BOOST_WINTLS_TEST_STREAM_FLAT_BUFFER_HPP
+#ifndef BOOST_WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
+#define BOOST_WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
 
 #include "empty_value.hpp"
 #include "allocator.hpp"
@@ -529,4 +529,4 @@ using flat_buffer =
 
 #include "impl/flat_buffer.hpp"
 
-#endif
+#endif // BOOST_WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP

@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_STREAM_ERROR_HPP
-#define BOOST_WINTLS_TEST_STREAM_ERROR_HPP
+#ifndef BOOST_WINTLS_TEST_TEST_STREAM_ERROR_HPP
+#define BOOST_WINTLS_TEST_TEST_STREAM_ERROR_HPP
 
 namespace boost {
 namespace wintls {
@@ -32,4 +32,4 @@ enum class error
 #include "impl/error.ipp"
 #include "impl/error.hpp"
 
-#endif
+#endif // BOOST_WINTLS_TEST_TEST_STREAM_ERROR_HPP

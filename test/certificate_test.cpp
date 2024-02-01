@@ -39,9 +39,9 @@ bool container_exists(const std::string& name) {
     }
 #ifdef WINTLS_USE_STANDALONE_ASIO
     throw std::system_error(static_cast<int>(last_error), std::system_category());
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
     throw boost::system::system_error(static_cast<int>(last_error), boost::system::system_category());
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
   }
   CryptReleaseContext(ptr, 0);
   return true;

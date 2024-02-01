@@ -12,27 +12,27 @@
 
 #ifndef SP_PROT_TLS1_1_SERVER
 #define SP_PROT_TLS1_1_SERVER 0x100
-#endif
+#endif // SP_PROT_TLS1_1_SERVER
 
 #ifndef SP_PROT_TLS1_1_CLIENT
 #define SP_PROT_TLS1_1_CLIENT 0x200
-#endif
+#endif // SP_PROT_TLS1_1_CLIENT
 
 #ifndef SP_PROT_TLS1_2_SERVER
 #define SP_PROT_TLS1_2_SERVER 0x400
-#endif
+#endif // SP_PROT_TLS1_2_SERVER
 
 #ifndef SP_PROT_TLS1_2_CLIENT
 #define SP_PROT_TLS1_2_CLIENT 0x800
-#endif
+#endif // SP_PROT_TLS1_2_CLIENT
 
 #ifndef SP_PROT_TLS1_3_SERVER
 #define SP_PROT_TLS1_3_SERVER 0x1000
-#endif
+#endif // SP_PROT_TLS1_3_SERVER
 
 #ifndef SP_PROT_TLS1_3_CLIENT
 #define SP_PROT_TLS1_3_CLIENT 0x2000
-#endif
+#endif // SP_PROT_TLS1_3_CLIENT
 
 namespace boost {
 namespace wintls {

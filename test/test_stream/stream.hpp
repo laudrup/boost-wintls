@@ -7,13 +7,13 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_STREAM_STREAM_HPP
-#define BOOST_WINTLS_TEST_STREAM_STREAM_HPP
+#ifndef BOOST_WINTLS_TEST_TEST_STREAM_STREAM_HPP
+#define BOOST_WINTLS_TEST_TEST_STREAM_STREAM_HPP
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <system_error>
 #include <asio.hpp>
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 #include <boost/config.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
@@ -24,7 +24,7 @@
 #include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 #include "role.hpp"
 #include "flat_buffer.hpp"
 #include "fail_count.hpp"
@@ -40,7 +40,7 @@ using string_view = std::string_view;
 #elif !defined(WINTLS_USE_STANDALONE_ASIO)
 #include <boost/utility/string_view.hpp>
 using string_view = boost::string_view;
-#else
+#else // !WINTLS_USE_STANDALONE_ASIO
 #include <nonstd/string_view.hpp>
 using string_view = nonstd::string_view;
 #endif
@@ -55,7 +55,7 @@ namespace ssl {
 template<typename> class stream;
 } // ssl
 } // asio
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 namespace net = boost::asio;
 using system_error = boost::system::system_error;
 using error_code = boost::system::error_code;
@@ -67,7 +67,7 @@ template<typename> class stream;
 } // ssl
 } // asio
 } // boost
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 namespace boost {
 namespace wintls {
@@ -631,4 +631,4 @@ connect(stream& to, Arg1&& arg1, ArgN&&... argn);
 #include "impl/stream.hpp"
 #include "impl/stream.ipp"
 
-#endif
+#endif //

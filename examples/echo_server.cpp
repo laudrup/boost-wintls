@@ -11,9 +11,9 @@
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio.hpp>
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 #include <boost/asio.hpp>
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 #include <cstdlib>
 #include <functional>
@@ -21,9 +21,9 @@
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 namespace net = asio;
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 namespace net = boost::asio;
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 using net::ip::tcp;
 

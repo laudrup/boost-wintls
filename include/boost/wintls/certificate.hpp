@@ -285,4 +285,4 @@ inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name
 } // namespace wintls
 } // namespace boost
 
-#endif
+#endif // BOOST_WINTLS_CERTIFICATE_HPP

@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_OCSP_RESPONDER_HPP
-#define BOOST_WINTLS_OCSP_RESPONDER_HPP
+#ifndef BOOST_WINTLS_TEST_OCSP_RESPONDER_HPP
+#define BOOST_WINTLS_TEST_OCSP_RESPONDER_HPP
 
 class ocsp_responder {
 public:
@@ -17,4 +17,4 @@ private:
   void* proc_handle_ = nullptr;
 };
 
-#endif
+#endif // BOOST_WINTLS_TEST_OCSP_RESPONDER_HPP

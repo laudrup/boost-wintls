@@ -4,8 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef WINTLS_CERTIFICATE_HPP
-#define WINTLS_CERTIFICATE_HPP
+#ifndef BOOST_WINTLS_TEST_CERTIFICATE_HPP
+#define BOOST_WINTLS_TEST_CERTIFICATE_HPP
 
 #include <string>
 
@@ -63,4 +63,4 @@ const std::string test_key =
   "-----END PRIVATE KEY-----\n";
 
 const std::string test_key_name="boost-wintls-test-key";
-#endif
+#endif // BOOST_WINTLS_TEST_CERTIFICATE_HPP

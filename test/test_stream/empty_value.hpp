@@ -5,8 +5,8 @@ Copyright 2018 Glen Joseph Fernandes
 Distributed under the Boost Software License, Version 1.0.
 (http://www.boost.org/LICENSE_1_0.txt)
 */
-#ifndef BOOST_WINTLS_TEST_STREAM_EMPTY_VALUE_HPP
-#define BOOST_WINTLS_TEST_STREAM_EMPTY_VALUE_HPP
+#ifndef BOOST_WINTLS_TEST_TEST_STREAM_EMPTY_VALUE_HPP
+#define BOOST_WINTLS_TEST_TEST_STREAM_EMPTY_VALUE_HPP
 
 #include <utility>
 
@@ -84,4 +84,4 @@ using empty_::empty_value;
 } // namespace wintls
 } // namespace boost
 
-#endif
+#endif // BOOST_WINTLS_TEST_TEST_STREAM_EMPTY_VALUE_HPP

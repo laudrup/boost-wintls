@@ -19,9 +19,9 @@
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/io_context.hpp>
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 #include <boost/asio/io_context.hpp>
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 #include <array>
 #include <thread>

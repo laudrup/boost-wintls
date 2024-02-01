@@ -22,12 +22,12 @@ const auto& get_system_category = std::system_category;
 #define WINTLS_TEST_ERROR_NAMESPACE_ALIAS() \
   using std::errc; \
   namespace err_help = std;
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 const auto& get_system_category = boost::system::system_category;
 #define WINTLS_TEST_ERROR_NAMESPACE_ALIAS()
   using namespace boost::system; \
   namespace err_help = boost::system::errc;
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 namespace boost {
 namespace wintls {

@@ -21,10 +21,10 @@
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/compose.hpp>
 #include <asio/io_context.hpp>
-#else
+#else // WINTLS_USE_STANDALONE_ASIO
 #include <boost/asio/compose.hpp>
 #include <boost/asio/io_context.hpp>
-#endif
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 #include <memory>
 

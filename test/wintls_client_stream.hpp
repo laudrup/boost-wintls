@@ -4,8 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef WINTLS_CLIENT_STREAM_HPP
-#define WINTLS_CLIENT_STREAM_HPP
+#ifndef BOOST_WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
+#define BOOST_WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
 
 #include "certificate.hpp"
 #include "unittest.hpp"
@@ -74,4 +74,4 @@ struct wintls_client_stream {
   boost::wintls::stream<test_stream&> stream;
 };
 
-#endif // WINTLS_CLIENT_STREAM_HPP
+#endif // BOOST_WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP

@@ -15,7 +15,7 @@ namespace variant = std;
 #elif !defined(WINTLS_USE_STANDALONE_ASIO)
 #include <boost/variant.hpp>
 namespace variant = boost;
-#else
+#else // !WINTLS_USE_STANDALONE_ASIO
 #include <nonstd/variant.hpp>
 namespace variant = nonstd;
 #endif

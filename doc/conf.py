@@ -4,7 +4,7 @@ import sys
 
 sys.path.append(os.path.abspath("./extensions"))
 
-project = 'boost-wintls'
+project = 'wintls'
 copyright = '2021, Kasper Laudrup'
 author = 'Kasper Laudrup'
 
@@ -24,7 +24,7 @@ templates_path = ['templates']
 
 html_static_path = ['static']
 
-html_title = 'boost.wintls'
+html_title = 'asio.wintls'
 
 html_css_files = [
   project + '.css',
@@ -40,4 +40,4 @@ html_theme_options = {
 
 html_last_updated_fmt = ''
 
-breathe_default_project = 'boost-wintls'
+breathe_default_project = 'wintls'

@@ -1,4 +1,4 @@
-.. cpp:namespace:: boost::wintls
+.. cpp:namespace:: wintls
 
 Usage
 =====
@@ -21,9 +21,9 @@ to support.
 To construct a context using the operating system default methods:
 ::
 
-   #include <boost/wintls.hpp>
+   #include <wintls.hpp>
 
-   boost::wintls::context ctx(boost::wintls::method::system_default);
+   wintls::context ctx(wintls::method::system_default);
 
 While that is all which is required to construct a context for
 client-side operations, most users would at least want to enable
@@ -37,9 +37,9 @@ provided by the operating system and verify the server certificate,
 would look something like:
 ::
 
-   #include <boost/wintls.hpp>
+   #include <wintls.hpp>
 
-   boost::wintls::context ctx(boost::wintls::method::system_default);
+   wintls::context ctx(wintls::method::system_default);
    ctx.use_default_certificates(true);
    ctx.verify_server_certificate(true);
 
@@ -64,7 +64,7 @@ Assuming an underlying TCP stream, once the context has been setup
 a :class:`stream` can be constructed like:
 ::
 
-   boost::wintls::stream<ip::tcp::socket> my_stream(my_io_service, ctx);
+   wintls::stream<ip::tcp::socket> my_stream(my_io_service, ctx);
 
 In the case of a TCP stream, the underlying stream needs to be
 connected before it can be used. To access the underlying stream use
@@ -87,7 +87,7 @@ like:
 ::
 
    strean.set_server_hostname("wintls.dev");
-   stream.handshake(boost::wintls::handshake_type::client);
+   stream.handshake(wintls::handshake_type::client);
 
 Similar to the `boost::asio`_ functions, this library provides
 overloads for accepting a `boost::system`_::error_codes.

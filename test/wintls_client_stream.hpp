@@ -4,29 +4,29 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef BOOST_WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
-#define BOOST_WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
+#ifndef WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
+#define WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
 
 #include "certificate.hpp"
 #include "unittest.hpp"
 
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 
 #include <fstream>
 #include <iterator>
 
 const std::string test_key_name_client = test_key_name + "-client";
 
-struct wintls_client_context : public boost::wintls::context {
+struct wintls_client_context : public wintls::context {
   wintls_client_context()
-    : boost::wintls::context(boost::wintls::method::system_default)
+    : wintls::context(wintls::method::system_default)
     , needs_private_key_clean_up_(false)
     , authority_ptr_() {
   }
 
   void with_test_cert_authority() {
     if(!authority_ptr_) {
-      authority_ptr_ = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+      authority_ptr_ = x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
       add_certificate_authority(authority_ptr_.get());
     }
   }
@@ -36,11 +36,11 @@ struct wintls_client_context : public boost::wintls::context {
 
     // delete key in case last test run has dangling key.
     error_code dummy;
-    boost::wintls::delete_private_key(test_key_name_client, dummy);
+    wintls::delete_private_key(test_key_name_client, dummy);
 
-    boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, test_key_name_client);
+    wintls::import_private_key(net::buffer(test_key), wintls::file_format::pem, test_key_name_client);
     needs_private_key_clean_up_ = true;
-    boost::wintls::assign_private_key(authority_ptr_.get(), test_key_name_client);
+    wintls::assign_private_key(authority_ptr_.get(), test_key_name_client);
     use_certificate(authority_ptr_.get());
   }
 
@@ -50,18 +50,18 @@ struct wintls_client_context : public boost::wintls::context {
 
   ~wintls_client_context() {
     if(needs_private_key_clean_up_) {
-      boost::wintls::delete_private_key(test_key_name_client);
+      wintls::delete_private_key(test_key_name_client);
       needs_private_key_clean_up_ = false;
     }
   }
 
 private:
   bool needs_private_key_clean_up_;
-  boost::wintls::cert_context_ptr authority_ptr_;
+  wintls::cert_context_ptr authority_ptr_;
 };
 
 struct wintls_client_stream {
-  using handshake_type = boost::wintls::handshake_type;
+  using handshake_type = wintls::handshake_type;
 
   template <class... Args>
   wintls_client_stream(Args&&... args)
@@ -71,7 +71,7 @@ struct wintls_client_stream {
 
   wintls_client_context ctx;
   test_stream tst;
-  boost::wintls::stream<test_stream&> stream;
+  wintls::stream<test_stream&> stream;
 };
 
-#endif // BOOST_WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP
+#endif // WINTLS_TEST_WINTLS_CLIENT_STREAM_HPP

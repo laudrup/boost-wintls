@@ -2,11 +2,11 @@ add_executable(echo_client echo_client.cpp)
 add_executable(echo_server echo_server.cpp)
 
 target_link_libraries(echo_server PRIVATE
-  boost-wintls
+  wintls
 )
 
 target_link_libraries(echo_client PRIVATE
-  boost-wintls
+  wintls
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -19,11 +19,11 @@ if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
   add_executable(async_https_client async_https_client.cpp)
 
   target_link_libraries(https_client PRIVATE
-    boost-wintls
+    wintls
   )
 
   target_link_libraries(async_https_client PRIVATE
-    boost-wintls
+    wintls
   )
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

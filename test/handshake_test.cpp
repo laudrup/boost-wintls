@@ -11,7 +11,7 @@
 #include "tls_record.hpp"
 #include "unittest.hpp"
 
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 #include "asio_ssl_server_stream.hpp"
 #include "asio_ssl_client_stream.hpp"
 #include "wintls_client_stream.hpp"
@@ -29,7 +29,6 @@ const auto& get_system_category = boost::system::system_category;
   namespace err_help = boost::system::errc;
 #endif // !WINTLS_USE_STANDALONE_ASIO
 
-namespace boost {
 namespace wintls {
 
 std::ostream& operator<<(std::ostream& os, const method meth) {
@@ -71,7 +70,6 @@ std::ostream& operator<<(std::ostream& os, const method meth) {
 }
 
 } // namespace wintls
-} // namespace boost
 
 namespace {
 
@@ -80,13 +78,13 @@ std::string wchar_to_string(const wchar_t* input) {
 
   const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, input, length, nullptr, 0, nullptr, nullptr);
   if (size_needed == 0) {
-    boost::wintls::detail::throw_last_error("WideCharToMultiByte");
+    wintls::detail::throw_last_error("WideCharToMultiByte");
   }
 
   std::string output(size_needed, '\0');
   const auto size_written = WideCharToMultiByte(CP_UTF8, 0, input, length, &output[0], size_needed, nullptr, nullptr);
   if (size_written == 0) {
-    boost::wintls::detail::throw_last_error("WideCharToMultiByte");
+    wintls::detail::throw_last_error("WideCharToMultiByte");
   }
   return output;
 }
@@ -95,11 +93,11 @@ std::vector<BYTE> string_to_x509_name(const std::string& str) {
   DWORD size = 0;
   std::vector<BYTE> ret;
   if (!CertStrToName(X509_ASN_ENCODING, str.c_str(), CERT_X500_NAME_STR, nullptr, nullptr, &size, nullptr)) {
-    boost::wintls::detail::throw_last_error("CertStrToName");
+    wintls::detail::throw_last_error("CertStrToName");
   }
   ret.resize(size);
   if (!CertStrToName(X509_ASN_ENCODING, str.c_str(), CERT_X500_NAME_STR, nullptr, ret.data(), &size, nullptr)) {
-    boost::wintls::detail::throw_last_error("CertStrToName");
+    wintls::detail::throw_last_error("CertStrToName");
   }
   return ret;
 }
@@ -116,7 +114,7 @@ private:
   std::vector<BYTE> data_;
 };
 
-boost::wintls::cert_context_ptr create_self_signed_cert(const std::string& subject) {
+wintls::cert_context_ptr create_self_signed_cert(const std::string& subject) {
   cert_name_blob cert_subject(subject);
   SYSTEMTIME expiry_date;
   GetSystemTime(&expiry_date);
@@ -131,9 +129,9 @@ boost::wintls::cert_context_ptr create_self_signed_cert(const std::string& subje
                                             &expiry_date,
                                             0);
   if (!cert) {
-    boost::wintls::detail::throw_last_error("CertCreateSelfSignCertificate");
+    wintls::detail::throw_last_error("CertCreateSelfSignCertificate");
   }
-  return boost::wintls::cert_context_ptr{cert};
+  return wintls::cert_context_ptr{cert};
 }
 
 std::string cert_container_name(const CERT_CONTEXT* cert) {
@@ -142,7 +140,7 @@ std::string cert_container_name(const CERT_CONTEXT* cert) {
                                          CERT_KEY_PROV_INFO_PROP_ID,
                                          nullptr,
                                          &size)) {
-    boost::wintls::detail::throw_last_error("CertGetCertificateContextProperty");
+    wintls::detail::throw_last_error("CertGetCertificateContextProperty");
   }
 
   std::vector<BYTE> data(size);
@@ -150,7 +148,7 @@ std::string cert_container_name(const CERT_CONTEXT* cert) {
                                          CERT_KEY_PROV_INFO_PROP_ID,
                                          data.data(),
                                          &size)) {
-    boost::wintls::detail::throw_last_error("CertGetCertificateContextProperty");
+    wintls::detail::throw_last_error("CertGetCertificateContextProperty");
   }
   const auto info = reinterpret_cast<CRYPT_KEY_PROV_INFO*>(data.data());
   return wchar_to_string(info->pwszContainerName);
@@ -162,8 +160,8 @@ TEST_CASE("certificates") {
   WINTLS_TEST_ERROR_NAMESPACE_ALIAS();
 
   net::io_context io_context;
-  boost::wintls::context client_ctx(boost::wintls::method::system_default);
-  boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+  wintls::context client_ctx(wintls::method::system_default);
+  wintls::stream<test_stream> client_stream(io_context, client_ctx);
 
   SECTION("invalid certificate data") {
     // TODO: Instead of returning an error when given a null pointer
@@ -193,8 +191,8 @@ TEST_CASE("certificates") {
   }
 
   SECTION("server cert without private key") {
-    boost::wintls::context server_ctx(boost::wintls::method::system_default);
-    auto cert = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+    wintls::context server_ctx(wintls::method::system_default);
+    auto cert = x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
 
     CHECK_THROWS_WITH(server_ctx.use_certificate(cert.get()),
                       Catch::Matchers::Contains("Cannot find the certificate and private key for decryption"));
@@ -206,23 +204,23 @@ TEST_CASE("certificates") {
   }
 
   SECTION("wintl server") {
-    boost::wintls::context server_ctx(boost::wintls::method::system_default);
+    wintls::context server_ctx(wintls::method::system_default);
     const auto cert = create_self_signed_cert("CN=WinTLS, T=Test");
     server_ctx.use_certificate(cert.get());
-    boost::wintls::stream<test_stream> server_stream(io_context, server_ctx);
+    wintls::stream<test_stream> server_stream(io_context, server_ctx);
 
     client_stream.next_layer().connect(server_stream.next_layer());
 
     SECTION("no certificate validation") {
       auto client_error = err_help::make_error_code(errc::not_supported);
-      client_stream.async_handshake(boost::wintls::handshake_type::client,
+      client_stream.async_handshake(wintls::handshake_type::client,
                                     [&client_error, &io_context](const error_code& ec) {
                                       client_error = ec;
                                       io_context.stop();
                                     });
 
       auto server_error = err_help::make_error_code(errc::not_supported);
-      server_stream.async_handshake(boost::wintls::handshake_type::server,
+      server_stream.async_handshake(wintls::handshake_type::server,
                                     [&server_error](const error_code& ec) {
                                       server_error = ec;
                                     });
@@ -235,13 +233,13 @@ TEST_CASE("certificates") {
       client_ctx.verify_server_certificate(true);
 
       auto client_error = err_help::make_error_code(errc::not_supported);
-      client_stream.async_handshake(boost::wintls::handshake_type::client,
+      client_stream.async_handshake(wintls::handshake_type::client,
                                     [&client_error](const error_code& ec) {
                                       client_error = ec;
                                     });
 
       auto server_error = err_help::make_error_code(errc::not_supported);
-      server_stream.async_handshake(boost::wintls::handshake_type::server,
+      server_stream.async_handshake(wintls::handshake_type::server,
                                     [&server_error](const error_code& ec) {
                                       server_error = ec;
                                     });
@@ -257,14 +255,14 @@ TEST_CASE("certificates") {
       client_ctx.add_certificate_authority(cert.get());
 
       auto client_error = err_help::make_error_code(errc::not_supported);
-      client_stream.async_handshake(boost::wintls::handshake_type::client,
+      client_stream.async_handshake(wintls::handshake_type::client,
                                     [&client_error, &io_context](const error_code& ec) {
                                       client_error = ec;
                                       io_context.stop();
                                     });
 
       auto server_error = err_help::make_error_code(errc::not_supported);
-      server_stream.async_handshake(boost::wintls::handshake_type::server,
+      server_stream.async_handshake(wintls::handshake_type::server,
                                     [&server_error](const error_code& ec) {
                                       server_error = ec;
                                     });
@@ -273,7 +271,7 @@ TEST_CASE("certificates") {
       CHECK_FALSE(server_error);
     }
 
-    boost::wintls::delete_private_key(cert_container_name(cert.get()));
+    wintls::delete_private_key(cert_container_name(cert.get()));
   }
 
   SECTION("asio::ssl server") {
@@ -287,7 +285,7 @@ TEST_CASE("certificates") {
 
     SECTION("no certificate validation") {
       auto client_error = err_help::make_error_code(errc::not_supported);
-      client_stream.async_handshake(boost::wintls::handshake_type::client,
+      client_stream.async_handshake(wintls::handshake_type::client,
                                     [&client_error, &io_context](const error_code& ec) {
                                       client_error = ec;
                                       io_context.stop();
@@ -307,7 +305,7 @@ TEST_CASE("certificates") {
       client_ctx.verify_server_certificate(true);
 
       auto client_error = err_help::make_error_code(errc::not_supported);
-      client_stream.async_handshake(boost::wintls::handshake_type::client,
+      client_stream.async_handshake(wintls::handshake_type::client,
                                     [&client_error](const error_code& ec) {
                                       client_error = ec;
                                     });
@@ -327,11 +325,11 @@ TEST_CASE("certificates") {
     SECTION("trusted certificate verified") {
       client_ctx.verify_server_certificate(true);
 
-      const auto cert_ptr = x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+      const auto cert_ptr = x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
       client_ctx.add_certificate_authority(cert_ptr.get());
 
       auto client_error = err_help::make_error_code(errc::not_supported);
-      client_stream.async_handshake(boost::wintls::handshake_type::client,
+      client_stream.async_handshake(wintls::handshake_type::client,
                                     [&client_error, &io_context](const error_code& ec) {
                                       client_error = ec;
                                       io_context.stop();
@@ -360,13 +358,13 @@ TEST_CASE("client certificates") {
     server_ctx.enable_client_verify();
 
     net::io_context io_context;
-    boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+    wintls::stream<test_stream> client_stream(io_context, client_ctx);
     net::ssl::stream<test_stream> server_stream(io_context, server_ctx);
 
     client_stream.next_layer().connect(server_stream.next_layer());
 
     auto client_error = err_help::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
+    client_stream.async_handshake(wintls::handshake_type::client,
                                   [&client_error](const error_code& ec) {
                                     client_error = ec;
                                   });
@@ -398,13 +396,13 @@ TEST_CASE("client certificates") {
     server_ctx.enable_client_verify();
 
     net::io_context io_context;
-    boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+    wintls::stream<test_stream> client_stream(io_context, client_ctx);
     net::ssl::stream<test_stream> server_stream(io_context, server_ctx);
 
     client_stream.next_layer().connect(server_stream.next_layer());
 
     auto client_error = err_help::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
+    client_stream.async_handshake(wintls::handshake_type::client,
                                   [&client_error](const error_code& ec) {
                                     client_error = ec;
                                   });
@@ -463,7 +461,7 @@ TEST_CASE("client certificates") {
 
     net::io_context io_context;
     net::ssl::stream<test_stream> client_stream(io_context, client_ctx);
-    boost::wintls::stream<test_stream> server_stream(io_context, server_ctx);
+    wintls::stream<test_stream> server_stream(io_context, server_ctx);
 
     client_stream.next_layer().connect(server_stream.next_layer());
 
@@ -474,7 +472,7 @@ TEST_CASE("client certificates") {
                                   });
 
     auto server_error = err_help::make_error_code(errc::not_supported);
-    server_stream.async_handshake(boost::wintls::handshake_type::server,
+    server_stream.async_handshake(wintls::handshake_type::server,
                                   [&server_error](const error_code& ec) {
                                     server_error = ec;
                                   });
@@ -493,7 +491,7 @@ TEST_CASE("client certificates") {
 
     net::io_context io_context;
     net::ssl::stream<test_stream> client_stream(io_context, client_ctx);
-    boost::wintls::stream<test_stream> server_stream(io_context, server_ctx);
+    wintls::stream<test_stream> server_stream(io_context, server_ctx);
 
     client_stream.next_layer().connect(server_stream.next_layer());
 
@@ -504,7 +502,7 @@ TEST_CASE("client certificates") {
                                   });
 
     auto server_error = err_help::make_error_code(errc::not_supported);
-    server_stream.async_handshake(boost::wintls::handshake_type::server,
+    server_stream.async_handshake(wintls::handshake_type::server,
                                   [&server_error](const error_code& ec) {
                                     server_error = ec;
                                   });
@@ -524,19 +522,19 @@ TEST_CASE("client certificates") {
     server_ctx.enable_client_verify();
 
     net::io_context io_context;
-    boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
-    boost::wintls::stream<test_stream> server_stream(io_context, server_ctx);
+    wintls::stream<test_stream> client_stream(io_context, client_ctx);
+    wintls::stream<test_stream> server_stream(io_context, server_ctx);
 
     client_stream.next_layer().connect(server_stream.next_layer());
 
     auto client_error = err_help::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
+    client_stream.async_handshake(wintls::handshake_type::client,
                                   [&client_error](const error_code& ec) {
                                     client_error = ec;
                                   });
 
     auto server_error = err_help::make_error_code(errc::not_supported);
-    server_stream.async_handshake(boost::wintls::handshake_type::server,
+    server_stream.async_handshake(wintls::handshake_type::server,
                                   [&server_error](const error_code& ec) {
                                     server_error = ec;
                                   });
@@ -547,9 +545,9 @@ TEST_CASE("client certificates") {
 }
 
 TEST_CASE("failing handshakes") {
-  boost::wintls::context client_ctx(boost::wintls::method::system_default);
+  wintls::context client_ctx(wintls::method::system_default);
   net::io_context io_context;
-  boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+  wintls::stream<test_stream> client_stream(io_context, client_ctx);
   test_stream server_stream(io_context);
 
   client_stream.next_layer().connect(server_stream);
@@ -558,7 +556,7 @@ TEST_CASE("failing handshakes") {
     WINTLS_TEST_ERROR_NAMESPACE_ALIAS();
 
     auto error = err_help::make_error_code(errc::not_supported);
-    client_stream.async_handshake(boost::wintls::handshake_type::client,
+    client_stream.async_handshake(wintls::handshake_type::client,
                                   [&error](const error_code& ec) {
                                     error = ec;
                                   });
@@ -581,29 +579,29 @@ TEST_CASE("failing handshakes") {
 }
 
 TEST_CASE("ssl/tls versions") {
-  const auto value = GENERATE(values<std::pair<boost::wintls::method, tls_version>>({
-        { boost::wintls::method::tlsv1, tls_version::tls_1_0 },
-        { boost::wintls::method::tlsv1_client, tls_version::tls_1_0 },
-        { boost::wintls::method::tlsv11, tls_version::tls_1_1 },
-        { boost::wintls::method::tlsv11_client, tls_version::tls_1_1 },
-        { boost::wintls::method::tlsv12, tls_version::tls_1_2 },
-        { boost::wintls::method::tlsv12_client, tls_version::tls_1_2 },
-        { boost::wintls::method::tlsv13, tls_version::tls_1_3 },
-        { boost::wintls::method::tlsv13_client, tls_version::tls_1_3 }
+  const auto value = GENERATE(values<std::pair<wintls::method, tls_version>>({
+        { wintls::method::tlsv1, tls_version::tls_1_0 },
+        { wintls::method::tlsv1_client, tls_version::tls_1_0 },
+        { wintls::method::tlsv11, tls_version::tls_1_1 },
+        { wintls::method::tlsv11_client, tls_version::tls_1_1 },
+        { wintls::method::tlsv12, tls_version::tls_1_2 },
+        { wintls::method::tlsv12_client, tls_version::tls_1_2 },
+        { wintls::method::tlsv13, tls_version::tls_1_3 },
+        { wintls::method::tlsv13_client, tls_version::tls_1_3 }
       })
     );
 
   const auto method = value.first;
   const auto version = value.second;
 
-  boost::wintls::context client_ctx(method);
+  wintls::context client_ctx(method);
   net::io_context io_context;
-  boost::wintls::stream<test_stream> client_stream(io_context, client_ctx);
+  wintls::stream<test_stream> client_stream(io_context, client_ctx);
   test_stream server_stream(io_context);
 
   client_stream.next_layer().connect(server_stream);
 
-  client_stream.async_handshake(boost::wintls::handshake_type::client,
+  client_stream.async_handshake(wintls::handshake_type::client,
                                 [method, &io_context](const error_code& ec) {
                                   if (ec.value() == SEC_E_ALGORITHM_MISMATCH) {
                                     WARN("Protocol not supported: " << method);

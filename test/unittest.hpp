@@ -4,10 +4,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef BOOST_WINTLS_TEST_UNITTEST_HPP
-#define BOOST_WINTLS_TEST_UNITTEST_HPP
+#ifndef WINTLS_TEST_UNITTEST_HPP
+#define WINTLS_TEST_UNITTEST_HPP
 
-#include <boost/wintls/detail/config.hpp>
+#include <wintls/detail/config.hpp>
 
 #include "test_stream/stream.hpp"
 
@@ -43,12 +43,12 @@ inline std::vector<unsigned char> bytes_from_file(const std::string& path) {
   return {std::istreambuf_iterator<char>{ifs}, {}};
 }
 
-namespace net = boost::wintls::net;
+namespace net = wintls::net;
 #ifdef WINTLS_USE_STANDALONE_ASIO
 namespace asio_ssl = asio::ssl;
 #else // WINTLS_USE_STANDALONE_ASIO
 namespace asio_ssl = boost::asio::ssl;
 #endif // !WINTLS_USE_STANDALONE_ASIO
-using test_stream = boost::wintls::test::stream;
+using test_stream = wintls::test::stream;
 
-#endif // BOOST_WINTLS_TEST_UNITTEST_HPP
+#endif // WINTLS_TEST_UNITTEST_HPP

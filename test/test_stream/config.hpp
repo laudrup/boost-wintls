@@ -1,5 +1,5 @@
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_CONFIG_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_CONFIG_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_CONFIG_HPP
+#define WINTLS_TEST_TEST_STREAM_CONFIG_HPP
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <system_error>
@@ -25,4 +25,4 @@ using error_category = boost::system::error_category;
 using error_condition = boost::system::error_condition;
 #endif // !WINTLS_USE_STANDALONE_ASIO
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_CONFIG_HPP
+#endif // WINTLS_TEST_TEST_STREAM_CONFIG_HPP

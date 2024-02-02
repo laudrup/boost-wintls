@@ -9,9 +9,9 @@
 #include "ocsp_responder.hpp"
 #include "unittest.hpp"
 
-#include <boost/wintls/certificate.hpp>
-#include <boost/wintls/error.hpp>
-#include <boost/wintls/detail/context_certificates.hpp>
+#include <wintls/certificate.hpp>
+#include <wintls/error.hpp>
+#include <wintls/detail/context_certificates.hpp>
 
 #include <chrono>
 #include <cstdint>
@@ -50,30 +50,30 @@ bool container_exists(const std::string& name) {
 // Add a certificate from the PEM formatted string cert_str to the given store.
 // If get_handle is true, a handle to the certificate in the store is returned.
 // Otherwise, the certificate will be owned by the store and nullptr is returned.
-boost::wintls::cert_context_ptr add_cert_str_to_store(HCERTSTORE store,
-                                                      const net::const_buffer& cert_str,
-                                                      bool get_handle) {
+wintls::cert_context_ptr add_cert_str_to_store(HCERTSTORE store,
+                                               const net::const_buffer& cert_str,
+                                               bool get_handle) {
   PCCERT_CONTEXT cert_in_store = nullptr;
-  const auto cert_data = boost::wintls::detail::crypt_string_to_binary(cert_str);
+  const auto cert_data = wintls::detail::crypt_string_to_binary(cert_str);
   if (!CertAddEncodedCertificateToStore(store,
                                         X509_ASN_ENCODING,
                                         cert_data.data(),
                                         static_cast<DWORD>(cert_data.size()),
                                         CERT_STORE_ADD_ALWAYS,
                                         get_handle ? &cert_in_store : nullptr)) {
-    boost::wintls::detail::throw_last_error("CertAddEncodedCertificateToStore");
+    wintls::detail::throw_last_error("CertAddEncodedCertificateToStore");
   }
   if (get_handle) {
-    return boost::wintls::cert_context_ptr{cert_in_store};
+    return wintls::cert_context_ptr{cert_in_store};
   }
-  return boost::wintls::cert_context_ptr{};
+  return wintls::cert_context_ptr{};
 }
 
 // Load a PEM formatted certificate chain from the given file.
 // Assumes that the first certificate in the file is the leaf certificate
 // and returns a context for this certificate which internally holds a store
 // containing all remaining certificates from the file.
-boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
+wintls::cert_context_ptr load_chain_file(const std::string& path) {
   std::ifstream ifs(path);
   if (ifs.fail()) {
     throw std::runtime_error("Failed to open file " + path);
@@ -90,7 +90,7 @@ boost::wintls::cert_context_ptr load_chain_file(const std::string& path) {
   }
   // Open a temporary store for the chain.
   // Use CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, so the context of the leaf certificate can take ownership.
-  const auto chain_store = boost::wintls::detail::cert_store_ptr{
+  const auto chain_store = wintls::detail::cert_store_ptr{
       CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, nullptr)};
   auto leaf_ctx = add_cert_str_to_store(chain_store.get(),
                                         net::buffer(&str[cert_begin], cert_end + end_cert_str_size - cert_begin),
@@ -119,10 +119,10 @@ struct crl_ctx_deleter {
 using crl_ctx_ptr = std::unique_ptr<const CRL_CONTEXT, crl_ctx_deleter>;
 
 crl_ctx_ptr x509_to_crl_context(const net::const_buffer& x509) {
-  const auto data = boost::wintls::detail::crypt_string_to_binary(x509);
+  const auto data = wintls::detail::crypt_string_to_binary(x509);
   const auto crl = CertCreateCRLContext(X509_ASN_ENCODING, data.data(), static_cast<DWORD>(data.size()));
   if (!crl) {
-    boost::wintls::detail::throw_last_error("CertCreateCRLContext");
+    wintls::detail::throw_last_error("CertCreateCRLContext");
   }
   return crl_ctx_ptr{crl};
 }
@@ -132,48 +132,48 @@ crl_ctx_ptr crl_from_file(const std::string& path) {
   return x509_to_crl_context(net::buffer(crl_bytes));
 }
 
-boost::wintls::cert_context_ptr cert_from_file(const std::string& path) {
+wintls::cert_context_ptr cert_from_file(const std::string& path) {
   const auto cert_bytes = bytes_from_file(path);
-  return boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem);
+  return wintls::x509_to_cert_context(net::buffer(cert_bytes), wintls::file_format::pem);
 }
 }
 
 TEST_CASE("certificate conversion") {
   SECTION("valid cert bytes") {
-    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
+    const auto cert = wintls::x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
     CHECK(get_cert_name(cert.get()) == "localhost");
   }
 
   SECTION("invalid cert bytes") {
     const std::vector<char> cert_bytes;
-    CHECK_THROWS(boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem));
+    CHECK_THROWS(wintls::x509_to_cert_context(net::buffer(cert_bytes), wintls::file_format::pem));
     error_code error = {};
-    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(cert_bytes), boost::wintls::file_format::pem, error);
+    const auto cert = wintls::x509_to_cert_context(net::buffer(cert_bytes), wintls::file_format::pem, error);
     CHECK(error);
     CHECK_FALSE(cert);
   }
 }
 
 TEST_CASE("import private key") {
-  const std::string name{"boost::wintls crypto test container"};
+  const std::string name{"wintls crypto test container"};
   REQUIRE_FALSE(container_exists(name));
 
-  boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, name);
+  wintls::import_private_key(net::buffer(test_key), wintls::file_format::pem, name);
   CHECK(container_exists(name));
 
   error_code ec;
-  boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, name, ec);
+  wintls::import_private_key(net::buffer(test_key), wintls::file_format::pem, name, ec);
   CHECK(ec.value() == NTE_EXISTS);
 
-  boost::wintls::delete_private_key(name);
+  wintls::delete_private_key(name);
   CHECK_FALSE(container_exists(name));
 
-  boost::wintls::delete_private_key(name, ec);
+  wintls::delete_private_key(name, ec);
   CHECK(ec.value() == NTE_BAD_KEYSET);
 }
 
 TEST_CASE("verify certificate host name") {
-  boost::wintls::detail::context_certificates ctx_certs;
+  wintls::detail::context_certificates ctx_certs;
   ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
 
   const auto cert = load_chain_file(TEST_CERTIFICATES_PATH "leaf_chain.pem");
@@ -190,8 +190,8 @@ TEST_CASE("verify certificate host name") {
 
 TEST_CASE("check certificate revocation") {
   SECTION("single self signed certificate") {
-    const auto cert = boost::wintls::x509_to_cert_context(net::buffer(test_certificate), boost::wintls::file_format::pem);
-    boost::wintls::detail::context_certificates ctx_certs;
+    const auto cert = wintls::x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
+    wintls::detail::context_certificates ctx_certs;
     ctx_certs.add_certificate_authority(cert.get());
     // It appears that there is no revocation check done in this case,
     // otherwise this should fail with CRYPT_E_NO_REVOCATION_CHECK
@@ -203,7 +203,7 @@ TEST_CASE("check certificate revocation") {
   }
 
   SECTION("certificate chain with CRLs") {
-    boost::wintls::detail::context_certificates ctx_certs;
+    wintls::detail::context_certificates ctx_certs;
     ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
 
     const auto cert = load_chain_file(TEST_CERTIFICATES_PATH "leaf_chain.pem");
@@ -226,7 +226,7 @@ TEST_CASE("check certificate revocation") {
 // Therefore it is marked as integration test and not run by default.
 TEST_CASE("check certificate revocation (integration test)", "[.integration]") {
   SECTION("certificate chain with OCSP") {
-    boost::wintls::detail::context_certificates ctx_certs;
+    wintls::detail::context_certificates ctx_certs;
     ctx_certs.add_certificate_authority(cert_from_file(TEST_CERTIFICATES_PATH "ca_root.crt").get());
 
     // fail case: OCSP responder is not running

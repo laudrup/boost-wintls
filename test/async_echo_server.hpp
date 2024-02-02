@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
-#define BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
+#ifndef WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
+#define WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
 
 #include "unittest.hpp"
 
@@ -58,4 +58,4 @@ public:
   net::streambuf recv_buffer_;
 };
 
-#endif // BOOST_WINTLS_TEST_ASYNC_ECHO_SERVER_HPP
+#endif // WINTLS_TEST_ASYNC_ECHO_SERVER_HPP

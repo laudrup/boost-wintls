@@ -6,9 +6,9 @@ include(VersionFromGit)
 
 version_from_git()
 
-project(boost-wintls
+project(wintls
   VERSION ${VERSION}
-  DESCRIPTION "Native Windows TLS stream for Boost.Asio"
+  DESCRIPTION "Native Windows TLS stream for Asio"
   HOMEPAGE_URL "https://wintls.dev/"
   LANGUAGES CXX
 )

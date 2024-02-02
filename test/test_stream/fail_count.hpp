@@ -7,14 +7,13 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_FAIL_COUNT_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_FAIL_COUNT_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_FAIL_COUNT_HPP
+#define WINTLS_TEST_TEST_STREAM_FAIL_COUNT_HPP
 
 #include "config.hpp"
 #include "error.hpp"
 #include <cstdlib>
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -61,8 +60,7 @@ public:
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
 #include "impl/fail_count.ipp"
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_FAIL_COUNT_HPP
+#endif // WINTLS_TEST_TEST_STREAM_FAIL_COUNT_HPP

@@ -3,13 +3,13 @@ Functions
 
 x509_to_cert_context
 --------------------
-.. doxygenfunction:: boost::wintls::x509_to_cert_context(const net::const_buffer &x509, file_format format)
-.. doxygenfunction:: boost::wintls::x509_to_cert_context(const net::const_buffer &x509, file_format format, boost::system::error_code& ec)
+.. doxygenfunction:: wintls::x509_to_cert_context(const net::const_buffer &x509, file_format format)
+.. doxygenfunction:: wintls::x509_to_cert_context(const net::const_buffer &x509, file_format format, boost::system::error_code& ec)
 
 import_private_key
 ------------------
-.. doxygenfunction:: boost::wintls::import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name)
-.. doxygenfunction:: boost::wintls::import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name, boost::system::error_code& ec)
+.. doxygenfunction:: wintls::import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name)
+.. doxygenfunction:: wintls::import_private_key(const net::const_buffer& private_key, file_format format, const std::string& name, boost::system::error_code& ec)
 
 delete_private_key
 ------------------

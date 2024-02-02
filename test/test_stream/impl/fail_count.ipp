@@ -7,10 +7,9 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_FAIL_COUNT_IPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_FAIL_COUNT_IPP
+#ifndef WINTLS_TEST_TEST_STREAM_IMPL_FAIL_COUNT_IPP
+#define WINTLS_TEST_TEST_STREAM_IMPL_FAIL_COUNT_IPP
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -50,6 +49,5 @@ fail(error_code& ec)
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_FAIL_COUNT_IPP
+#endif // WINTLS_TEST_TEST_STREAM_IMPL_FAIL_COUNT_IPP

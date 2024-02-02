@@ -4,7 +4,7 @@
 #include "certificate.hpp"
 #include "unittest.hpp"
 
-#include <boost/wintls/certificate.hpp>
+#include <wintls/certificate.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
   SetThreadUILanguage(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT));
 
   error_code ec;
-  boost::wintls::delete_private_key(test_key_name, ec);
-  boost::wintls::import_private_key(net::buffer(test_key), boost::wintls::file_format::pem, test_key_name, ec);
+  wintls::delete_private_key(test_key_name, ec);
+  wintls::import_private_key(net::buffer(test_key), wintls::file_format::pem, test_key_name, ec);
   if (ec) {
     std::cerr << "Unable to import private test key: " << ec.message() << "\n";
     return EXIT_FAILURE;
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
   int result = Catch::Session().run(argc, argv);
 
-  boost::wintls::delete_private_key(test_key_name, ec);
+  wintls::delete_private_key(test_key_name, ec);
   if (ec) {
     std::cerr << "Unable to delete private test key: " << ec.message() << "\n";
     return EXIT_FAILURE;

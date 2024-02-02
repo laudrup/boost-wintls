@@ -14,8 +14,8 @@
 #include "async_echo_client.hpp"
 #include "async_echo_server.hpp"
 
-#include <boost/wintls.hpp>
-#include <boost/wintls/detail/config.hpp>
+#include <wintls.hpp>
+#include <wintls/detail/config.hpp>
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/io_context.hpp>
@@ -41,19 +41,19 @@ TEST_CASE("moved stream") {
   net::io_context ioc;
 
   wintls_server_context server_ctx;
-  boost::wintls::stream<test_stream> moved_server_stream(ioc, server_ctx);
-  boost::wintls::stream<test_stream> server_stream(std::move(moved_server_stream));
+  wintls::stream<test_stream> moved_server_stream(ioc, server_ctx);
+  wintls::stream<test_stream> server_stream(std::move(moved_server_stream));
 
   wintls_client_context client_ctx;
-  boost::wintls::stream<test_stream> moved_client_stream(ioc, client_ctx);
-  boost::wintls::stream<test_stream> client_stream(std::move(moved_client_stream));
+  wintls::stream<test_stream> moved_client_stream(ioc, client_ctx);
+  wintls::stream<test_stream> client_stream(std::move(moved_client_stream));
 
   client_stream.next_layer().connect(server_stream.next_layer());
 
   error_code client_ec{};
   error_code server_ec{};
 
-  server_stream.async_handshake(boost::wintls::handshake_type::server,
+  server_stream.async_handshake(wintls::handshake_type::server,
                                 [&server_ec, &server_stream](const error_code& ec) {
                                   server_ec = ec;
                                   if (ec) {
@@ -61,7 +61,7 @@ TEST_CASE("moved stream") {
                                   }
                                 });
 
-  client_stream.async_handshake(boost::wintls::handshake_type::client,
+  client_stream.async_handshake(wintls::handshake_type::client,
                                 [&client_ec, &client_stream](const error_code& ec) {
                                   client_ec = ec;
                                   if (ec) {
@@ -74,20 +74,20 @@ TEST_CASE("moved stream") {
 }
 
 TEST_CASE("handshake not done") {
-  boost::wintls::context ctx{boost::wintls::method::system_default};
+  wintls::context ctx{wintls::method::system_default};
   net::io_context ioc;
   std::array<char, 4> buf{};
 
-  boost::wintls::stream<net::ip::tcp::socket> stream(ioc, ctx);
+  wintls::stream<net::ip::tcp::socket> stream(ioc, ctx);
   error_code ec{};
 
   SECTION("write fails") {
-    boost::wintls::net::write(stream, boost::wintls::net::buffer(buf), ec);
+    wintls::net::write(stream, wintls::net::buffer(buf), ec);
     CHECK(ec);
   }
 
   SECTION("async_write fails") {
-    boost::wintls::net::async_write(stream, boost::wintls::net::buffer(buf),
+    wintls::net::async_write(stream, wintls::net::buffer(buf),
                                     [&ec](const error_code& error, std::size_t) {
                                       ec = error;
                                     });
@@ -96,12 +96,12 @@ TEST_CASE("handshake not done") {
   }
 
   SECTION("read fails") {
-    boost::wintls::net::read(stream, boost::wintls::net::buffer(buf), ec);
+    wintls::net::read(stream, wintls::net::buffer(buf), ec);
     CHECK(ec);
   }
 
   SECTION("async_read fails") {
-    boost::wintls::net::async_read(stream, boost::wintls::net::buffer(buf),
+    wintls::net::async_read(stream, wintls::net::buffer(buf),
                                    [&ec](const error_code& error, std::size_t) {
                                       ec = error;
                                     });
@@ -117,7 +117,7 @@ TEST_CASE("underlying stream errors") {
     error_code client_ec{};
 
     SECTION("handshake error") {
-      boost::wintls::test::fail_count fc(4);
+      wintls::test::fail_count fc(4);
       wintls_client_stream client(io_context, fc);
 
       client.stream.next_layer().connect(server.stream.next_layer());
@@ -129,7 +129,7 @@ TEST_CASE("underlying stream errors") {
     }
 
     SECTION("failing read/write") {
-      boost::wintls::test::fail_count fc(5);
+      wintls::test::fail_count fc(5);
       wintls_client_stream client(io_context, fc);
 
       client.stream.next_layer().connect(server.stream.next_layer());
@@ -160,7 +160,7 @@ TEST_CASE("underlying stream errors") {
     test_server server(io_context);
 
     SECTION("handshake error") {
-      boost::wintls::test::fail_count fc(4);
+      wintls::test::fail_count fc(4);
       wintls_client_stream client(io_context, fc);
       client.stream.next_layer().connect(server.stream.next_layer());
       server.run();
@@ -173,7 +173,7 @@ TEST_CASE("underlying stream errors") {
     }
 
     SECTION("failing read/write") {
-      boost::wintls::test::fail_count fc(5);
+      wintls::test::fail_count fc(5);
       wintls_client_stream client(io_context, fc);
       client.stream.next_layer().connect(server.stream.next_layer());
       net::streambuf buffer;

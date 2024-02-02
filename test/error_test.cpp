@@ -7,13 +7,13 @@
 
 #include "unittest.hpp"
 
-#include <boost/wintls/error.hpp>
+#include <wintls/error.hpp>
 
 extern "C" __declspec(dllimport) void __stdcall SetLastError(unsigned long);
 
 TEST_CASE("SECURITY_STATUS error code") {
   auto sc = static_cast<SECURITY_STATUS>(0x80090326);
-  auto ec = boost::wintls::error::make_error_code(sc);
+  auto ec = wintls::error::make_error_code(sc);
   CHECK(ec.value() == sc);
   // Boost will trim line breaks as well as periods from the original error message.
   std::string msg = "The message received was unexpected or badly formatted";
@@ -26,7 +26,7 @@ TEST_CASE("throw last error") {
 
   ::SetLastError(0x00000053);
   try {
-    boost::wintls::detail::throw_last_error("YetAnotherUglyWindowsAPIFunctionEx3");
+    wintls::detail::throw_last_error("YetAnotherUglyWindowsAPIFunctionEx3");
   } catch (const system_error& ex) {
     error = ex;
   }

@@ -7,7 +7,7 @@
 
 #include "certificate.hpp"
 
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio.hpp>
@@ -29,7 +29,7 @@ using net::ip::tcp;
 
 class session : public std::enable_shared_from_this<session> {
 public:
-  session(boost::wintls::stream<tcp::socket> stream)
+  session(wintls::stream<tcp::socket> stream)
     : stream_(std::move(stream)) {
   }
 
@@ -40,8 +40,8 @@ public:
 private:
   void do_handshake() {
     auto self(shared_from_this());
-    stream_.async_handshake(boost::wintls::handshake_type::server,
-                            [this, self](const boost::wintls::error_code& ec) {
+    stream_.async_handshake(wintls::handshake_type::server,
+                            [this, self](const wintls::error_code& ec) {
       if (!ec) {
         do_read();
       } else {
@@ -53,7 +53,7 @@ private:
   void do_read() {
     auto self(shared_from_this());
     stream_.async_read_some(net::buffer(data_),
-                            [this, self](const boost::wintls::error_code& ec, std::size_t length) {
+                            [this, self](const wintls::error_code& ec, std::size_t length) {
       if (!ec) {
         do_write(length);
       } else {
@@ -67,7 +67,7 @@ private:
   void do_write(std::size_t length) {
     auto self(shared_from_this());
     net::async_write(stream_, net::buffer(data_, length),
-                             [this, self](const boost::wintls::error_code& ec, std::size_t /*length*/) {
+                             [this, self](const wintls::error_code& ec, std::size_t /*length*/) {
       if (!ec) {
         do_read();
       } else {
@@ -76,7 +76,7 @@ private:
     });
   }
 
-  boost::wintls::stream<tcp::socket> stream_;
+  wintls::stream<tcp::socket> stream_;
   char data_[1024];
 };
 
@@ -84,28 +84,28 @@ class server {
 public:
   server(net::io_context& io_context, unsigned short port)
     : acceptor_(io_context, tcp::endpoint(tcp::v4(), port))
-    , context_(boost::wintls::method::system_default)
+    , context_(wintls::method::system_default)
     , private_key_name_("wintls-echo-server-example") {
 
     // Convert X509 PEM bytes to Windows CERT_CONTEXT
-    auto certificate = boost::wintls::x509_to_cert_context(net::buffer(x509_certificate),
-                                                           boost::wintls::file_format::pem);
+    auto certificate = wintls::x509_to_cert_context(net::buffer(x509_certificate),
+                                                    wintls::file_format::pem);
 
     // Import RSA private key into the default cryptographic provider
-    boost::wintls::error_code ec;
-    boost::wintls::import_private_key(net::buffer(rsa_key),
-                                      boost::wintls::file_format::pem,
-                                      private_key_name_,
-                                      ec);
+    wintls::error_code ec;
+    wintls::import_private_key(net::buffer(rsa_key),
+                               wintls::file_format::pem,
+                               private_key_name_,
+                               ec);
 
     // If the key already exists, assume it's the one already imported
     // and ignore that error
     if (ec && ec.value() != NTE_EXISTS) {
-      throw boost::wintls::system_error(ec);
+      throw wintls::system_error(ec);
     }
 
     // Use the imported private key for the certificate
-    boost::wintls::assign_private_key(certificate.get(), private_key_name_);
+    wintls::assign_private_key(certificate.get(), private_key_name_);
 
     // Use the certificate for encrypting TLS messages
     context_.use_certificate(certificate.get());
@@ -117,15 +117,15 @@ public:
     // Remove the imported private key. Most real applications
     // probably only want to import the key once and most likely not
     // in the server code. This is just for demonstration purposesq.
-    boost::wintls::error_code ec;
-    boost::wintls::delete_private_key(private_key_name_, ec);
+    wintls::error_code ec;
+    wintls::delete_private_key(private_key_name_, ec);
   }
 
 private:
   void do_accept() {
-    acceptor_.async_accept([this](const boost::wintls::error_code& ec, tcp::socket socket) {
+    acceptor_.async_accept([this](const wintls::error_code& ec, tcp::socket socket) {
       if (!ec) {
-        std::make_shared<session>(boost::wintls::stream<tcp::socket>(std::move(socket), context_))->start();
+        std::make_shared<session>(wintls::stream<tcp::socket>(std::move(socket), context_))->start();
       } else {
         std::cerr << "Read failed: " << ec.message() << "\n";
       }
@@ -135,7 +135,7 @@ private:
   }
 
   tcp::acceptor acceptor_;
-  boost::wintls::context context_;
+  wintls::context context_;
   std::string private_key_name_;
 };
 

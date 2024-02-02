@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_STREAM_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_STREAM_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_STREAM_HPP
+#define WINTLS_TEST_TEST_STREAM_STREAM_HPP
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <system_error>
@@ -53,8 +53,8 @@ using error_code = std::error_code;
 namespace asio {
 namespace ssl {
 template<typename> class stream;
-} // ssl
-} // asio
+} // namespace ssl
+} // namespace asio
 #else // WINTLS_USE_STANDALONE_ASIO
 namespace net = boost::asio;
 using system_error = boost::system::system_error;
@@ -64,12 +64,11 @@ namespace boost {
 namespace asio {
 namespace ssl {
 template<typename> class stream;
-} // ssl
-} // asio
-} // boost
+} // namespace ssl
+} // namespace asio
+} // namespace boost
 #endif // !WINTLS_USE_STANDALONE_ASIO
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -626,7 +625,6 @@ connect(stream& to, Arg1&& arg1, ArgN&&... argn);
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
 #include "impl/stream.hpp"
 #include "impl/stream.ipp"

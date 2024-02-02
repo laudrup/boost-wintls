@@ -15,7 +15,7 @@
 #include "wintls_server_stream.hpp"
 #include "unittest.hpp"
 
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 
 #include <cstdint>
 #include <string>

@@ -7,7 +7,7 @@
 
 #include "certificate.hpp"
 
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio.hpp>
@@ -33,7 +33,7 @@ constexpr std::size_t max_length = 1024;
 class client {
 public:
   client(net::io_context& io_context,
-         boost::wintls::context& context,
+         wintls::context& context,
          const tcp::resolver::results_type& endpoints)
       : stream_(io_context, context) {
     connect(endpoints);
@@ -42,7 +42,7 @@ public:
 private:
   void connect(const tcp::resolver::results_type& endpoints) {
     net::async_connect(
-        stream_.next_layer(), endpoints, [this](const boost::wintls::error_code& error,
+        stream_.next_layer(), endpoints, [this](const wintls::error_code& error,
                                                 const tcp::endpoint& /*endpoint*/) {
           if (!error) {
             handshake();
@@ -53,8 +53,8 @@ private:
   }
 
   void handshake() {
-    stream_.async_handshake(boost::wintls::handshake_type::client,
-                            [this](const boost::wintls::error_code& error) {
+    stream_.async_handshake(wintls::handshake_type::client,
+                            [this](const wintls::error_code& error) {
       if (!error) {
         send_request();
       } else {
@@ -70,7 +70,7 @@ private:
 
     net::async_write(
         stream_, net::buffer(request_, request_length),
-        [this](const boost::wintls::error_code& error, std::size_t length) {
+        [this](const wintls::error_code& error, std::size_t length) {
           if (!error) {
             receive_response(length);
           } else {
@@ -82,12 +82,12 @@ private:
   void receive_response(std::size_t size) {
     net::async_read(
         stream_, net::buffer(reply_, size),
-        [this](const boost::wintls::error_code& ec, std::size_t length) {
+        [this](const wintls::error_code& ec, std::size_t length) {
           if (!ec) {
             std::cout << "Reply: ";
             std::cout.write(reply_, static_cast<std::streamsize>(length));
             std::cout << "\n";
-            stream_.async_shutdown([](const boost::wintls::error_code& error) {
+            stream_.async_shutdown([](const wintls::error_code& error) {
               if(error) {
                 std::cerr << "Shutdown failed: " << error.message() << "\n";
               }
@@ -98,7 +98,7 @@ private:
         });
   }
 
-  boost::wintls::stream<tcp::socket> stream_;
+  wintls::stream<tcp::socket> stream_;
   char request_[max_length];
   char reply_[max_length];
 };
@@ -115,11 +115,11 @@ int main(int argc, char* argv[]) {
     tcp::resolver resolver(io_context);
     auto endpoints = resolver.resolve(argv[1], argv[2]);
 
-    boost::wintls::context ctx(boost::wintls::method::system_default);
+    wintls::context ctx(wintls::method::system_default);
 
     // Convert X509 PEM bytes to Windows CERT_CONTEXT
-    auto certificate = boost::wintls::x509_to_cert_context(net::buffer(x509_certificate),
-                                                           boost::wintls::file_format::pem);
+    auto certificate = wintls::x509_to_cert_context(net::buffer(x509_certificate),
+                                                    wintls::file_format::pem);
 
     // Add certifcate as a trusted certifcate authority and verify it on handshake
     ctx.add_certificate_authority(certificate.get());

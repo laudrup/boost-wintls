@@ -7,12 +7,12 @@
 
 #include "unittest.hpp"
 
-#include <boost/wintls/detail/sspi_buffer_sequence.hpp>
+#include <wintls/detail/sspi_buffer_sequence.hpp>
 
 #include <iterator>
 
-using boost::wintls::detail::sspi_buffer;
-using boost::wintls::detail::sspi_buffer_sequence;
+using wintls::detail::sspi_buffer;
+using wintls::detail::sspi_buffer_sequence;
 
 class test_buffer_sequence : public sspi_buffer_sequence<4> {
 public:
@@ -26,10 +26,10 @@ public:
   }
 };
 
-static_assert(boost::wintls::net::is_const_buffer_sequence<test_buffer_sequence>::value,
+static_assert(wintls::net::is_const_buffer_sequence<test_buffer_sequence>::value,
               "ConstBufferSequence type requirements not met");
 
-static_assert(boost::wintls::net::is_mutable_buffer_sequence<test_buffer_sequence>::value,
+static_assert(wintls::net::is_mutable_buffer_sequence<test_buffer_sequence>::value,
               "MutableBufferSequence type requirements not met");
 
 TEST_CASE("sspi buffer sequence") {

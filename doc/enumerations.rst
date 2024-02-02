@@ -3,12 +3,12 @@ Enumerations
 
 handshake_type
 --------------
-.. doxygenenum:: boost::wintls::handshake_type
+.. doxygenenum:: wintls::handshake_type
 
 method
 ------
-.. doxygenenum:: boost::wintls::method
+.. doxygenenum:: wintls::method
 
 file_format
 -----------
-.. doxygenenum:: boost::wintls::file_format
+.. doxygenenum:: wintls::file_format

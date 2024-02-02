@@ -3,10 +3,10 @@ Classes
 
 context
 -------
-.. doxygenclass:: boost::wintls::context
+.. doxygenclass:: wintls::context
    :members:
 
 stream
 ------
-.. doxygenclass:: boost::wintls::stream
+.. doxygenclass:: wintls::stream
    :members:

@@ -1,9 +1,9 @@
-<img width="800" height = "80" alt = "Boost.Wintls Logo" src="https://raw.githubusercontent.com/laudrup/boost-wintls/master/doc/logo.jpg">
+<img width="800" height="80" alt="Asio.Wintls Logo" src="https://raw.githubusercontent.com/laudrup/boost-wintls/master/doc/logo.jpg">
 
-# Native Windows TLS stream for Boost.Asio
+# Native Windows TLS stream for Asio
 
 <a href="https://www.stopputin.net/">
-    <img style="display: block; margin-left: 20%; margin-right: auto; width: 7%" alt = "Support Ukraine" src="https://raw.githubusercontent.com/laudrup/boost-wintls/master/doc/support-ukraine.png">
+    <img style="display: block; margin-left: 20%; margin-right: auto; width: 7%;" alt="Support Ukraine" src="https://raw.githubusercontent.com/laudrup/boost-wintls/master/doc/support-ukraine.png">
 </a>
 
 [wintls.dev](https://wintls.dev/)
@@ -25,9 +25,10 @@ Build | Coverage | Coverity Analysis |
 ## Introduction
 
 Implements a TLS stream wrapper for use with
+[Asio](https://think-async.com/Asio/) or
 [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)
 similar to
-[Boost.Asio.SSL](https://www.boost.org/doc/libs/release/doc/html/boost_asio/overview/ssl.html)
+[Asio.SSL](https://www.boost.org/doc/libs/release/doc/html/boost_asio/overview/ssl.html)
 but using native Windows API
 ([SSPI/Schannel](https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview))
 functionality instead of OpenSSL for providing TLS encrypted stream functionality.
@@ -36,13 +37,18 @@ functionality instead of OpenSSL for providing TLS encrypted stream functionalit
 
 As this library uses Windows specific libraries, it is only supported
 on Microsoft Windows although it is intended to be used alongside the
-existing Boost.Asio.SSL implementation.
+existing Asio.SSL implementation.
 
-[Boost](https://www.boost.org) is required. Currently tested with
-Boost 1.80 to 1.83 but most newer versions ought to work.
+Code using this library must target at least
+[Windows 7 (NT 6.1)](https://learn.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers).
 
-A working C++ compiler supporting the C++14 standard is required.
-Currently tested compilers are:
+Either [Asio](https://think-async.com/Asio/) or the [Boost
+libraries](https://www.boost.org) are required. Currently tested with
+Boost 1.80 to 1.83 and Asio 1.28 to 1.29 but at least most newer
+versions ought to work.
+
+A working C++ compiler supporting at least the C++14 standard is
+required.  Currently tested compilers are:
 
 - MSVC for Visual Studio 2022
 - MSVC for Visual Studio 2019
@@ -51,10 +57,10 @@ Currently tested compilers are:
 
 ## Building
 
-Boost.Wintls is header-only. To use it just add the necessary `#include` line
+Asio.Wintls is header-only. To use it just add the necessary `#include` line
 to your source files, like this:
 ```C++
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 ```
 
 CMake may be used to generate a Visual Studio solution for building
@@ -71,21 +77,26 @@ If the provided CMake scripts are not used and you are using the
 MinGW64 compiler the `crypt32`, `secur32`, `ws2_32` and `wsock32`
 libraries needs to be linked with your libraries/executables.
 
+Currently this library expects the Boost libraries to be available
+(i.e. found in the include path). If standalone Asio is to be used
+instead, define `#WINTLS_USE_STANDALONE_ASIO` before including
+`wintls.hpp` and make sure that Asio is found in the include path
+instead.
 
 ## Quickstart
 
-Similar to Boost.Asio.SSL a
-[boost::wintls::context](https://laudrup.github.io/boost-wintls/classes.html#context)
+Similar to Asio.SSL a
+[wintls::context](https://wintls.dev/classes.html#context)
 is required to hold certificates and options to use for the TLS
 stream:
 
 ```C++
     // Set up context to use the systems default TLS methods (e.g. TLS 1.2)
-    boost::wintls::context ctx{boost::wintls::method::system_default};
+    wintls::context ctx{wintls::method::system_default};
 ```
 
 Using that context a
-[boost::wintls::stream](https://laudrup.github.io/boost-wintls/classes.html#stream)
+[wintls::stream](https://wintls.dev/classes.html#stream)
 can be constructed using a
 [boost::asio::io_context](https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/io_context.html)
 specifying the underlying stream type (most often a TCP stream):
@@ -93,7 +104,7 @@ specifying the underlying stream type (most often a TCP stream):
 ```C++
     boost::asio::io_context ioc;
 
-    boost::wintls::stream<boost::asio::ip::tcp::socket> stream(ioc, ctx);
+    wintls::stream<boost::asio::ip::tcp::socket> stream(ioc, ctx);
 ```
 
 Although that is all that is required to construct a stream that fully
@@ -106,18 +117,20 @@ to be performed and most likely, certificates and keys has to be
 handled as well.
 
 For details on how to do that, please see the
-[documentation](https://laudrup.github.io/boost-wintls) and the
-[examples](https://laudrup.github.io/boost-wintls/examples.html)
+[documentation](https://wintls.dev) and the
+[examples](https://wintls.dev/examples.html)
 
 ## Documentation
 
-Documentation is available [here](https://laudrup.github.io/boost-wintls).
+Documentation is available [here](https://wintls.dev/).
 
 ## Contributing
 
 Pull requests, issue reporting etc. are very much welcome.
 
-If you use this library and find it useful, I would love to know. You should also consider donating to one of the funds that help victims of the war in Ukraine:
+If you use this library and find it useful, I would love to know. You
+should also consider donating to one of the funds that help victims of
+the war in Ukraine:
 
 [https://www.stopputin.net/](https://www.stopputin.net/)
 

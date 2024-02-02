@@ -7,12 +7,12 @@
 
 #include "unittest.hpp"
 
-#include <boost/wintls/detail/decrypted_data_buffer.hpp>
+#include <wintls/detail/decrypted_data_buffer.hpp>
 
 #include <string>
 
 TEST_CASE("decrypted data buffer") {
-  boost::wintls::detail::decrypted_data_buffer<25> test_buffer;
+  wintls::detail::decrypted_data_buffer<25> test_buffer;
   CHECK(test_buffer.empty());
 
   std::string input_str{"abc"};

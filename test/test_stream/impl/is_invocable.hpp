@@ -7,13 +7,12 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_IS_INVOCABLE_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_IS_INVOCABLE_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_IMPL_IS_INVOCABLE_HPP
+#define WINTLS_TEST_TEST_STREAM_IMPL_IS_INVOCABLE_HPP
 
 #include <type_traits>
 #include <utility>
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -53,6 +52,5 @@ struct is_invocable<C, R(A...)>
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_IS_INVOCABLE_HPP
+#endif // WINTLS_TEST_TEST_STREAM_IMPL_IS_INVOCABLE_HPP

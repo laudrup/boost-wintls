@@ -10,7 +10,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 
-#include <boost/wintls.hpp>
+#include <wintls.hpp>
 
 #include <cstdlib>
 #include <functional>
@@ -22,7 +22,7 @@
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
 namespace net = boost::asio;      // from <boost/asio.hpp>
-namespace ssl = boost::wintls;    // from <boost/wintls/wintls.hpp>
+namespace ssl = wintls;           // from <wintls/wintls.hpp>
 
 using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 
@@ -82,7 +82,7 @@ public:
       return fail(ec, "connect");
 
     // Perform the SSL handshake
-    stream_.async_handshake(boost::wintls::handshake_type::client, beast::bind_front_handler(&session::on_handshake, shared_from_this()));
+    stream_.async_handshake(wintls::handshake_type::client, beast::bind_front_handler(&session::on_handshake, shared_from_this()));
   }
 
   void on_handshake(beast::error_code ec) {
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
   net::io_context ioc;
 
   // The SSL context is required, and holds certificates
-  ssl::context ctx{boost::wintls::method::system_default};
+  ssl::context ctx{wintls::method::system_default};
 
   // Use the operating systems default certificates for verification
   ctx.use_default_certificates(true);

@@ -7,10 +7,9 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_ROLE_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_ROLE_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_ROLE_HPP
+#define WINTLS_TEST_TEST_STREAM_ROLE_HPP
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -45,6 +44,5 @@ enum class role_type
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_ROLE_HPP
+#endif // WINTLS_TEST_TEST_STREAM_ROLE_HPP

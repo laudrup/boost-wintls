@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
+#define WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
 
 #include "empty_value.hpp"
 #include "allocator.hpp"
@@ -17,7 +17,6 @@
 #include <memory>
 #include <type_traits>
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -56,22 +55,22 @@ namespace test {
 */
 template<class Allocator>
 class basic_flat_buffer
-    : private boost::wintls::test::empty_value<
-        typename boost::wintls::test::allocator_traits<Allocator>::
+    : private wintls::test::empty_value<
+        typename wintls::test::allocator_traits<Allocator>::
             template rebind_alloc<char>>
 {
     template<class OtherAlloc>
     friend class basic_flat_buffer;
 
     using base_alloc_type = typename
-        boost::wintls::test::allocator_traits<Allocator>::
+        wintls::test::allocator_traits<Allocator>::
             template rebind_alloc<char>;
 
     static bool constexpr default_nothrow =
         std::is_nothrow_default_constructible<Allocator>::value;
 
     using alloc_traits =
-        boost::wintls::test::allocator_traits<base_alloc_type>;
+        wintls::test::allocator_traits<base_alloc_type>;
 
     using pocma = typename
         alloc_traits::propagate_on_container_move_assignment;
@@ -525,8 +524,7 @@ using flat_buffer =
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
 #include "impl/flat_buffer.hpp"
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP
+#endif // WINTLS_TEST_TEST_STREAM_FLAT_BUFFER_HPP

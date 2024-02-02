@@ -7,14 +7,13 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_STREAM_IPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_STREAM_IPP
+#ifndef WINTLS_TEST_TEST_STREAM_IMPL_STREAM_IPP
+#define WINTLS_TEST_TEST_STREAM_IMPL_STREAM_IPP
 
 #include <memory>
 #include <stdexcept>
 #include <vector>
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -368,6 +367,5 @@ connect(stream& s1, stream& s2)
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_STREAM_IPP
+#endif // WINTLS_TEST_TEST_STREAM_IMPL_STREAM_IPP

@@ -7,12 +7,11 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_ERROR_IPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_ERROR_IPP
+#ifndef WINTLS_TEST_TEST_STREAM_IMPL_ERROR_IPP
+#define WINTLS_TEST_TEST_STREAM_IMPL_ERROR_IPP
 
 #include "error.hpp"
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -48,15 +47,14 @@ public:
 
 inline
 error_code
-make_error_code(boost::wintls::test::error e) noexcept
+make_error_code(wintls::test::error e) noexcept
 {
-    static boost::wintls::test::error_codes const cat{};
+    static wintls::test::error_codes const cat{};
     return error_code{static_cast<
         std::underlying_type<error>::type>(e), cat};
 }
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_ERROR_IPP
+#endif // WINTLS_TEST_TEST_STREAM_IMPL_ERROR_IPP

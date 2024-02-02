@@ -60,7 +60,7 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::Crypto
   Threads::Threads
   Catch2::Catch2
-  boost-wintls
+  wintls
 )
 
 if(${CMAKE_CXX_STANDARD} LESS 17 AND ENABLE_WINTLS_STANDALONE_ASIO)

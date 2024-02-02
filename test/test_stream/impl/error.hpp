@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_ERROR_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_ERROR_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_IMPL_ERROR_HPP
+#define WINTLS_TEST_TEST_STREAM_IMPL_ERROR_HPP
 
 #include <type_traits>
 
@@ -16,7 +16,7 @@
 namespace std {
 template<>
 struct is_error_code_enum<
-    boost::wintls::test::error>
+    wintls::test::error>
         : std::true_type
 {
 };
@@ -26,7 +26,7 @@ namespace boost {
 namespace system {
 template<>
 struct is_error_code_enum<
-    boost::wintls::test::error>
+    wintls::test::error>
         : std::true_type
 {
 };
@@ -34,7 +34,6 @@ struct is_error_code_enum<
 } // boost
 #endif // !WINTLS_USE_STANDALONE_ASIO
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -44,6 +43,5 @@ make_error_code(error e) noexcept;
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_ERROR_HPP
+#endif // WINTLS_TEST_TEST_STREAM_IMPL_ERROR_HPP

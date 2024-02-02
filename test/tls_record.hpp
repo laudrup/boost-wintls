@@ -4,8 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef BOOST_WINTLS_TEST_TLS_RECORD_HPP
-#define BOOST_WINTLS_TEST_TLS_RECORD_HPP
+#ifndef WINTLS_TEST_TLS_RECORD_HPP
+#define WINTLS_TEST_TLS_RECORD_HPP
 
 #include "unittest.hpp"
 
@@ -134,4 +134,4 @@ struct tls_record {
   message_type message;
 };
 
-#endif // BOOST_WINTLS_TEST_TLS_RECORD_HPP
+#endif // WINTLS_TEST_TLS_RECORD_HPP

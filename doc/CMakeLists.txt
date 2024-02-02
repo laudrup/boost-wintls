@@ -1,7 +1,7 @@
 find_package(Doxygen REQUIRED)
 find_package(Sphinx REQUIRED)
 
-set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/include/boost/wintls/)
+set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/include/wintls/)
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
 set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/index.xml)
 set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
@@ -50,12 +50,12 @@ set(SPHINX_SOURCE_FILES
 add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
 	COMMAND
 		${SPHINX_EXECUTABLE} -b html
-		-D breathe_projects.boost-wintls=${DOXYGEN_OUTPUT_DIR}
+		-D breathe_projects.wintls=${DOXYGEN_OUTPUT_DIR}
     -D version=${PROJECT_VERSION}
 		${SPHINX_SOURCE} ${SPHINX_BUILD}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/static/boost-wintls.css
+    ${CMAKE_CURRENT_SOURCE_DIR}/static/wintls.css
     ${CMAKE_CURRENT_SOURCE_DIR}/templates/layout.html
     ${CMAKE_CURRENT_SOURCE_DIR}/templates/navbar.html
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/toctree_elements.py

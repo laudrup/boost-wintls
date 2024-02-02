@@ -7,8 +7,8 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-#ifndef BOOST_WINTLS_TEST_TEST_STREAM_IMPL_STREAM_HPP
-#define BOOST_WINTLS_TEST_TEST_STREAM_IMPL_STREAM_HPP
+#ifndef WINTLS_TEST_TEST_STREAM_IMPL_STREAM_HPP
+#define WINTLS_TEST_TEST_STREAM_IMPL_STREAM_HPP
 
 #include "service_base.hpp"
 #include "is_invocable.hpp"
@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <vector>
 
-namespace boost {
 namespace wintls {
 namespace test {
 
@@ -164,7 +163,7 @@ struct stream::run_read_op
         // requirements for the handler.
 
         static_assert(
-            boost::wintls::test::is_invocable<ReadHandler,
+            wintls::test::is_invocable<ReadHandler,
                 void(error_code, std::size_t)>::value,
             "ReadHandler type requirements not met");
 
@@ -197,7 +196,7 @@ struct stream::run_write_op
         // that your handler does not meet the documented type
         // requirements for the handler.
         static_assert(
-            boost::wintls::test::is_invocable<WriteHandler,
+            wintls::test::is_invocable<WriteHandler,
                 void(error_code, std::size_t)>::value,
             "WriteHandler type requirements not met");
 
@@ -450,6 +449,5 @@ connect(stream& to, Arg1&& arg1, ArgN&&... argn)
 
 } // namespace test
 } // namespace wintls
-} // namespace boost
 
-#endif // BOOST_WINTLS_TEST_TEST_STREAM_IMPL_STREAM_HPP
+#endif // WINTLS_TEST_TEST_STREAM_IMPL_STREAM_HPP

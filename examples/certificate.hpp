@@ -7,8 +7,8 @@
 
 #include <string>
 
-#ifndef BOOST_WINTLS_EXAMPLES_CERTIFICATE_HPP
-#define BOOST_WINTLS_EXAMPLES_CERTIFICATE_HPP
+#ifndef WINTLS_EXAMPLES_CERTIFICATE_HPP
+#define WINTLS_EXAMPLES_CERTIFICATE_HPP
 
 const std::string x509_certificate =
   "-----BEGIN CERTIFICATE-----\n"
@@ -63,4 +63,4 @@ const std::string rsa_key =
   "hSWgRxNM62fdbmxZ+JrxHCE=\n"
   "-----END PRIVATE KEY-----\n";
 
-#endif // BOOST_WINTLS_EXAMPLES_CERTIFICATE_HPP
+#endif // WINTLS_EXAMPLES_CERTIFICATE_HPP

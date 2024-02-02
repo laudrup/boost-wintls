@@ -30,6 +30,12 @@
 #pragma comment(lib, "secur32")
 #endif // !__MINGW32__
 
+#ifdef _MSC_VER
+#define WINTLS_UNREACHABLE_RETURN(x) __assume(0);
+#else // _MSC_VER
+#define WINTLS_UNREACHABLE_RETURN(x) __builtin_unreachable();
+#endif // !_MSC_VER
+
 namespace boost {
 namespace wintls {
 #ifdef WINTLS_USE_STANDALONE_ASIO

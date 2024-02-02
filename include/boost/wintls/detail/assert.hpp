@@ -20,10 +20,4 @@
 #define WINTLS_VERIFY_MSG(expr, msg) assert((expr) && (msg))
 #endif // !NDEBUG
 
-#ifdef _MSC_VER
-#define WINTLS_UNREACHABLE_RETURN(x) __assume(0);
-#else // _MSC_VER
-#define WINTLS_UNREACHABLE_RETURN(x) __builtin_unreachable();
-#endif // !_MSC_VER
-
 #endif // BOOST_WINTLS_DETAIL_ASSERT_HPP

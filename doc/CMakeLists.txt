@@ -60,6 +60,7 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
     ${CMAKE_CURRENT_SOURCE_DIR}/templates/navbar.html
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/toctree_elements.py
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/remove_inline_specifier.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/logo.jpg
     ${SPHINX_SOURCE_FILES}
 		${DOXYGEN_INDEX_FILE}
 	MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py

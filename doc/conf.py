@@ -14,6 +14,7 @@ extensions = ['sphinx.ext.autosectionlabel',
               'breathe',
               'toctree_elements',
               'remove_inline_specifier',
+              'sphinx_jinja',
               ]
 
 highlight_language = 'c++'
@@ -38,6 +39,16 @@ html_theme_options = {
     'navbar_title': html_title
 }
 
+# Hack to get the version passed from the command line. There ought to
+# be a cleaner way to do this
+version_from_cmdline = [s for s in sys.argv if s.startswith('version=')][0].split('=')[1]
+
 html_last_updated_fmt = ''
+
+jinja_contexts = {
+    'version_uris': {
+        'examples_uri': f'https://github.com/laudrup/boost-wintls/tree/v{version_from_cmdline}/examples',
+    }
+}
 
 breathe_default_project = 'wintls'

@@ -44,7 +44,7 @@ Code using this library must target at least
 
 Either [Asio](https://think-async.com/Asio/) or the [Boost
 libraries](https://www.boost.org) are required. Currently tested with
-Boost 1.80 to 1.83 and Asio 1.28 to 1.29 but at least most newer
+Boost 1.81 to 1.84 and Asio 1.28 to 1.29 but at least most newer
 versions ought to work.
 
 A working C++ compiler supporting at least the C++14 standard is

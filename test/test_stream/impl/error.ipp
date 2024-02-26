@@ -12,6 +12,11 @@
 
 #include "error.hpp"
 
+#ifdef __MINGW32__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#endif
+
 namespace wintls {
 namespace test {
 
@@ -44,6 +49,10 @@ public:
         return error_condition{ev, *this};
     }
 };
+
+#ifdef __MINGW32__
+#pragma GCC diagnostic pop
+#endif
 
 inline
 error_code

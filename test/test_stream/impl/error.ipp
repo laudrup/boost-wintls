@@ -27,7 +27,7 @@ public:
     const char*
     name() const noexcept override
     {
-        return "boost.beast.test";
+        return "wintls.test";
     }
 
     inline

@@ -81,7 +81,7 @@ std::string wchar_to_string(const wchar_t* input) {
     wintls::detail::throw_last_error("WideCharToMultiByte");
   }
 
-  std::string output(size_needed, '\0');
+  std::string output(static_cast<std::size_t>(size_needed), '\0');
   const auto size_written = WideCharToMultiByte(CP_UTF8, 0, input, length, &output[0], size_needed, nullptr, nullptr);
   if (size_written == 0) {
     wintls::detail::throw_last_error("WideCharToMultiByte");

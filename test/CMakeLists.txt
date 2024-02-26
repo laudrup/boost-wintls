@@ -85,4 +85,4 @@ endif()
 
 include(CTest)
 include(Catch)
-catch_discover_tests(unittest TEST_SPEC "*")
+catch_discover_tests(unittest TEST_SPEC " *")

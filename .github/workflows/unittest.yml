@@ -47,7 +47,7 @@ jobs:
             toolset: ""
             build_type: ""
             generator: "MinGW Makefiles"
-            config_args: ""
+            config_args: "-DOPENSSL_ROOT_DIR=\"c:/Program Files/OpenSSL\""
             name_args: ""
 
     steps:

@@ -51,8 +51,13 @@ if(WIN32)
     _WIN32_WINNT=0x0601     # Target Windows 7
   )
 
+  if(WARNINGS_AS_ERRORS)
+    set(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
+    set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
+  endif()
+
   # Based on https://github.com/lefticus/cpp_starter_project
-  set(MSVC_WARNINGS
+  list(APPEND MSVC_WARNINGS
     /W4 # Baseline reasonable warnings
     /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
     /w14263 # 'function': member function does not override any base class virtual member function
@@ -75,12 +80,7 @@ if(WIN32)
     /permissive- # standards conformance mode for MSVC compiler.
   )
 
-  if(WARNINGS_AS_ERRORS)
-    set(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
-    set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
-  endif()
-
-  set(CLANG_WARNINGS
+  list(APPEND CLANG_WARNINGS
     -Wall
     -Wextra # reasonable and standard
     -Wshadow # warn the user if a variable declaration shadows one from a parent context

@@ -40,5 +40,7 @@ if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Work around string table overflow by enabling optimizations
     target_compile_options(async_https_client PRIVATE -Os)
+    # Work around null pointer deref warning in boost code from GCC 12
+    target_compile_options(async_https_client PRIVATE -fno-delete-null-pointer-checks)
   endif()
 endif()

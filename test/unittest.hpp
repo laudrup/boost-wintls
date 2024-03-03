@@ -9,12 +9,18 @@
 
 #include <wintls/detail/config.hpp>
 
+#ifndef WINTLS_USE_STANDALONE_ASIO
+#include <boost/beast/core.hpp>
+#endif // !WINTLS_USE_STANDALONE_ASIO
+
 #include "test_stream/stream.hpp"
 
 #ifdef WINTLS_USE_STANDALONE_ASIO
 #include <asio/ssl.hpp>
 #else // WINTLS_USE_STANDALONE_ASIO
+#include <boost/beast/websocket/ssl.hpp>
 #include <boost/asio/ssl.hpp>
+#include <wintls/beast.hpp>
 #endif // !WINTLS_USE_STANDALONE_ASIO
 
 #include <catch2/catch.hpp>
@@ -33,7 +39,7 @@ struct StringMaker<error_code> {
     return oss.str();
   }
 };
-}
+} // namespace Catch
 
 inline std::vector<unsigned char> bytes_from_file(const std::string& path) {
   std::ifstream ifs{path};
@@ -46,8 +52,10 @@ inline std::vector<unsigned char> bytes_from_file(const std::string& path) {
 namespace net = wintls::net;
 #ifdef WINTLS_USE_STANDALONE_ASIO
 namespace asio_ssl = asio::ssl;
-#else // WINTLS_USE_STANDALONE_ASIO
+#else  // WINTLS_USE_STANDALONE_ASIO
 namespace asio_ssl = boost::asio::ssl;
+namespace beast = boost::beast;
+namespace websocket = boost::beast::websocket;
 #endif // !WINTLS_USE_STANDALONE_ASIO
 using test_stream = wintls::test::stream;
 

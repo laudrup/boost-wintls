@@ -52,7 +52,7 @@ jobs:
             toolset: ""
             build_type: ""
             generator: "MinGW Makefiles"
-            config_args: "-DOPENSSL_ROOT_DIR=\"c:/Program Files/OpenSSL\""
+            config_args: ""
             name_args: ""
 
     steps:
@@ -126,6 +126,7 @@ jobs:
               "${GITHUB_WORKSPACE}"
       env:
         BOOST_ROOT: ${{env.BOOST_INSTALL_PATH}}/boost
+        OPENSSL_ROOT: ${{matrix.generator == 'MinGW Makefiles' && 'C:/Program Files/OpenSSL' || null}}
 
     - name: Build
       working-directory: build

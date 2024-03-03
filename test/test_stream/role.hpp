@@ -13,6 +13,7 @@
 namespace wintls {
 namespace test {
 
+#ifdef WINTLS_USE_STANDALONE_ASIO
 /** The role of local or remote peer.
 
     Whether the endpoint is a client or server affects the
@@ -41,6 +42,11 @@ enum class role_type
     /// The stream is operating as a server.
     server
 };
+#else // WINTLS_USE_STANDALONE_ASIO
+#include <boost/beast/core.hpp>
+
+using role_type = boost::beast::role_type;
+#endif // !WINTLS_USE_STANDALONE_ASIO
 
 } // namespace test
 } // namespace wintls

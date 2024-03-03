@@ -2,6 +2,11 @@
 name: unittest
 on: [push, pull_request]
 
+# stop in-progress builds on push
+concurrency:
+  group: unittest-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unittest-boost-asio:
     name: "${{matrix.generator}} ${{matrix.toolset}} Boost ${{matrix.boost_version}} ${{matrix.build_type}} C++${{matrix.standard}} ${{matrix.name_args}}"

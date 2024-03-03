@@ -21,6 +21,8 @@ if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
       # Temporary workaround issue https://github.com/boostorg/beast/issues/1582
       target_compile_options(${name} PRIVATE "-wd4702")
+      # Object files get quite big when using async and beast
+      target_compile_options(${name} PRIVATE "/bigobj")
     endif()
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -37,4 +39,6 @@ if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
 
   add_wintls_example(https_client)
   add_wintls_example(async_https_client)
+  add_wintls_example(websocket_client)
+  add_wintls_example(async_websocket_client)
 endif()

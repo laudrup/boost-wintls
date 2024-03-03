@@ -12,3 +12,5 @@ Examples
    async_https_client
    echo_client
    echo_server
+   websocket_client
+   async_websocket_client

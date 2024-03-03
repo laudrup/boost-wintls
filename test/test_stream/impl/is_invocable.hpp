@@ -16,9 +16,10 @@
 namespace wintls {
 namespace test {
 
+// Note: This is prefixed to avoid conflicts with boost::beast::detail::is_invocable_test
 template<class R, class C, class ...A>
 auto
-is_invocable_test(C&& c, int, A&& ...a)
+wintls_is_invocable_test(C&& c, int, A&& ...a)
     -> decltype(std::is_convertible<
         decltype(c(std::forward<A>(a)...)), R>::value ||
             std::is_same<R, void>::value,
@@ -26,7 +27,7 @@ is_invocable_test(C&& c, int, A&& ...a)
 
 template<class R, class C, class ...A>
 std::false_type
-is_invocable_test(C&& c, long, A&& ...a);
+wintls_is_invocable_test(C&& c, long, A&& ...a);
 
 /** Metafunction returns `true` if F callable as R(A...)
 
@@ -44,7 +45,7 @@ struct is_invocable : std::false_type
 
 template<class C, class R, class ...A>
 struct is_invocable<C, R(A...)>
-    : decltype(is_invocable_test<R>(
+    : decltype(wintls_is_invocable_test<R>(
         std::declval<C>(), 1, std::declval<A>()...))
 {
 };

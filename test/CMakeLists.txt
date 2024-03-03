@@ -38,6 +38,10 @@ set(test_sources
   decrypted_data_buffer_test.cpp
 )
 
+if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
+  list(APPEND test_sources echo_test_ws.cpp)
+endif()
+
 add_executable(unittest
   ${test_sources}
 )
@@ -49,6 +53,14 @@ endif()
 
 if(MSVC)
   target_compile_options(unittest PRIVATE "-bigobj")
+endif()
+
+if(MINGW)
+  target_compile_options(unittest PRIVATE "-Wa,-mbig-obj")
+  # Work around string table overflow by enabling optimizations
+  target_compile_options(unittest PRIVATE -O1)
+  # Work around null pointer deref warning in boost code from GCC 12
+  target_compile_options(unittest PRIVATE -fno-delete-null-pointer-checks)
 endif()
 
 target_compile_definitions(unittest PRIVATE
@@ -81,6 +93,18 @@ if(${CMAKE_CXX_STANDARD} LESS 17 AND ENABLE_WINTLS_STANDALONE_ASIO)
     string-view-lite
     variant-lite
   )
+endif()
+
+if(NOT ENABLE_WINTLS_STANDALONE_ASIO)
+  if(MSVC AND ${Boost_VERSION} VERSION_LESS "1.76")
+    # Unreferenced formal parameter in boost/beast/websocket/impl/ssl.hpp
+    target_compile_options(unittest PRIVATE /wd4100)
+  endif()
+
+  if(MSVC AND ${Boost_VERSION} VERSION_LESS "1.85")
+    # Unreachable code in boost/beast/core/impl/buffers_cat.hpp
+    target_compile_options(unittest PRIVATE /wd4702)
+  endif()
 endif()
 
 include(CTest)

@@ -88,7 +88,7 @@ public:
     }
 
     TimeStamp expiry;
-    last_error_ = detail::sspi_functions::AcquireCredentialsHandle(nullptr,
+    last_error_ = detail::sspi_functions::AcquireCredentialsHandleA(nullptr,
                                                                    const_cast<SEC_CHAR*>(UNISP_NAME),
                                                                    static_cast<unsigned>(usage),
                                                                    nullptr,
@@ -106,7 +106,7 @@ public:
         DWORD out_flags = 0;
 
         handshake_output_buffers buffers;
-        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+        last_error_ = detail::sspi_functions::InitializeSecurityContextA(cred_handle_.get(),
                                                                         nullptr,
                                                                         const_cast<SEC_CHAR*>(server_hostname_.c_str()),
                                                                         client_context_flags,
@@ -148,7 +148,7 @@ public:
 
     switch(handshake_type_) {
       case handshake_type::client:
-        last_error_ = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+        last_error_ = detail::sspi_functions::InitializeSecurityContextA(cred_handle_.get(),
                                                                         ctxt_handle_.get(),
                                                                         const_cast<SEC_CHAR*>(server_hostname_.c_str()),
                                                                         client_context_flags,
@@ -281,7 +281,7 @@ private:
       return SEC_E_OK;
     }
     const CERT_CONTEXT* ctx_ptr = nullptr;
-    last_error_ = detail::sspi_functions::QueryContextAttributes(ctxt_handle_.get(), SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
+    last_error_ = detail::sspi_functions::QueryContextAttributesA(ctxt_handle_.get(), SECPKG_ATTR_REMOTE_CERT_CONTEXT, &ctx_ptr);
     if (last_error_ != SEC_E_OK) {
       return last_error_;
     }

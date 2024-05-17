@@ -36,7 +36,7 @@ public:
     }
 
     DWORD out_flags = 0;
-    sc = detail::sspi_functions::InitializeSecurityContext(cred_handle_.get(),
+    sc = detail::sspi_functions::InitializeSecurityContextA(cred_handle_.get(),
                                                            ctxt_handle_.get(),
                                                            nullptr,
                                                            client_context_flags,

@@ -29,7 +29,7 @@ public:
 
   template <typename ConstBufferSequence> std::size_t operator()(const ConstBufferSequence& buffers, SECURITY_STATUS& sc) {
     if (data_.empty()) {
-      sc = sspi_functions::QueryContextAttributes(ctxt_handle_.get(), SECPKG_ATTR_STREAM_SIZES, &stream_sizes_);
+      sc = sspi_functions::QueryContextAttributesA(ctxt_handle_.get(), SECPKG_ATTR_STREAM_SIZES, &stream_sizes_);
       if (sc != SEC_E_OK) {
         return 0;
       }

@@ -47,17 +47,10 @@ public:
   void operator()(handshake_type type) {
     handshake_type_ = type;
 
+    TLS_PARAMETERS tls_parameters{};
+    SCH_CREDENTIALS credentials{};
     SCHANNEL_CRED creds{};
-    creds.dwVersion = SCHANNEL_CRED_VERSION;
-    creds.grbitEnabledProtocols = static_cast<DWORD>(context_.method_);
-    creds.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_DEFAULT_CREDS;
-    // If revocation checking is enables, specify SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
-    // to cause the TLS certificate status request extension (commonly known as OCSP stapling)
-    // to be sent. This flag matches the CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
-    // flag that we pass to the CertGetCertificateChain calls during our manual authentication.
-    if (check_revocation_) {
-      creds.dwFlags |= SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT;
-    }
+    void* cred = nullptr;
 
     auto usage = [this]() {
       switch (handshake_type_) {
@@ -69,13 +62,63 @@ public:
       WINTLS_UNREACHABLE_RETURN(0);
     }();
 
+    auto server_cert = context_.server_cert();
+    bool is_tlsv13 = [this]() {
+      switch (context_.method_) {
+        case method::tlsv13:
+        case method::tlsv13_client:
+        case method::tlsv13_server:
+          return true;
+        default:
+          return false;
+      }
+      WINTLS_UNREACHABLE_RETURN(0);
+    }();
+
+    DWORD version = is_tlsv13 ? SCH_CREDENTIALS_VERSION : SCHANNEL_CRED_VERSION;
+    DWORD flags = is_tlsv13 ? SCH_USE_STRONG_CRYPTO : (SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_DEFAULT_CREDS);
+    DWORD protocols = static_cast<DWORD>(context_.method_);
+
+    // If revocation checking is enables, specify SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
+    // to cause the TLS certificate status request extension (commonly known as OCSP stapling)
+    // to be sent. This flag matches the CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT
+    // flag that we pass to the CertGetCertificateChain calls during our manual authentication.
+    if (check_revocation_) {
+      flags |= SCH_CRED_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT;
+    }
+
+    DWORD num_creds = 0;
+    decltype(&server_cert) creds_list = nullptr;
+
+    if (handshake_type_ == handshake_type::server && server_cert != nullptr) {
+      num_creds = 1;
+      creds_list = &server_cert;
+    }
+
     // TODO: rename server_cert field since it is also used for client cert.
     // Note: if client cert is set, sspi will auto validate server cert with it.
     // Even though verify_server_certificate_ in context is set to false.
-    auto server_cert = context_.server_cert();
-    if (server_cert != nullptr) {
-      creds.cCreds = 1;
-      creds.paCred = &server_cert;
+    if (handshake_type_ == handshake_type::client && server_cert != nullptr) {
+      num_creds = 1;
+      creds_list = &server_cert;
+    }
+
+    if (!is_tlsv13) {
+      cred = &creds;
+      creds.dwVersion = version;
+      creds.grbitEnabledProtocols = protocols;
+      creds.dwFlags = flags;
+      creds.cCreds = num_creds;
+      creds.paCred = creds_list;
+    } else {
+      cred = &credentials;
+      credentials.dwVersion = version;
+      credentials.dwFlags = flags;
+      credentials.cTlsParameters = 1;
+      credentials.pTlsParameters = &tls_parameters;
+      credentials.pTlsParameters->grbitDisabledProtocols = ~protocols;
+      credentials.cCreds = num_creds;
+      credentials.paCred = creds_list;
     }
 
     TimeStamp expiry;
@@ -83,7 +126,7 @@ public:
                                                                    const_cast<SEC_CHAR*>(UNISP_NAME),
                                                                    static_cast<unsigned>(usage),
                                                                    nullptr,
-                                                                   &creds,
+                                                                   cred,
                                                                    nullptr,
                                                                    nullptr,
                                                                    cred_handle_.get(),

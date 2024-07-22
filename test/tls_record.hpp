@@ -38,6 +38,54 @@ struct tls_alert {
   // TODO: Implement
 };
 
+struct tls_extension {
+  enum class extension_type : std::uint16_t {
+    server_name = 0,                             /* RFC 6066 */
+    max_fragment_length = 1,                     /* RFC 6066 */
+    status_request = 5,                          /* RFC 6066 */
+    supported_group = 10,                        /* RFC 8422, 7919 */
+    signature_algorithms = 13,                   /* RFC 8446 */
+    use_srtp = 14,                               /* RFC 5764 */
+    heartbeat = 15,                              /* RFC 6520 */
+    application_layer_protocol_negotiation = 16, /* RFC 7301 */
+    signed_certificate_timestamp = 18,           /* RFC 6962 */
+    client_certificate_type = 19,                /* RFC 7250 */
+    server_certificate_type = 20,                /* RFC 7250 */
+    padding = 21,                                /* RFC 7685 */
+    pre_shared_key = 41,                         /* RFC 8446 */
+    early_data = 42,                             /* RFC 8446 */
+    supported_versions = 43,                     /* RFC 8446 */
+    cookie = 44,                                 /* RFC 8446 */
+    psk_key_exchange_modes = 45,                 /* RFC 8446 */
+    certificate_authorities = 47,                /* RFC 8446 */
+    oid_filters = 48,                            /* RFC 8446 */
+    post_handshake_auth = 49,                    /* RFC 8446 */
+    signature_algorithms_cert = 50,              /* RFC 8446 */
+    key_share = 51,                              /* RFC 8446 */
+    max_extension_type = 65535
+  };
+
+  struct supported_versions {
+    supported_versions(net::const_buffer& data);
+
+    std::vector<tls_version> version;
+  };
+
+  struct common {
+    common(net::const_buffer& data, std::uint16_t size);
+
+    net::const_buffer message;
+  };
+
+  using message_type = variant::variant<supported_versions, common>;
+
+  tls_extension(net::const_buffer& data);
+
+  extension_type type;
+  std::uint16_t size;
+  message_type message;
+};
+
 struct tls_handshake {
   enum class handshake_type : std::uint8_t {
     hello_request = 0x00,
@@ -57,7 +105,18 @@ struct tls_handshake {
   };
 
   struct client_hello {
-    // TODO: Implement
+    tls_version version;
+    net::const_buffer random;
+    std::uint8_t session_id_length;
+    net::const_buffer session_id;
+    std::uint16_t cipher_suites_length;
+    net::const_buffer cipher_suites;
+    std::uint8_t compression_methods_length;
+    net::const_buffer compression_methods;
+    std::uint16_t extensions_length;
+    std::vector<tls_extension> extension;
+
+    client_hello(net::const_buffer& data);
   };
 
   struct server_hello {

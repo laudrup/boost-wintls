@@ -616,7 +616,29 @@ TEST_CASE("ssl/tls versions") {
                                 [&buffer, &server_stream, &version](const error_code&, std::size_t length) {
                                   tls_record rec(net::buffer(buffer, length));
                                   REQUIRE(rec.type == tls_record::record_type::handshake);
-                                  CHECK(rec.version == version);
+                                  if (version != tls_version::tls_1_3) {
+                                    CHECK(rec.version == version);
+                                  } else {
+                                    bool support_tls_v1_3 = false;
+
+                                    if (rec.type == tls_record::record_type::handshake) {
+                                      tls_handshake& handshake = variant::get<tls_handshake>(rec.message);
+                                      auto& extension = variant::get<tls_handshake::client_hello>(handshake.message).extension;
+
+                                      auto it = std::find_if(extension.begin(), extension.end(), [](const tls_extension& s) {
+                                        return s.type == tls_extension::extension_type::supported_versions;
+                                      });
+
+                                      if (it != extension.end()) {
+                                        auto& versions = variant::get<tls_extension::supported_versions>(it->message).version;
+                                        support_tls_v1_3 = std::any_of(versions.begin(), versions.end(), [](const auto& s) {
+                                          return s == tls_version::tls_1_3;
+                                        });
+                                      }
+                                    }
+
+                                    REQUIRE(support_tls_v1_3);
+                                  }
                                   server_stream.close();
                                 });
 

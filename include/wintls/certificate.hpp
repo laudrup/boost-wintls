@@ -219,7 +219,7 @@ inline void delete_private_key(const std::string& name, wintls::error_code& ec) 
  * @endverbatim
  *
  * This function will associate the named key with the given
- * certficate in order for it be used by eg. @ref context::use_certificate.
+ * certificate in order for it be used by eg. @ref context::use_certificate.
  *
  * @note No check is done to ensure the key exists. Associating a non
  * existing or non accessible key will result in unexpected behavior
@@ -260,7 +260,7 @@ inline void assign_private_key(const CERT_CONTEXT* cert, const std::string& name
  * @endverbatim
  *
  * This function will associate the named key with the given
- * certficate in order for it be used by eg. @ref context::use_certificate.
+ * certificate in order for it be used by eg. @ref context::use_certificate.
  *
  * @note No check is done to ensure the key exists. Associating a non
  * existing or non accessible key will result in unexpected behavior

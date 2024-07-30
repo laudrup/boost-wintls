@@ -37,7 +37,7 @@ public:
    * This function is used to add one trusted certification authority
    * to the contexts certificate store used for certificate validation
    *
-   * @param cert The certficate to add to the certificate store
+   * @param cert The certificate to add to the certificate store
    *
    * @throws wintls::system_error Thrown on failure.
    */
@@ -50,7 +50,7 @@ public:
    * This function is used to add one trusted certification authority
    * to the contexts certificate store used for certificate validation
    *
-   * @param cert The certficate to add to the certificate store
+   * @param cert The certificate to add to the certificate store
    *
    * @param ec Set to indicate what error occurred, if any.
    */
@@ -77,8 +77,8 @@ public:
 
   /** Use the default operating system certificates
    *
-   * This function may be used to verify the server certficates
-   * against the certficates installed in the operating system when
+   * This function may be used to verify the server certificates
+   * against the certificates installed in the operating system when
    * performing handshakes as a client.
    *
    * It is still possible to add additional certificates for
@@ -94,7 +94,7 @@ public:
 
   /** Set the certificate to use when operating as a server
    *
-   * This function sets the certficate to use when using a @ref stream
+   * This function sets the certificate to use when using a @ref stream
    * as server.
    *
    * @param cert The private certificate the @ref stream will use for
@@ -113,7 +113,7 @@ public:
 
   /** Set the certificate to use when operating as a server
    *
-   * This function sets the certficate to use when using a @ref stream
+   * This function sets the certificate to use when using a @ref stream
    * as server.
    *
    * @param cert The private certificate the @ref stream will use for

@@ -313,7 +313,7 @@ public:
    * @code
    * void handler(
    *     const wintls::error_code& error, // Result of operation.
-   *     std::size_t bytes_transferred           // Number of bytes read.
+   *     std::size_t bytes_transferred    // Number of bytes read.
    * ); @endcode
    *
    * @note The `async_read_some` operation may not read all of the
@@ -402,7 +402,7 @@ public:
    * @code
    * void handler(
    *     const wintls::error_code& error, // Result of operation.
-   *     std::size_t bytes_transferred           // Number of bytes written.
+   *     std::size_t bytes_transferred    // Number of bytes written.
    * );
    * @endcode
    *
@@ -457,7 +457,7 @@ public:
    * This function is used to asynchronously shut down TLS on the
    * stream. This function call always returns immediately.
    *
-   * @param handler The handler to be called when the handshake
+   * @param handler The handler to be called when the shutdown
    * operation completes. Copies will be made of the handler as
    * required. The equivalent function signature of the handler must
    * be:

@@ -116,7 +116,7 @@ public:
   ~server() {
     // Remove the imported private key. Most real applications
     // probably only want to import the key once and most likely not
-    // in the server code. This is just for demonstration purposesq.
+    // in the server code. This is just for demonstration purposes.
     wintls::error_code ec;
     wintls::delete_private_key(private_key_name_, ec);
   }

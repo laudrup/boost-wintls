@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
     auto certificate = wintls::x509_to_cert_context(net::buffer(x509_certificate),
                                                     wintls::file_format::pem);
 
-    // Add certifcate as a trusted certifcate authority and verify it on handshake
+    // Add certificate as a trusted certificate authority and verify it on handshake
     ctx.add_certificate_authority(certificate.get());
     ctx.verify_server_certificate(true);
 

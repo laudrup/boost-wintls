@@ -9,6 +9,8 @@ jobs:
   coverity-scan:
     name: Build with coverity and upload to coverity scan
     runs-on: windows-2022
+    if: github.repository_owner == 'laudrup'
+
     defaults:
       run:
         shell: bash

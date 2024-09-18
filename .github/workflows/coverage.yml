@@ -10,6 +10,7 @@ jobs:
   codecoverage:
     runs-on: windows-2022
     name: Generate and upload code coverage
+    if: github.repository_owner == 'laudrup'
     steps:
     - name: Checkout
       uses: actions/checkout@v4

@@ -15,6 +15,7 @@ extensions = ['sphinx.ext.autosectionlabel',
               'toctree_elements',
               'remove_inline_specifier',
               'sphinx_jinja',
+              'sphinxcontrib.jquery',
               ]
 
 highlight_language = 'c++'

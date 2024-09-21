@@ -18,7 +18,7 @@
 #define WINTLS_UNICODE_UNDEFINED
 #endif // UNICODE
 
-#include <schannel.h>
+#include <wintls/detail/sspi_compat.hpp>
 #include <security.h>
 
 #ifdef WINTLS_SECURITY_WIN32_DEFINED
@@ -28,5 +28,6 @@
 #ifdef WINTLS_UNICODE_UNDEFINED
 #define UNICODE
 #endif // WINTLS_UNICODE_UNDEFINED
+
 
 #endif // WINTLS_DETAIL_SSPI_TYPES_HPP

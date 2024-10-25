@@ -20,8 +20,7 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: sudo apt-get -yq install doxygen libboost-dev libssl-dev python3-pip
     - name: Install PIP packages
-      # TODO: Consider using requirements.txt to ensure specific versions are used
-      run: sudo pip3 install sphinx breathe sphinx_bootstrap_theme sphinx_jinja sphinxcontrib_jquery
+      run: sudo pip3 install -r doc/requirements.txt
     - name: Configure build system
       run: mkdir build && cmake -Bbuild -H.
     - name: Build documentation

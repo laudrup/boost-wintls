@@ -21,6 +21,9 @@ namespace detail {
 class sspi_handshake;
 }
 
+/** Holds certificates and related options required for setting up TLS
+ *  connections.
+ */
 class context {
 public:
   /** Construct a context.

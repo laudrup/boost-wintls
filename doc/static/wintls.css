@@ -5,3 +5,34 @@
 .content {
     max-width: 1000px !important;
 }
+
+h2 {
+    margin-bottom: 20px;
+}
+
+dl:not(.field-list) {
+    border-bottom: 1px solid #cccccc;
+    width: auto;
+    display: block;
+    padding-bottom: 20px;
+}
+
+dl:not(.field-list) > dt {
+    border-radius: 4px;
+    border: 1px solid #d5d5d5;
+    width: auto;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    width: auto;
+    display: block;
+}
+
+dl > dd {
+    margin-left: 30px;
+}
+
+div.admonition.note.alert.alert-info {
+    background: #3498db80;
+    color: #707070;
+}

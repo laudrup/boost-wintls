@@ -13,7 +13,7 @@ master_doc = 'index'
 extensions = ['sphinx.ext.autosectionlabel',
               'breathe',
               'toctree_elements',
-              'remove_inline_specifier',
+              'remove_specifiers',
               'sphinx_jinja',
               'sphinxcontrib.jquery',
               ]

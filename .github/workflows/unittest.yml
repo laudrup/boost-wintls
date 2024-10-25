@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        boost_version: ["1.81.0", "1.82.0", "1.83.0", "1.84.0"]
+        boost_version: ["1.83.0", "1.84.0", "1.85.0", "1.86.0"]
         os: [windows-2019, windows-2022]
         toolset: [v142, v143, ClangCL]
         build_type: [Debug, Release]
@@ -155,7 +155,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        asio_version: ["asio-1-28-0", "asio-1-29-0"]
+        asio_version: ["asio-1-31-0", "asio-1-32-0"]
         os: [windows-2022]
         build_type: [Debug, Release]
         standard: [14, 17, 20]

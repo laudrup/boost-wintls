@@ -52,6 +52,7 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
 		${SPHINX_EXECUTABLE} -b html
 		-D breathe_projects.wintls=${DOXYGEN_OUTPUT_DIR}
     -D version=${PROJECT_VERSION}
+    -E
 		${SPHINX_SOURCE} ${SPHINX_BUILD}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	DEPENDS

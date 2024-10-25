@@ -5,12 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Overview &#8212; boost.wintls</title>
+    <title>Overview &#8212; asio.wintls</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css?v=284a2d1d" />
-    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css?v=32acb9a4" />
+    <link rel="stylesheet" type="text/css" href="_static/wintls.css?v=161f2d5a" />
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,8 +38,8 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#">
-          boost.wintls</a>
-      <span class="navbar-text navbar-version pull-left"><b>0.9.8</b></span>
+          asio.wintls</a>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.9</b></span>
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
@@ -58,6 +60,10 @@
                   <li><a href="echo_client.html">Echo Client</a></li>
                 
                   <li><a href="echo_server.html">Echo Server</a></li>
+                
+                  <li><a href="websocket_client.html">WebSocket Client</a></li>
+                
+                  <li><a href="async_websocket_client.html">Asynchronous WebSocket Client</a></li>
                 
               </ul>
             </li>
@@ -80,7 +86,7 @@
             </li>
           
         
-        <li><a href="https://github.com/laudrup/boost-wintls">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
+        <li><a href="https://github.com/laudrup/boost-wintls/releases/tag/v0.9.9">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
       </ul>
     </div>
   </div>
@@ -91,21 +97,21 @@
     <div class="body col-md-12 content" role="main">
       
   <figure class="align-default">
-<img alt="Boost.Wintls logo" src="_images/logo.jpg" />
+<img alt="Wintls logo" src="_images/logo.jpg" />
 </figure>
 <section id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h1>
-<p>This library implements TLS stream functionality for <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a>
-using native Windows <a class="reference external" href="https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/">SSPI/Schannel</a> implementation.</p>
+<p>This library implements TLS stream functionality for <a class="reference external" href="https://think-async.com/Asio/">asio</a> or
+<a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> using native Windows <a class="reference external" href="https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/">SSPI/Schannel</a> implementation.</p>
 <p>To the extend possible it provides the same functionality as the
-<a class="reference external" href="https://www.openssl.org/">OpenSSL</a> implementation used by <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> and provides some
-helper <a class="reference internal" href="functions.html#functions"><span class="std std-ref">functions</span></a> for converting and managing certificates and keys in
-standard formats used by <a class="reference external" href="https://www.openssl.org/">OpenSSL</a>.</p>
+<a class="reference external" href="https://www.openssl.org/">OpenSSL</a> implementation used by <a class="reference external" href="https://think-async.com/Asio/">asio</a> and provides some helper
+<a class="reference internal" href="functions.html#functions"><span class="std std-ref">functions</span></a> for converting and managing certificates
+and keys in standard formats used by <a class="reference external" href="https://www.openssl.org/">OpenSSL</a>.</p>
 <p>Released under the <a class="reference external" href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License</a>. Source code available on <a class="reference external" href="https://github.com/laudrup/boost-wintls">GitHub</a>.</p>
 <section id="motivation">
 <h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">¶</a></h2>
-<p><a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> uses <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> for TLS encryption which has a few
-downsides when used on Windows:</p>
+<p><a class="reference external" href="https://think-async.com/Asio/">asio</a> uses <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> for TLS encryption which has a few downsides
+when used on Windows:</p>
 <ul class="simple">
 <li><p>Requires maintaining a separate copy of trusted certificate
 authorities although the operating system already ships with and
@@ -117,7 +123,7 @@ private key is properly protected.</p></li>
 <li><p>Installing third party libraries and software in general on Windows
 is often a complicated process since no central packaging system
 exists, so any security updates to <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> would have to be
-maintained by the software using the <a class="reference external" href="https://www.boost.org/doc/libs/release/doc/html/boost_asio.html">boost::asio</a> library.</p></li>
+maintained by the software using the <a class="reference external" href="https://think-async.com/Asio/">asio</a> library.</p></li>
 </ul>
 <p>This library avoids these issues by using the native Windows TLS
 implementation (<a class="reference external" href="https://docs.microsoft.com/en-us/windows-server/security/tls/tls-ssl-schannel-ssp-overview/">SSPI/SChannel</a>) which uses the methods for storing
@@ -143,6 +149,8 @@ certificates and keys provided by the Windows operating system itself.</p>
 <li class="toctree-l2"><a class="reference internal" href="async_https_client.html">Asynchronous HTTPS Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="echo_client.html">Echo Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="echo_server.html">Echo Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="websocket_client.html">WebSocket Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async_websocket_client.html">Asynchronous WebSocket Client</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="API.html">API</a><ul>
@@ -183,11 +191,11 @@ certificates and keys provided by the Windows operating system itself.</p>
   <footer class="footer">
     <div class="container">
       <p class="pull-right">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.1.3.<br/>
       </p>
       <p>
-        Revised Nov 10, 2023.<br/>
-        boost.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
+        Revised Oct 25, 2024.<br/>
+        asio.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
         Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
       </p>
     </div>

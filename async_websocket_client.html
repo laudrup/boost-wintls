@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Asynchronous WebSocket Client &#8212; asio.wintls</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css?v=284a2d1d" />
+    <link rel="stylesheet" type="text/css" href="_static/wintls.css?v=161f2d5a" />
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="API.html" />
+    <link rel="prev" title="WebSocket Client" href="websocket_client.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+<div id="navbar" class="navbar navbar-default navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">
+          asio.wintls</a>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.9</b></span>
+    </div>
+    <div class="collapse navbar-collapse nav-collapse">
+      <ul class="nav navbar-nav">
+        
+          
+        <li><a href="usage.html">Usage</a></li>
+        
+        
+          
+            <li class="dropdown">
+              <a href="examples.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Examples<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="https_client.html">HTTPS Client</a></li>
+                
+                  <li><a href="async_https_client.html">Asynchronous HTTPS Client</a></li>
+                
+                  <li><a href="echo_client.html">Echo Client</a></li>
+                
+                  <li><a href="echo_server.html">Echo Server</a></li>
+                
+                  <li><a href="websocket_client.html">WebSocket Client</a></li>
+                
+                  <li><a href="">Asynchronous WebSocket Client</a></li>
+                
+              </ul>
+            </li>
+          
+        
+          
+            <li class="dropdown">
+              <a href="API.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">API<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                
+                  <li><a href="classes.html">Classes</a></li>
+                
+                  <li><a href="enumerations.html">Enumerations</a></li>
+                
+                  <li><a href="functions.html">Functions</a></li>
+                
+                  <li><a href="type_aliases.html">Type aliases</a></li>
+                
+              </ul>
+            </li>
+          
+        
+        <li><a href="https://github.com/laudrup/boost-wintls/releases/tag/v0.9.9">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="asynchronous-websocket-client">
+<h1>Asynchronous WebSocket Client<a class="headerlink" href="#asynchronous-websocket-client" title="Link to this heading">¶</a></h1>
+<p>This example demonstrates a basic asynchronous WebSocket client using
+<a class="reference external" href="https://github.com/boostorg/beast">boost::beast</a>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/beast/core.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/beast/websocket.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/asio/strand.hpp&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;wintls.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;wintls/beast.hpp&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstdlib&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">beast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">boost</span><span class="o">::</span><span class="nn">beast</span><span class="p">;</span><span class="w">         </span><span class="c1">// from &lt;boost/beast.hpp&gt;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">websocket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">beast</span><span class="o">::</span><span class="nn">websocket</span><span class="p">;</span><span class="w"> </span><span class="c1">// from &lt;boost/beast/websocket.hpp&gt;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">boost</span><span class="o">::</span><span class="nn">asio</span><span class="p">;</span><span class="w">            </span><span class="c1">// from &lt;boost/asio.hpp&gt;</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">ssl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">wintls</span><span class="p">;</span><span class="w">                 </span><span class="c1">// from &lt;wintls/wintls.hpp&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">tcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span><span class="w">       </span><span class="c1">// from &lt;boost/asio/ip/tcp.hpp&gt;</span>
+
+<span class="c1">//------------------------------------------------------------------------------</span>
+
+<span class="c1">// Report a failure</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">fail</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">what</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">what</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ec</span><span class="p">.</span><span class="n">message</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Sends a WebSocket message and prints the response</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">session</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">enable_shared_from_this</span><span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">tcp</span><span class="o">::</span><span class="n">resolver</span><span class="w"> </span><span class="n">resolver_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">websocket</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">ssl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">beast</span><span class="o">::</span><span class="n">tcp_stream</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">ws_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">beast</span><span class="o">::</span><span class="n">flat_buffer</span><span class="w"> </span><span class="n">buffer_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">host_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">text_</span><span class="p">;</span>
+
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="c1">// Resolver and socket require an io_context</span>
+<span class="w">  </span><span class="k">explicit</span><span class="w"> </span><span class="n">session</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">io_context</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ioc</span><span class="p">,</span><span class="w"> </span><span class="n">ssl</span><span class="o">::</span><span class="n">context</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span>
+<span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="n">resolver_</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">make_strand</span><span class="p">(</span><span class="n">ioc</span><span class="p">))</span>
+<span class="w">      </span><span class="p">,</span><span class="w"> </span><span class="n">ws_</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">make_strand</span><span class="p">(</span><span class="n">ioc</span><span class="p">),</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Start the asynchronous operation</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">host</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">port</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Set SNI hostname (many hosts need this to handshake successfully)</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">set_server_hostname</span><span class="p">(</span><span class="n">host</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Enable Check whether the Server Certificate was revoked</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">set_certificate_revocation_check</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Save these for later</span>
+<span class="w">    </span><span class="n">host_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">host</span><span class="p">;</span>
+<span class="w">    </span><span class="n">text_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Look up the domain name</span>
+<span class="w">    </span><span class="n">resolver_</span><span class="p">.</span><span class="n">async_resolve</span><span class="p">(</span><span class="n">host</span><span class="p">,</span><span class="w"> </span><span class="n">port</span><span class="p">,</span><span class="w"> </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_resolve</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_resolve</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">tcp</span><span class="o">::</span><span class="n">resolver</span><span class="o">::</span><span class="n">results_type</span><span class="w"> </span><span class="n">results</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;resolve&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Set a timeout on the operation</span>
+<span class="w">    </span><span class="n">beast</span><span class="o">::</span><span class="n">get_lowest_layer</span><span class="p">(</span><span class="n">ws_</span><span class="p">).</span><span class="n">expires_after</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">30</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// Make the connection on the IP address we get from a lookup</span>
+<span class="w">    </span><span class="n">beast</span><span class="o">::</span><span class="n">get_lowest_layer</span><span class="p">(</span><span class="n">ws_</span><span class="p">).</span><span class="n">async_connect</span><span class="p">(</span><span class="n">results</span><span class="p">,</span>
+<span class="w">                                               </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_connect</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_connect</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">tcp</span><span class="o">::</span><span class="n">resolver</span><span class="o">::</span><span class="n">results_type</span><span class="o">::</span><span class="n">endpoint_type</span><span class="w"> </span><span class="n">ep</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;connect&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Set a timeout on the operation</span>
+<span class="w">    </span><span class="n">beast</span><span class="o">::</span><span class="n">get_lowest_layer</span><span class="p">(</span><span class="n">ws_</span><span class="p">).</span><span class="n">expires_after</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">30</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// Update the host_ string. This will provide the value of the</span>
+<span class="w">    </span><span class="c1">// Host HTTP header during the WebSocket handshake.</span>
+<span class="w">    </span><span class="c1">// See https://tools.ietf.org/html/rfc7230#section-5.4</span>
+<span class="w">    </span><span class="n">host_</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sc">&#39;:&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">ep</span><span class="p">.</span><span class="n">port</span><span class="p">());</span>
+
+<span class="w">    </span><span class="c1">// Perform the SSL handshake</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">async_handshake</span><span class="p">(</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">client</span><span class="p">,</span>
+<span class="w">                                     </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_ssl_handshake</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_ssl_handshake</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ssl_handshake&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Turn off the timeout on the tcp_stream, because</span>
+<span class="w">    </span><span class="c1">// the websocket stream has its own timeout system.</span>
+<span class="w">    </span><span class="n">beast</span><span class="o">::</span><span class="n">get_lowest_layer</span><span class="p">(</span><span class="n">ws_</span><span class="p">).</span><span class="n">expires_never</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// Set suggested timeout settings for the websocket</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">websocket</span><span class="o">::</span><span class="n">stream_base</span><span class="o">::</span><span class="n">timeout</span><span class="o">::</span><span class="n">suggested</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">role_type</span><span class="o">::</span><span class="n">client</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// Perform the websocket handshake</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">async_handshake</span><span class="p">(</span><span class="n">host_</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_handshake</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_handshake</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;handshake&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Send the message</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">async_write</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">text_</span><span class="p">),</span><span class="w"> </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_write</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_write</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes_transferred</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">ignore_unused</span><span class="p">(</span><span class="n">bytes_transferred</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;write&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Read a message into our buffer</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">async_read</span><span class="p">(</span><span class="n">buffer_</span><span class="p">,</span><span class="w"> </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_read</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_read</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes_transferred</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">ignore_unused</span><span class="p">(</span><span class="n">bytes_transferred</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;read&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Close the WebSocket connection</span>
+<span class="w">    </span><span class="n">ws_</span><span class="p">.</span><span class="n">async_close</span><span class="p">(</span><span class="n">websocket</span><span class="o">::</span><span class="n">close_code</span><span class="o">::</span><span class="n">normal</span><span class="p">,</span><span class="w"> </span><span class="n">beast</span><span class="o">::</span><span class="n">bind_front_handler</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="o">::</span><span class="n">on_close</span><span class="p">,</span><span class="w"> </span><span class="n">shared_from_this</span><span class="p">()));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">on_close</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">fail</span><span class="p">(</span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;close&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// If we get here then the connection is closed gracefully</span>
+
+<span class="w">    </span><span class="c1">// The make_printable() function helps print a ConstBufferSequence</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">beast</span><span class="o">::</span><span class="n">make_printable</span><span class="p">(</span><span class="n">buffer_</span><span class="p">.</span><span class="n">data</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">//------------------------------------------------------------------------------</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Check command line arguments.</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">argc</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Usage: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &lt;host&gt; &lt;port&gt; &lt;text&gt;</span><span class="se">\n\n</span><span class="s">&quot;</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Example: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; echo.websocket.org 443 </span><span class="se">\&quot;</span><span class="s">Hello, world!</span><span class="se">\&quot;\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_FAILURE</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+<span class="w">  </span><span class="c1">// The io_context is required for all I/O</span>
+<span class="w">  </span><span class="n">net</span><span class="o">::</span><span class="n">io_context</span><span class="w"> </span><span class="n">ioc</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// The SSL context is required, and holds certificates</span>
+<span class="w">  </span><span class="n">ssl</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="n">ctx</span><span class="p">{</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">};</span>
+
+<span class="w">  </span><span class="c1">// Use the operating systems default certificates for verification</span>
+<span class="w">  </span><span class="n">ctx</span><span class="p">.</span><span class="n">use_default_certificates</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Verify the remote server&#39;s certificate</span>
+<span class="w">  </span><span class="n">ctx</span><span class="p">.</span><span class="n">verify_server_certificate</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Launch the asynchronous operation</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ioc</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="p">,</span><span class="w"> </span><span class="n">port</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Run the I/O service. The call will return when</span>
+<span class="w">  </span><span class="c1">// the socket is closed.</span>
+<span class="w">  </span><span class="n">ioc</span><span class="p">.</span><span class="n">run</span><span class="p">();</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+  <footer class="footer">
+    <div class="container">
+      <p class="pull-right">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.1.3.<br/>
+      </p>
+      <p>
+        Revised Oct 25, 2024.<br/>
+        asio.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
+        Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
+      </p>
+    </div>
+  </footer>
+
+  </body>
+</html>

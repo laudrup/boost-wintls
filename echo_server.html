@@ -5,16 +5,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Echo Server &#8212; boost.wintls</title>
+    <title>Echo Server &#8212; asio.wintls</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css?v=284a2d1d" />
-    <link rel="stylesheet" type="text/css" href="_static/boost-wintls.css?v=32acb9a4" />
+    <link rel="stylesheet" type="text/css" href="_static/wintls.css?v=161f2d5a" />
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="API.html" />
+    <link rel="next" title="WebSocket Client" href="websocket_client.html" />
     <link rel="prev" title="Echo Client" href="echo_client.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -37,8 +39,8 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="index.html">
-          boost.wintls</a>
-      <span class="navbar-text navbar-version pull-left"><b>0.9.8</b></span>
+          asio.wintls</a>
+      <span class="navbar-text navbar-version pull-left"><b>0.9.9</b></span>
     </div>
     <div class="collapse navbar-collapse nav-collapse">
       <ul class="nav navbar-nav">
@@ -59,6 +61,10 @@
                   <li><a href="echo_client.html">Echo Client</a></li>
                 
                   <li><a href="">Echo Server</a></li>
+                
+                  <li><a href="websocket_client.html">WebSocket Client</a></li>
+                
+                  <li><a href="async_websocket_client.html">Asynchronous WebSocket Client</a></li>
                 
               </ul>
             </li>
@@ -81,7 +87,7 @@
             </li>
           
         
-        <li><a href="https://github.com/laudrup/boost-wintls">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
+        <li><a href="https://github.com/laudrup/boost-wintls/releases/tag/v0.9.9">Download<span style="position:relative;top:-2px;left:10px;"><img src="_static/github.png"></span></a></li>
       </ul>
     </div>
   </div>
@@ -96,19 +102,29 @@
 <p>This example demonstrates a basic asynchronous echo server</p>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;certificate.hpp&quot;</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/wintls.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;wintls.hpp&gt;</span>
 
+<span class="cp">#ifdef WINTLS_USE_STANDALONE_ASIO</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;asio.hpp&gt;</span>
+<span class="cp">#else </span><span class="c1">// WINTLS_USE_STANDALONE_ASIO</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/asio.hpp&gt;</span>
+<span class="cp">#endif </span><span class="c1">// !WINTLS_USE_STANDALONE_ASIO</span>
 
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstdlib&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;functional&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
 
-<span class="k">using</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span>
+<span class="cp">#ifdef WINTLS_USE_STANDALONE_ASIO</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">asio</span><span class="p">;</span>
+<span class="cp">#else </span><span class="c1">// WINTLS_USE_STANDALONE_ASIO</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">boost</span><span class="o">::</span><span class="nn">asio</span><span class="p">;</span>
+<span class="cp">#endif </span><span class="c1">// !WINTLS_USE_STANDALONE_ASIO</span>
+
+<span class="k">using</span><span class="w"> </span><span class="n">net</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">session</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">enable_shared_from_this</span><span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-<span class="w">  </span><span class="n">session</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="p">)</span>
+<span class="w">  </span><span class="n">session</span><span class="p">(</span><span class="n">wintls</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream</span><span class="p">)</span>
 <span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="n">stream_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">stream</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="p">}</span>
 
@@ -119,8 +135,8 @@
 <span class="k">private</span><span class="o">:</span>
 <span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">do_handshake</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">self</span><span class="p">(</span><span class="n">shared_from_this</span><span class="p">());</span>
-<span class="w">    </span><span class="n">stream_</span><span class="p">.</span><span class="n">async_handshake</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">server</span><span class="p">,</span>
-<span class="w">                            </span><span class="p">[</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">stream_</span><span class="p">.</span><span class="n">async_handshake</span><span class="p">(</span><span class="n">wintls</span><span class="o">::</span><span class="n">handshake_type</span><span class="o">::</span><span class="n">server</span><span class="p">,</span>
+<span class="w">                            </span><span class="p">[</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">wintls</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">do_read</span><span class="p">();</span>
 <span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
@@ -131,8 +147,8 @@
 
 <span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">do_read</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">self</span><span class="p">(</span><span class="n">shared_from_this</span><span class="p">());</span>
-<span class="w">    </span><span class="n">stream_</span><span class="p">.</span><span class="n">async_read_some</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">data_</span><span class="p">),</span>
-<span class="w">                            </span><span class="p">[</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">stream_</span><span class="p">.</span><span class="n">async_read_some</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">data_</span><span class="p">),</span>
+<span class="w">                            </span><span class="p">[</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">wintls</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">do_write</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
 <span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
@@ -145,8 +161,8 @@
 
 <span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">do_write</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">self</span><span class="p">(</span><span class="n">shared_from_this</span><span class="p">());</span>
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">async_write</span><span class="p">(</span><span class="n">stream_</span><span class="p">,</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">data_</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="p">),</span>
-<span class="w">                             </span><span class="p">[</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="cm">/*length*/</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">net</span><span class="o">::</span><span class="n">async_write</span><span class="p">(</span><span class="n">stream_</span><span class="p">,</span><span class="w"> </span><span class="n">net</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">data_</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="p">),</span>
+<span class="w">                             </span><span class="p">[</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">self</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">wintls</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="cm">/*length*/</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">do_read</span><span class="p">();</span>
 <span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
@@ -155,36 +171,36 @@
 <span class="w">    </span><span class="p">});</span>
 <span class="w">  </span><span class="p">}</span>
 
-<span class="w">  </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">wintls</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stream_</span><span class="p">;</span>
 <span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">data_</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
 <span class="p">};</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">server</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-<span class="w">  </span><span class="n">server</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">io_context</span><span class="o">&amp;</span><span class="w"> </span><span class="n">io_context</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">port</span><span class="p">)</span>
+<span class="w">  </span><span class="n">server</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">io_context</span><span class="o">&amp;</span><span class="w"> </span><span class="n">io_context</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">port</span><span class="p">)</span>
 <span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="n">acceptor_</span><span class="p">(</span><span class="n">io_context</span><span class="p">,</span><span class="w"> </span><span class="n">tcp</span><span class="o">::</span><span class="n">endpoint</span><span class="p">(</span><span class="n">tcp</span><span class="o">::</span><span class="n">v4</span><span class="p">(),</span><span class="w"> </span><span class="n">port</span><span class="p">))</span>
-<span class="w">    </span><span class="p">,</span><span class="w"> </span><span class="n">context_</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">)</span>
+<span class="w">    </span><span class="p">,</span><span class="w"> </span><span class="n">context_</span><span class="p">(</span><span class="n">wintls</span><span class="o">::</span><span class="n">method</span><span class="o">::</span><span class="n">system_default</span><span class="p">)</span>
 <span class="w">    </span><span class="p">,</span><span class="w"> </span><span class="n">private_key_name_</span><span class="p">(</span><span class="s">&quot;wintls-echo-server-example&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="c1">// Convert X509 PEM bytes to Windows CERT_CONTEXT</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">certificate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">x509_to_cert_context</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">x509_certificate</span><span class="p">),</span>
-<span class="w">                                                           </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">file_format</span><span class="o">::</span><span class="n">pem</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">certificate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wintls</span><span class="o">::</span><span class="n">x509_to_cert_context</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">x509_certificate</span><span class="p">),</span>
+<span class="w">                                                    </span><span class="n">wintls</span><span class="o">::</span><span class="n">file_format</span><span class="o">::</span><span class="n">pem</span><span class="p">);</span>
 
 <span class="w">    </span><span class="c1">// Import RSA private key into the default cryptographic provider</span>
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">;</span>
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">import_private_key</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">rsa_key</span><span class="p">),</span>
-<span class="w">                                      </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">file_format</span><span class="o">::</span><span class="n">pem</span><span class="p">,</span>
-<span class="w">                                      </span><span class="n">private_key_name_</span><span class="p">,</span>
-<span class="w">                                      </span><span class="n">ec</span><span class="p">);</span>
+<span class="w">    </span><span class="n">wintls</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">;</span>
+<span class="w">    </span><span class="n">wintls</span><span class="o">::</span><span class="n">import_private_key</span><span class="p">(</span><span class="n">net</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">rsa_key</span><span class="p">),</span>
+<span class="w">                               </span><span class="n">wintls</span><span class="o">::</span><span class="n">file_format</span><span class="o">::</span><span class="n">pem</span><span class="p">,</span>
+<span class="w">                               </span><span class="n">private_key_name_</span><span class="p">,</span>
+<span class="w">                               </span><span class="n">ec</span><span class="p">);</span>
 
 <span class="w">    </span><span class="c1">// If the key already exists, assume it&#39;s the one already imported</span>
 <span class="w">    </span><span class="c1">// and ignore that error</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ec</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">.</span><span class="n">value</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">NTE_EXISTS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">system_error</span><span class="p">(</span><span class="n">ec</span><span class="p">);</span>
+<span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="n">wintls</span><span class="o">::</span><span class="n">system_error</span><span class="p">(</span><span class="n">ec</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">// Use the imported private key for the certificate</span>
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">assign_private_key</span><span class="p">(</span><span class="n">certificate</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span><span class="w"> </span><span class="n">private_key_name_</span><span class="p">);</span>
+<span class="w">    </span><span class="n">wintls</span><span class="o">::</span><span class="n">assign_private_key</span><span class="p">(</span><span class="n">certificate</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span><span class="w"> </span><span class="n">private_key_name_</span><span class="p">);</span>
 
 <span class="w">    </span><span class="c1">// Use the certificate for encrypting TLS messages</span>
 <span class="w">    </span><span class="n">context_</span><span class="p">.</span><span class="n">use_certificate</span><span class="p">(</span><span class="n">certificate</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
@@ -195,16 +211,16 @@
 <span class="w">  </span><span class="o">~</span><span class="n">server</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// Remove the imported private key. Most real applications</span>
 <span class="w">    </span><span class="c1">// probably only want to import the key once and most likely not</span>
-<span class="w">    </span><span class="c1">// in the server code. This is just for demonstration purposesq.</span>
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">;</span>
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">delete_private_key</span><span class="p">(</span><span class="n">private_key_name_</span><span class="p">,</span><span class="w"> </span><span class="n">ec</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// in the server code. This is just for demonstration purposes.</span>
+<span class="w">    </span><span class="n">wintls</span><span class="o">::</span><span class="n">error_code</span><span class="w"> </span><span class="n">ec</span><span class="p">;</span>
+<span class="w">    </span><span class="n">wintls</span><span class="o">::</span><span class="n">delete_private_key</span><span class="p">(</span><span class="n">private_key_name_</span><span class="p">,</span><span class="w"> </span><span class="n">ec</span><span class="p">);</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="k">private</span><span class="o">:</span>
 <span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">do_accept</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">acceptor_</span><span class="p">.</span><span class="n">async_accept</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="w"> </span><span class="n">socket</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">acceptor_</span><span class="p">.</span><span class="n">async_accept</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">wintls</span><span class="o">::</span><span class="n">error_code</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ec</span><span class="p">,</span><span class="w"> </span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="w"> </span><span class="n">socket</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">socket</span><span class="p">),</span><span class="w"> </span><span class="n">context_</span><span class="p">))</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span><span class="p">(</span><span class="n">wintls</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">socket</span><span class="p">),</span><span class="w"> </span><span class="n">context_</span><span class="p">))</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span>
 <span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Read failed: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ec</span><span class="p">.</span><span class="n">message</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="w">      </span><span class="p">}</span>
@@ -214,7 +230,7 @@
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">tcp</span><span class="o">::</span><span class="n">acceptor</span><span class="w"> </span><span class="n">acceptor_</span><span class="p">;</span>
-<span class="w">  </span><span class="n">boost</span><span class="o">::</span><span class="n">wintls</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="n">context_</span><span class="p">;</span>
+<span class="w">  </span><span class="n">wintls</span><span class="o">::</span><span class="n">context</span><span class="w"> </span><span class="n">context_</span><span class="p">;</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">private_key_name_</span><span class="p">;</span>
 <span class="p">};</span>
 
@@ -225,7 +241,7 @@
 <span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">io_context</span><span class="w"> </span><span class="n">io_context</span><span class="p">;</span>
+<span class="w">    </span><span class="n">net</span><span class="o">::</span><span class="n">io_context</span><span class="w"> </span><span class="n">io_context</span><span class="p">;</span>
 <span class="w">    </span><span class="n">server</span><span class="w"> </span><span class="n">s</span><span class="p">(</span><span class="n">io_context</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])));</span>
 
 <span class="w">    </span><span class="n">io_context</span><span class="p">.</span><span class="n">run</span><span class="p">();</span>
@@ -247,11 +263,11 @@
   <footer class="footer">
     <div class="container">
       <p class="pull-right">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.1.3.<br/>
       </p>
       <p>
-        Revised Nov 10, 2023.<br/>
-        boost.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
+        Revised Oct 25, 2024.<br/>
+        asio.wintls. &copy; Copyright 2021, Kasper Laudrup.<br/>
         Distributed under the <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0.</a><br/>
       </p>
     </div>

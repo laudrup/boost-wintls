@@ -262,6 +262,10 @@ public:
           if (has_buffer_output) {
             return state::data_available;
           }
+        } else if (handshake_type_ == handshake_type::client) {
+          if (has_buffer_output) {
+            return state::data_available;
+          }
         }
         return state::done;
       }

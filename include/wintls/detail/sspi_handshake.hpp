@@ -31,6 +31,7 @@ public:
   enum class state {
     data_needed,           // data needs to be read from peer
     data_available,        // data needs to be write to peer
+    renegotiate_data_available, // renegotiate data needs to be decrypted
     done,                  // handshake success
     error                  // handshake error
   };
@@ -227,6 +228,10 @@ public:
       in_buffer_ = net::buffer(input_data_) + extra_size;
 
       WINTLS_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
+      if (last_error_ == SEC_E_OK) {
+        return state::renegotiate_data_available;
+      }
+
       return state::data_needed;
     } else if (last_error_ == SEC_E_INCOMPLETE_MESSAGE) {
       WINTLS_ASSERT_MSG(in_buffer_.size() > 0, "buffer not large enough for tls handshake message");
@@ -279,6 +284,24 @@ public:
       default:
         return state::error;
     }
+  }
+
+  void load_renegotiate_extra_data(wintls::detail::sspi_buffer& extra_buffer) {
+    last_error_ = SEC_I_CONTINUE_NEEDED;
+    input_buffers_[0].cbBuffer = 0;
+    input_buffers_[0].pvBuffer = reinterpret_cast<void*>(input_data_.data());
+    in_buffer_ = net::buffer(input_data_);
+
+    if (extra_buffer.BufferType == SECBUFFER_EXTRA) {
+      auto len = extra_buffer.cbBuffer;
+      input_buffers_[0].cbBuffer = len;
+      std::memmove(input_buffers_[0].pvBuffer, extra_buffer.pvBuffer, len);
+      in_buffer_ = net::buffer(input_data_) + len;
+    }
+  }
+
+  wintls::detail::sspi_buffer& get_renegotiate_data_buffer() {
+    return input_buffers_[0];
   }
 
   void size_written(std::size_t size) {

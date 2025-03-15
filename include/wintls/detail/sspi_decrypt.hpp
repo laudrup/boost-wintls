@@ -25,6 +25,7 @@ public:
   enum class state {
     data_needed,
     data_available,
+    renegotiate_handshake,
     error
   };
 
@@ -36,7 +37,18 @@ public:
     buffers_[0].pvBuffer = encrypted_data_.data();
   }
 
-  template <class MutableBufferSequence>
+  void load_renegotiate_extra_data(wintls::detail::sspi_buffer& extra_buffer) {
+    buffers_[0].cbBuffer = extra_buffer.cbBuffer;
+    buffers_[0].pvBuffer = encrypted_data_.data();
+    std::memmove(encrypted_data_.data(), extra_buffer.pvBuffer, extra_buffer.cbBuffer);
+    input_buffer = net::buffer(encrypted_data_) + buffers_[0].cbBuffer;
+  }
+
+  wintls::detail::sspi_buffer& get_renegotiate_data_buffer() {
+    return buffers_[3];
+  }
+
+  template<class MutableBufferSequence>
   state operator()(const MutableBufferSequence& output_buffers) {
     if (!decrypted_data_.empty()) {
       size_decrypted = decrypted_data_.get(output_buffers);
@@ -62,7 +74,7 @@ public:
       return state::data_needed;
     }
 
-    if (last_error_ != SEC_E_OK) {
+    if (last_error_ != SEC_E_OK && last_error_ != SEC_I_RENEGOTIATE) {
       return state::error;
     }
 
@@ -81,6 +93,11 @@ public:
       buffers_[0].cbBuffer = extra_size;
     } else {
       buffers_[0].cbBuffer = 0;
+    }
+
+    if (last_error_ == SEC_I_RENEGOTIATE) {
+      buffers_[0].cbBuffer = 0;
+      return state::renegotiate_handshake;
     }
 
     return state::data_available;

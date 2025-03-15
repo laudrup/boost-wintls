@@ -141,6 +141,11 @@ public:
   void handshake(handshake_type type, wintls::error_code& ec) {
     sspi_stream_->handshake(type);
 
+    handshake_second_stage(ec);
+  }
+
+private:
+  void handshake_second_stage(wintls::error_code& ec) {
     while (true) {
       switch (sspi_stream_->handshake()) {
         case detail::sspi_handshake::state::data_needed: {
@@ -167,10 +172,15 @@ public:
             ec = sspi_stream_->handshake.last_error();
           }
           return;
+        case detail::sspi_handshake::state::renegotiate_data_available:
+          auto& buffer = sspi_stream_->handshake.get_renegotiate_data_buffer();
+          sspi_stream_->decrypt.load_renegotiate_extra_data(buffer);
+          return;
       }
     }
   }
 
+public:
   /** Perform TLS handshaking.
    *
    * This function is used to perform TLS handshaking on the
@@ -238,14 +248,26 @@ public:
   template <class MutableBufferSequence>
   size_t read_some(const MutableBufferSequence& buffers, wintls::error_code& ec) {
     detail::sspi_decrypt::state state;
-    while((state = sspi_stream_->decrypt(buffers)) == detail::sspi_decrypt::state::data_needed) {
-      std::size_t size_read = next_layer_.read_some(sspi_stream_->decrypt.input_buffer, ec);
-      if (ec) {
-        return 0;
+    std::size_t size_read;
+
+    do {
+      state = sspi_stream_->decrypt(buffers);
+      if (state == detail::sspi_decrypt::state::data_needed) {
+        size_read = next_layer_.read_some(sspi_stream_->decrypt.input_buffer, ec);
+        if (ec) {
+          return 0;
+        }
+        sspi_stream_->decrypt.size_read(size_read);
+      } else if (state == detail::sspi_decrypt::state::renegotiate_handshake) {
+        auto& buffer = sspi_stream_->decrypt.get_renegotiate_data_buffer();
+        sspi_stream_->handshake.load_renegotiate_extra_data(buffer);
+        handshake_second_stage(ec);
+        if (ec) {
+          return 0;
+        }
       }
-      sspi_stream_->decrypt.size_read(size_read);
-      continue;
-    }
+    } while (state == detail::sspi_decrypt::state::data_needed ||
+             state == detail::sspi_decrypt::state::renegotiate_handshake);
 
     if (state == detail::sspi_decrypt::state::error) {
       ec = sspi_stream_->decrypt.last_error();

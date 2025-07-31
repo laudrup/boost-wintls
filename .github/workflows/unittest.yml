@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        boost_version: ["1.83.0", "1.84.0", "1.85.0", "1.86.0"]
+        boost_version: ["1.84.0", "1.85.0", "1.86.0", "1.87.0"]
         os: [windows-2022]
         toolset: [v142, v143, ClangCL]
         build_type: [Debug, Release]
@@ -29,7 +29,7 @@ jobs:
         exclude:
           - { toolset: ClangCL, build_type: Release }
         include:
-          - boost_version: "1.84.0"
+          - boost_version: "1.87.0"
             os: windows-2022
             toolset: v143
             build_type: Debug
@@ -37,7 +37,7 @@ jobs:
             config_args: ""
             build_args: "-- -p:CharacterSet=Unicode"
             name_args: "Unicode"
-          - boost_version: "1.84.0"
+          - boost_version: "1.87.0"
             os: windows-2022
             toolset: v143
             build_type: Debug
@@ -152,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        asio_version: ["asio-1-31-0", "asio-1-32-0"]
+        asio_version: ["asio-1-33-0", "asio-1-34-2"]
         os: [windows-2022]
         build_type: [Debug, Release]
         standard: [14, 17, 20]

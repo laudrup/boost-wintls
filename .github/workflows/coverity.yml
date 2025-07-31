@@ -36,7 +36,7 @@ jobs:
       uses: MarkusJx/install-boost@v2
       id: install-boost
       with:
-        boost_version: 1.83.0
+        boost_version: 1.87.0
         toolset: msvc
         platform_version: 2022
 

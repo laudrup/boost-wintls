@@ -51,7 +51,6 @@ A working C++ compiler supporting at least the C++14 standard is
 required.  Currently tested compilers are:
 
 - MSVC for Visual Studio 2022
-- MSVC for Visual Studio 2019
 - Clang
 - MinGW64 (GCC)
 

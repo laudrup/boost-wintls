@@ -87,7 +87,7 @@ public:
     DWORD unused_1;
     BOOL unused_2;
     if (!CryptAcquireCertificatePrivateKey(cert,
-                                           CRYPT_ACQUIRE_COMPARE_KEY_FLAG,
+                                           CRYPT_ACQUIRE_COMPARE_KEY_FLAG | CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG,
                                            nullptr,
                                            &unused_0,
                                            &unused_1,

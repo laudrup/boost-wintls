@@ -72,6 +72,7 @@ target_link_libraries(unittest PRIVATE
   OpenSSL::Crypto
   Threads::Threads
   Catch2::Catch2
+  ncrypt
   wintls
 )
 

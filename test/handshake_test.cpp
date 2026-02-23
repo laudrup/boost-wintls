@@ -134,6 +134,63 @@ wintls::cert_context_ptr create_self_signed_cert(const std::string& subject) {
   return wintls::cert_context_ptr{cert};
 }
 
+wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::string& subject) {
+  NCRYPT_PROV_HANDLE hProvider{};
+  const auto providerOpened = NCryptOpenStorageProvider(&hProvider,
+                                                        MS_PLATFORM_KEY_STORAGE_PROVIDER,
+                                                        0);
+  if (providerOpened != ERROR_SUCCESS) {
+    wintls::detail::throw_last_error("NCryptOpenStorageProvider");
+  }
+
+  NCRYPT_KEY_HANDLE hKey{};
+  LPCWSTR keyName = L"UnitTestTPMKey";
+  const auto keyCreated = NCryptCreatePersistedKey(hProvider,
+                                                   &hKey,
+                                                   BCRYPT_RSA_ALGORITHM,
+                                                   keyName,
+                                                   0,
+                                                   NCRYPT_OVERWRITE_KEY_FLAG);
+  NCryptFreeObject(hProvider);
+  if (keyCreated != ERROR_SUCCESS) {
+    wintls::detail::throw_last_error("NCryptCreatePersistedKey");
+  }
+
+  const auto keyFinalized = NCryptFinalizeKey(hKey, 0);
+  NCryptFreeObject(hKey);
+  if (keyFinalized != ERROR_SUCCESS) {
+    wintls::detail::throw_last_error("NCryptFinalizeKey");
+  }
+
+  CRYPT_KEY_PROV_INFO keyProvInfo = {};
+  keyProvInfo.pwszContainerName = (LPWSTR)keyName;
+  keyProvInfo.pwszProvName = (LPWSTR)MS_PLATFORM_KEY_STORAGE_PROVIDER;
+  keyProvInfo.dwProvType = 0; // CNG providers use 0
+  keyProvInfo.dwFlags = 0;
+  keyProvInfo.cProvParam = 0;
+  keyProvInfo.rgProvParam = nullptr;
+  keyProvInfo.dwKeySpec = 0; // CNG keys use 0
+
+  cert_name_blob cert_subject(subject);
+  SYSTEMTIME expiry_date;
+  GetSystemTime(&expiry_date);
+  expiry_date.wYear += 1;
+
+  auto cert = CertCreateSelfSignCertificate(0,
+                                            &cert_subject.blob,
+                                            0,
+                                            &keyProvInfo,
+                                            nullptr,
+                                            0,
+                                            &expiry_date,
+                                            0);
+  if (!cert) {
+    wintls::detail::throw_last_error("CertCreateSelfSignCertificate");
+  }
+
+  return wintls::cert_context_ptr{cert};
+}
+
 std::string cert_container_name(const CERT_CONTEXT* cert) {
   DWORD size = 0;
   if (!CertGetCertificateContextProperty(cert,
@@ -195,7 +252,7 @@ TEST_CASE("certificates") {
     auto cert = x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
 
     CHECK_THROWS_WITH(server_ctx.use_certificate(cert.get()),
-                      Catch::Matchers::Contains("Cannot find the certificate and private key for decryption"));
+    Catch::Matchers::Contains("Cannot find the certificate and private key for decryption"));
 
     error_code ec{};
     server_ctx.use_certificate(cert.get(), ec);
@@ -203,7 +260,15 @@ TEST_CASE("certificates") {
     CHECK(ec.value() & NTE_BAD_SIGNATURE);
   }
 
-  SECTION("wintl server") {
+  SECTION("server cert with TPM-backed private key") {
+    wintls::context server_ctx(wintls::method::system_default);
+    auto cert = create_self_signed_cert_with_tpm_backed_key("CN=WinTLS, T=Test");
+    error_code ec{};
+    server_ctx.use_certificate(cert.get(), ec);
+    CHECK(ec.value() == ERROR_SUCCESS);
+  }
+
+  SECTION("wintls server") {
     wintls::context server_ctx(wintls::method::system_default);
     const auto cert = create_self_signed_cert("CN=WinTLS, T=Test");
     server_ctx.use_certificate(cert.get());

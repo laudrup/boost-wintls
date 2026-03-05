@@ -140,7 +140,9 @@ wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::
                                                         MS_PLATFORM_KEY_STORAGE_PROVIDER,
                                                         0);
   if (providerOpened != ERROR_SUCCESS) {
-    wintls::detail::throw_last_error("NCryptOpenStorageProvider");
+    wintls::detail::throw_last_error((
+      "NCryptOpenStorageProvider("
+      + std::to_string(providerOpened)+ "," + std::to_string(ERROR_SUCCESS) + ")").c_str());
   }
 
   NCRYPT_KEY_HANDLE hKey{};
@@ -252,7 +254,7 @@ TEST_CASE("certificates") {
     auto cert = x509_to_cert_context(net::buffer(test_certificate), wintls::file_format::pem);
 
     CHECK_THROWS_WITH(server_ctx.use_certificate(cert.get()),
-    Catch::Matchers::Contains("Cannot find the certificate and private key for decryption"));
+                      Catch::Matchers::Contains("Cannot find the certificate and private key for decryption"));
 
     error_code ec{};
     server_ctx.use_certificate(cert.get(), ec);

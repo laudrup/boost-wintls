@@ -134,6 +134,18 @@ wintls::cert_context_ptr create_self_signed_cert(const std::string& subject) {
   return wintls::cert_context_ptr{cert};
 }
 
+bool able_to_test_tpm_backed_key() {
+  NCRYPT_PROV_HANDLE hProvider{};
+  const auto providerOpened = NCryptOpenStorageProvider(&hProvider,
+                                                        MS_PLATFORM_KEY_STORAGE_PROVIDER,
+                                                        0);
+  if (providerOpened != ERROR_SUCCESS) {
+    return false;
+  }
+  NCryptFreeObject(hProvider);
+  return true;
+}
+
 wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::string& subject) {
   NCRYPT_PROV_HANDLE hProvider{};
   const auto providerOpened = NCryptOpenStorageProvider(&hProvider,
@@ -141,8 +153,7 @@ wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::
                                                         0);
   if (providerOpened != ERROR_SUCCESS) {
     wintls::detail::throw_last_error((
-      "NCryptOpenStorageProvider("
-      + std::to_string(providerOpened)+ "," + std::to_string(ERROR_SUCCESS) + ")").c_str());
+      "NCryptOpenStorageProvider(" + std::to_string(providerOpened) + ")").c_str());
   }
 
   NCRYPT_KEY_HANDLE hKey{};
@@ -263,6 +274,9 @@ TEST_CASE("certificates") {
   }
 
   SECTION("server cert with TPM-backed private key") {
+    if (!able_to_test_tpm_backed_key()) {
+      return;
+    }
     wintls::context server_ctx(wintls::method::system_default);
     auto cert = create_self_signed_cert_with_tpm_backed_key("CN=WinTLS, T=Test");
     error_code ec{};

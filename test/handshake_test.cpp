@@ -135,20 +135,20 @@ wintls::cert_context_ptr create_self_signed_cert(const std::string& subject) {
 }
 
 bool able_to_test_tpm_backed_key() {
-  NCRYPT_PROV_HANDLE hProvider{};
-  const auto providerOpened = NCryptOpenStorageProvider(&hProvider,
+  NCRYPT_PROV_HANDLE provider{};
+  const auto providerOpened = NCryptOpenStorageProvider(&provider,
                                                         MS_PLATFORM_KEY_STORAGE_PROVIDER,
                                                         0);
   if (providerOpened != ERROR_SUCCESS) {
     return false;
   }
-  NCryptFreeObject(hProvider);
+  NCryptFreeObject(provider);
   return true;
 }
 
 wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::string& subject) {
-  NCRYPT_PROV_HANDLE hProvider{};
-  const auto providerOpened = NCryptOpenStorageProvider(&hProvider,
+  NCRYPT_PROV_HANDLE provider{};
+  const auto providerOpened = NCryptOpenStorageProvider(&provider,
                                                         MS_PLATFORM_KEY_STORAGE_PROVIDER,
                                                         0);
   if (providerOpened != ERROR_SUCCESS) {
@@ -156,21 +156,21 @@ wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::
       "NCryptOpenStorageProvider(" + std::to_string(providerOpened) + ")").c_str());
   }
 
-  NCRYPT_KEY_HANDLE hKey{};
+  NCRYPT_KEY_HANDLE key{};
   LPCWSTR keyName = L"UnitTestTPMKey";
-  const auto keyCreated = NCryptCreatePersistedKey(hProvider,
-                                                   &hKey,
+  const auto keyCreated = NCryptCreatePersistedKey(provider,
+                                                   &key,
                                                    BCRYPT_RSA_ALGORITHM,
                                                    keyName,
                                                    0,
                                                    NCRYPT_OVERWRITE_KEY_FLAG);
-  NCryptFreeObject(hProvider);
+  NCryptFreeObject(provider);
   if (keyCreated != ERROR_SUCCESS) {
     wintls::detail::throw_last_error("NCryptCreatePersistedKey");
   }
 
-  const auto keyFinalized = NCryptFinalizeKey(hKey, 0);
-  NCryptFreeObject(hKey);
+  const auto keyFinalized = NCryptFinalizeKey(key, 0);
+  NCryptFreeObject(key);
   if (keyFinalized != ERROR_SUCCESS) {
     wintls::detail::throw_last_error("NCryptFinalizeKey");
   }
@@ -189,14 +189,14 @@ wintls::cert_context_ptr create_self_signed_cert_with_tpm_backed_key(const std::
   GetSystemTime(&expiry_date);
   expiry_date.wYear += 1;
 
-  auto cert = CertCreateSelfSignCertificate(0,
-                                            &cert_subject.blob,
-                                            0,
-                                            &keyProvInfo,
-                                            nullptr,
-                                            0,
-                                            &expiry_date,
-                                            0);
+  const auto cert = CertCreateSelfSignCertificate(0,
+                                                  &cert_subject.blob,
+                                                  0,
+                                                  &keyProvInfo,
+                                                  nullptr,
+                                                  0,
+                                                  &expiry_date,
+                                                  0);
   if (!cert) {
     wintls::detail::throw_last_error("CertCreateSelfSignCertificate");
   }
@@ -278,7 +278,7 @@ TEST_CASE("certificates") {
       return;
     }
     wintls::context server_ctx(wintls::method::system_default);
-    auto cert = create_self_signed_cert_with_tpm_backed_key("CN=WinTLS, T=Test");
+    const auto cert = create_self_signed_cert_with_tpm_backed_key("CN=WinTLS, T=Test");
     error_code ec{};
     server_ctx.use_certificate(cert.get(), ec);
     CHECK(ec.value() == ERROR_SUCCESS);
